@@ -41,15 +41,23 @@ AddDefaultCharset UTF-8
 </FilesMatch>
 
 # As ferramentas de publicação não são para o navegador, e estavam sendo
-# servidas. `conferir-tabelas.mjs` é a pior das duas: ele lista os nomes das
+# servidas. `conferir-tabelas.mjs` é a pior delas: ele lista os nomes das
 # tabelas dos outros negócios deste mesmo banco. Com RLS em todas, não era
 # buraco — era entregar o mapa de graça.
 #
-# Bloqueadas pelo NOME, e não por `\.mjs$`: a loja é montada, e no dia em que a
-# montagem resolver gerar um pedaço `.mjs` uma regra por extensão derrubaria a
-# loja sem dizer por quê. Regra que pode quebrar o site depois não vale a
-# economia de uma linha.
-RedirectMatch 404 ^/(conferir-tabelas|marcar-versao)\.mjs$
+# Esta linha listava as ferramentas pelo NOME, uma por uma. Lista escrita à mão
+# envelhece: hoje nasceu `conferir-css.mjs` e eu quase esqueci de somar ele
+# aqui — e já é a terceira lista à mão que apodrece neste projeto.
+#
+# Agora a regra é pela FORMA: `.mjs` solto na raiz. Toda ferramenta mora na
+# raiz e nenhum pedaço do site mora lá — o site é `assets/`, e a loja montada
+# é `loja/`. É para isso que serve o `[^/]+`: ele casa só com a raiz e deixa
+# `/loja/` em paz, que era justamente o motivo de eu não ter usado `\.mjs$`
+# puro. A loja é montada, e no dia em que a montagem gerar um `.mjs` ela
+# continua sendo servida.
+#
+# Ferramenta nova fica protegida sozinha, sem ninguém precisar lembrar.
+RedirectMatch 404 ^/[^/]+\.mjs$
 RedirectMatch 404 ^/gestao/supabase/.*$
 
 # A pasta loja-fonte é o CÓDIGO da loja, não a loja. Ela vem no repositório

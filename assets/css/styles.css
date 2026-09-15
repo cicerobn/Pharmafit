@@ -1637,6 +1637,84 @@ ul{margin:0;padding:0;list-style:none}
 
 .link-more{padding:8px 0 6px}
 
+/* ---------- três classes que moravam na folha errada ----------
+
+   Estas existiam só em gestao/assets/gestao.css. O site público não
+   carrega aquela folha, então quem usava estas classes aqui ficava sem
+   regra nenhuma — o mesmo caso do `.linkish` logo abaixo. Medido:
+
+   · .btn--block      o botão "Pedir orçamento" em atacado.html saía com
+                      295px dentro de um formulário de 335px, 40px mais
+                      curto que todos os outros botões de enviar do site.
+                      Também é o botão "Confirmar" das caixas de
+                      confirmação, que aparecem nas 16 páginas.
+   · .empty           o recado "Você ainda não fez pedidos por aqui." em
+                      conta.html saía como texto cru, sem recuo nem cor.
+   · .visually-hidden é o texto que só o leitor de tela deve ouvir. Sem
+                      regra ele não esconde nada; hoje o pai está com
+                      `hidden` e por isso ninguém viu, mas era questão
+                      de tempo. */
+.btn--block{width:100%}
+.empty{padding:22px 18px;font-size:13.5px;color:var(--muted)}
+.visually-hidden{
+  position:absolute;
+  width:1px;height:1px;
+  margin:-1px;padding:0;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+  border:0;
+}
+
+/* ---------- link discreto (.linkish) ----------
+
+   Ele aparece nas 16 páginas: "Criar conta", "Esqueci minha senha",
+   "Limpar o carrinho", "Compartilhar", "Pedir orçamento de atacado" e o
+   número do WhatsApp.
+
+   A regra dele só existia em gestao/assets/gestao.css — a folha do
+   PAINEL, que o site público não carrega. Medido no navegador, cada um
+   desses links saía com a mesma cor do texto ao redor, sem sublinhado,
+   sem peso e sem fundo. O único sinal era `cursor:pointer`, e no
+   celular não existe cursor: eles funcionavam e pareciam texto morto.
+   Em entrar.html, "Criar conta" é o único caminho para o cadastro.
+
+   O sublinhado fica sempre à vista, e não só no hover, justamente
+   porque no celular ninguém passa o mouse em nada.
+
+   O `display` fica `inline`. Com `inline-block`, o link "Ver o que
+   fazemos com seus dados" virou uma palavra só de 191px: caberia hoje e
+   estouraria no dia em que o texto crescesse. Assim ele quebra de linha
+   como qualquer texto, e quem precisa de caixa própria pede
+   `inline-block` logo abaixo.
+
+   O risco é `text-decoration`, e não `border-bottom`: a borda fica na
+   beirada da caixa, então nos links com área de toque grande ela
+   aparecia solta, 10px abaixo da palavra e mais larga que ela. O
+   sublinhado de texto acompanha a letra e quebra junto com a linha. */
+.linkish{
+  display:inline;
+  color:var(--gold);
+  font-weight:500;
+  text-decoration:underline;
+  text-decoration-color:var(--gold-soft);
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+  cursor:pointer;
+  transition:color .18s ease,text-decoration-color .18s ease;
+}
+.linkish:hover{color:var(--gold-2);text-decoration-color:var(--gold-2)}
+
+/* Altura de dedo só para os .linkish que são um controle por si, fora
+   do meio de uma frase. Os que ficam dentro de um parágrafo continuam
+   do tamanho do texto de propósito: para crescer, a área de toque
+   precisaria invadir a linha vizinha, e aí o dedo cai no link errado.
+   No carrinho o vizinho é "Limpar o carrinho". */
+.entrada__pe .linkish,
+.entrada__troca .linkish,
+.ficha__acoes .linkish,
+.carrinho__acoes .linkish{display:inline-block;padding:11px 10px 10px}
+
 .footnote .linkish{display:inline-block;padding:8px 4px}
 
 a:focus-visible,
@@ -2309,10 +2387,36 @@ textarea:focus-visible{
 .carrinho__tirar{
   font-size:12.5px;
   color:var(--muted);
-  border-bottom:1px solid transparent;
-  transition:color .18s ease,border-color .18s ease;
+  text-decoration:underline;
+  text-decoration-color:transparent;
+  text-underline-offset:3px;
+  transition:color .18s ease,text-decoration-color .18s ease;
+  /* Tirar um item é destrutivo, e o alvo media 34×22 — pequeno para
+     acertar de propósito e fácil de acertar sem querer. A área cresce
+     por dentro (padding) e a mesma medida volta por fora (margem
+     negativa), então a linha do carrinho não mudou de tamanho. */
+  padding:10px 8px;
+  margin:0 -8px -10px;
 }
-.carrinho__tirar:hover{color:#8f2b2b;border-color:#e0b4b4}
+.carrinho__tirar:hover{color:#8f2b2b;text-decoration-color:#e0b4b4}
+
+.carrinho__acoes{
+  margin:14px 0 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0 2px;
+}
+.carrinho__acoes-sep{color:var(--line);margin:0 6px}
+
+/* Os dois links somados passam de 340px, então em tela estreita eles
+   não caberiam lado a lado. Aqui eles empilham de propósito, e o ponto
+   separador sai — solto no meio de uma coluna ele não separa nada. */
+@media (max-width:420px){
+  .carrinho__acoes{flex-direction:column;gap:2px}
+  .carrinho__acoes-sep{display:none}
+}
+.carrinho__atacado{margin:18px 0 0;text-align:center;font-size:13px;color:var(--muted)}
 
 /* ---- o resumo ---- */
 .resumo{

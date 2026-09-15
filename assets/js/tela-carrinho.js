@@ -60,12 +60,18 @@
     elCheio.hidden = conta.itens.length === 0;
 
     if (!conta.itens.length) {
-      /* Nada válido sobrou, mas se houve perda o recado tem de ficar na
-         tela. Ele vive dentro do bloco "cheio", então o bloco aparece
-         só com ele dentro. */
+      /* Esvaziar a lista ANTES de sair. O bloco fica com `hidden`, então
+         nada disso aparece — mas as linhas antigas continuavam
+         penduradas no HTML. Invisível não é o mesmo que ausente: basta
+         alguém tirar o `hidden` um dia, ou uma busca pegar uma dessas
+         linhas velhas, para o carrinho vazio voltar a mostrar produto
+         que a pessoa já tirou. */
+      elItens.innerHTML = '';
+
+      /* Se houve perda, o recado tem de ficar na tela. Ele vive dentro
+         do bloco "cheio", então o bloco aparece só com ele dentro. */
       if (conta.perdidos.length) {
         elCheio.hidden = false;
-        elItens.innerHTML = '';
         document.querySelector('.resumo').hidden = true;
       }
       return;
@@ -202,10 +208,28 @@
     return achado;
   }
 
-  document.getElementById('limpar').addEventListener('click', function () {
+  document.getElementById('limpar').addEventListener('click', async function () {
     /* Pergunta antes: limpar o carrinho sem confirmar é o tipo de toque
-       errado que faz a pessoa recomeçar a compra do zero. */
-    if (!window.confirm('Tirar todos os itens do carrinho?')) return;
+       errado que faz a pessoa recomeçar a compra do zero.
+
+       Usa a caixa do próprio site, e não o `confirm()` do navegador.
+       Era `confirm()` aqui, e o comentário do modal.js já dizia por que
+       isso é ruim: no celular ele aparece como uma caixa cinza do
+       sistema, sem relação nenhuma com o site, mostrando o endereço da
+       página. Na hora de apagar a compra da pessoa, é o pior momento
+       possível para o site parecer outro. */
+    var limpar = window.PharmaFitConfirmar
+      ? await window.PharmaFitConfirmar({
+          titulo: 'Tirar tudo do carrinho?',
+          texto: 'Os produtos que você escolheu saem da lista. Dá para escolher de novo depois.',
+          confirmar: 'Tirar tudo',
+          cancelar: 'Deixar como está'
+        })
+      /* Se por algum motivo o modal do site não carregou, ainda
+         pergunta — o que não pode é apagar sem perguntar. */
+      : window.confirm('Tirar todos os itens do carrinho?');
+
+    if (!limpar) return;
     C.limpar();
     pintar();
   });

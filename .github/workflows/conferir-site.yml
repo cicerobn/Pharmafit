@@ -62,6 +62,24 @@ jobs:
       - name: Conferir as marcas de versão dos scripts
         run: node marcar-versao.mjs --conferir
 
+      # CSS escrito errado não dá erro: o navegador engole o trecho que não
+      # entende e segue em frente. Fechei um comentário e continuei escrevendo
+      # depois da marca de fechar — o texto solto apagou a regra inteira do
+      # `.linkish`, o site abriu normal, as seis suítes passaram, e os links
+      # voltaram a parecer texto morto nas 16 páginas. Fiz isso duas vezes na
+      # mesma tarde e só a foto da tela me pegou. Este passo pega antes.
+      - name: Conferir que o CSS não tem erro de escrita
+        run: node conferir-css.mjs
+
+      # Página nova nasce do esqueleto de uma pronta, e o cabeçalho invisível
+      # vem junto. Quatro páginas nasceram de `privacidade.html` e diziam ao
+      # WhatsApp que eram "Seus dados"; a 404 nasceu de `atendimento.html` e se
+      # anunciava como atendimento. Não aparece na tela — aparece no
+      # quadradinho que o cliente vê quando manda o link, e a página mais
+      # compartilhada é a do produto.
+      - name: Conferir que cada página se anuncia como ela mesma
+        run: node conferir-paginas.mjs
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela
@@ -219,14 +237,25 @@ jobs:
           # O .htaccess recusa .sql, .ts e .md, e bloqueia gestao/supabase/.
           # Os arquivos nem estão neste repositório, mas a regra é o que segura
           # se alguém copiá-los para lá um dia — então ela é conferida.
+          #
+          # As ferramentas `.mjs` da raiz entram na lista SOZINHAS, pelo find.
+          # Escritas à mão elas ficariam atrás: `conferir-css.mjs` nasceu hoje
+          # e eu já ia esquecer de somar ele aqui.
+          #
+          # O contrário — que a regra não derrubou nada que o site precisa —
+          # está provado no passo 3 logo acima: ele baixa TODO .js de /loja/ e
+          # exige tipo de javascript. Se o bloqueio pegasse a loja por engano,
+          # aquele passo falharia antes deste.
+          FERRAMENTAS=$(find . -maxdepth 1 -type f -name '*.mjs' | sed 's|^\./||' | sort)
+          echo "ferramentas da raiz que têm de estar bloqueadas: $(echo $FERRAMENTAS)"
+
           for proibido in gestao/supabase/schema.sql \
                           gestao/supabase/functions/notificar-pedido/index.ts \
                           loja-fonte/src/App.jsx \
                           loja-fonte/package.json \
                           loja/.htaccess \
-                          conferir-tabelas.mjs \
-                          marcar-versao.mjs \
-                          README.md; do
+                          README.md \
+                          $FERRAMENTAS; do
             c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
             if [ "$c" = "200" ]; then
               echo "::error::$proibido está sendo servido ao público (HTTP 200). Isso entrega a estrutura do banco a quem passar."
