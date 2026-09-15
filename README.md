@@ -54,11 +54,20 @@ Basta abrir `index.html` no navegador.
 
 ## Publicar na Hostinger (implantação por Git)
 
+> **Quem publica é ESTE repositório.** A Hostinger acompanha
+> `cicerobn/Pharmafit`, branch `main` — está medido: a conferência automática
+> compara o site no ar com o md5 dos arquivos deste commit, e bate.
+>
+> Esta seção dizia para apontar a Hostinger para `cicerobn/medgroup`, branch
+> `claude/site-clone-31skzi`. Isso está errado e mandaria alguém para o lugar
+> errado: aquele repositório é uma CÓPIA de leitura (guarda o SQL da gestão, a
+> loja nova e os documentos) e editar lá não muda nada no ar.
+
 No **hPanel → Avançado → GIT**:
 
 1. **Criar novo repositório**
-   - Repositório: `https://github.com/cicerobn/medgroup`
-   - Branch: `claude/site-clone-31skzi`
+   - Repositório: `https://github.com/cicerobn/Pharmafit`
+   - Branch: `main`
    - Diretório: deixe **em branco** (é a raiz do `public_html`)
 2. Clique em **Criar**. Se o repositório for privado, a Hostinger mostra uma
    *Deploy key* — copie e cole em GitHub → Settings → Deploy keys do repositório.
@@ -73,6 +82,36 @@ Depois disso:
 
 O `.htaccess` na raiz já força HTTPS (necessário para as notificações), bloqueia os
 arquivos de projeto (`.sql`, `.md`) e configura cache.
+
+### Se depois de publicar o site parecer "meio errado"
+
+A Hostinger tem um **CDN na frente** (`server: hcdn`, `cache-control: max-age=86400`),
+e a publicação **não é atômica**: o HTML pode chegar ao servidor antes do CSS.
+
+Quem pedir um arquivo nesses poucos segundos recebe a versão velha — e o CDN guarda
+essa resposta velha, **no endereço novo, por 24 horas**. Depois disso, nem o arquivo
+certo já estando lá resolve: aquele endereço ficou envenenado até expirar.
+
+Foi medido em 15/09/2026, no `gestao.css`:
+
+| endereço pedido | tamanho | o que era |
+|---|---|---|
+| sem marca de versão | 35 228 bytes | versão velha (cache HIT, 6h) |
+| com marca `?v=…` | 38 624 bytes | versão velha (cache HIT, 5h) |
+| com `?nocache=…` | 39 091 bytes | **a versão certa, igual ao repositório** |
+
+O que fazia isso acontecer quase sempre era a própria conferência automática: ela
+disparava uns 2000 pedidos aos endereços com marca segundos depois do push, dentro
+da janela. Isso foi consertado — ela agora pergunta furando o cache, e só olha o
+endereço do visitante **uma vez**, depois de o arquivo já ter chegado.
+
+Sobrou uma janela pequena, de poucos segundos por publicação, em que um visitante
+pode cair nisso sozinho. **Se acontecer:** não é preciso republicar; o endereço
+se corrige sozinho em até 24h. Para resolver na hora, limpe o cache do CDN no
+hPanel da Hostinger.
+
+Fechar essa janela de vez significa mexer no cache do site no ar, e isso é decisão
+do Brian — não foi feito.
 
 ## Design
 
