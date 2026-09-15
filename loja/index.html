@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Loja</title>
+<meta name="description" content="Loja online.">
+<meta name="theme-color" content="#101010">
+
+<style>
+  /* Estilo mínimo, escrito aqui dentro de propósito: se o arquivo de estilo
+     não carregar, esta parte continua legível. */
+  body { margin: 0; font: 15px/1.55 "Helvetica Neue", Arial, system-ui, sans-serif;
+         color: #121212; background: #f7f6f4; }
+  #partida { max-width: 460px; margin: 0 auto; padding: 60px 22px; }
+  #partida h1 { font-size: 17px; margin: 0 0 8px; }
+  #partida p { margin: 0 0 10px; color: #6b6b6b; font-size: 14px; }
+  #socorro { display: none; background: #fff; border: 1px solid #e6e3de;
+             border-radius: 14px; padding: 18px; margin-top: 18px; }
+  #socorro h2 { font-size: 15px; margin: 0 0 10px; }
+  #socorro ol { margin: 0 0 12px; padding-left: 20px; font-size: 14px; color: #444; }
+  #socorro li { margin-bottom: 6px; }
+  #socorro code { background: #f2efec; border-radius: 4px; padding: 1px 5px;
+                  font-size: 13px; word-break: break-all; }
+  #motivo { background: #fdeceb; border: 1px solid #f3c9c6; color: #8f1d17;
+            border-radius: 10px; padding: 11px 13px; font-size: 13px;
+            margin: 0 0 14px; word-break: break-word; }
+  #socorro a { color: #1f6b4a; }
+</style>
+  <script type="module" src="./index-Ctj6MFPc.js"></script>
+  <link rel="stylesheet" href="./index-C0c3kUhk.css">
+</head>
+<body>
+
+<!-- O #raiz é onde a loja é desenhada. O aviso abaixo é vizinho dele, não
+     filho: quem o apaga é o main.jsx, depois de conferir que o React realmente
+     montou. Se o programa nunca acordar, o aviso fica na tela e vira um
+     diagnóstico em português.
+
+     Tela branca sem informação nenhuma é a pior coisa que este site pode
+     mostrar — quem está olhando não tem nem por onde começar. -->
+<div id="raiz"></div>
+
+<div id="partida">
+    <h1>Abrindo a loja…</h1>
+    <p>Um instante.</p>
+
+    <div id="socorro">
+      <h2>A loja não abriu.</h2>
+      <p id="motivo" style="display:none"></p>
+      <p>O site está no ar, mas o programa dele não terminou de carregar. Quase
+         sempre é uma destas três coisas:</p>
+      <ol>
+        <li>Algum arquivo não subiu. Todos eles têm que ficar na
+            <b>mesma pasta</b> que o <code>index.html</code>.</li>
+        <li>Os arquivos foram extraídos dentro de uma subpasta, e não na pasta
+            pública do endereço.</li>
+        <li>O arquivo <code>.htaccess</code> não subiu — ele é um arquivo oculto
+            e muitos gerenciadores de arquivo escondem.</li>
+      </ol>
+      <p>Para saber qual é, abra
+         <a id="link-diagnostico" href="diagnostico.html">esta página de conferência</a>
+         e me mande o print. Ela diz exatamente qual peça está faltando.</p>
+    </div>
+</div>
+
+<script>
+/* Guarda de partida. Roda sem depender de nada: nem do React, nem do arquivo de
+   estilo, nem de módulo — script comum é executado pelo navegador mesmo quando
+   o servidor manda o tipo de arquivo errado. */
+(function () {
+  var motivos = [];
+
+  function contar(texto) {
+    if (motivos.indexOf(texto) < 0) motivos.push(texto);
+  }
+
+  window.addEventListener('error', function (e) {
+    /* Erro ao BAIXAR um arquivo vem com e.target; erro de programa vem com
+       e.message. Os dois interessam, por razões diferentes. */
+    if (e && e.target && (e.target.src || e.target.href)) {
+      contar('Não conseguiu baixar: ' + (e.target.src || e.target.href));
+    } else if (e && e.message) {
+      contar(e.message);
+    }
+    mostrarSeParado();
+  }, true);
+
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e && e.reason;
+    contar('Falhou: ' + ((r && r.message) || String(r)));
+    mostrarSeParado();
+  });
+
+  function acordou() {
+    /* O React montou quando o #raiz deixou de estar vazio. Quem apaga este
+       aviso é o main.jsx, e só depois de conferir isso. */
+    var r = document.getElementById('raiz');
+    return !!(r && r.childElementCount > 0);
+  }
+
+  function mostrarSeParado() {
+    if (acordou()) return;
+    var caixa = document.getElementById('socorro');
+    if (!caixa) return;
+    caixa.style.display = 'block';
+
+    if (motivos.length) {
+      var m = document.getElementById('motivo');
+      m.style.display = 'block';
+      m.textContent = motivos.join(' · ');
+    }
+  }
+
+  /* Oito segundos é bastante até no 3G ruim. Passado isso, alguma coisa não vai
+     acontecer mais, e é melhor dizer do que deixar o "um instante" para sempre. */
+  setTimeout(mostrarSeParado, 8000);
+})();
+</script>
+
+</body>
+</html>

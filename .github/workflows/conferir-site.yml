@@ -47,6 +47,59 @@ jobs:
       - name: Conferir que a gestão só fala com as tabelas dela
         run: node conferir-tabelas.mjs gestao pf_
 
+      # ---------- a loja nova, que mora em /loja/ ----------
+      #
+      # Este repositório publica a branch como ela está, e a loja é React: ela
+      # precisa ser MONTADA. A pasta `loja/` no repositório é essa montagem, já
+      # feita, e a fonte está em `loja-fonte/`.
+      #
+      # O risco óbvio disso é as duas divergirem — alguém mexe na fonte, esquece
+      # de montar, e o que está no ar continua o antigo sem ninguém notar. Então
+      # a publicação monta do zero e COMPARA. Se diferir, ela falha.
+      - name: Instalar as dependências da loja
+        working-directory: loja-fonte
+        run: npm ci
+
+      - name: Conferir que nenhum segredo entrou no código da loja
+        working-directory: loja-fonte
+        run: node conferir-segredos.mjs
+
+      - name: Conferir que a loja só fala com as tabelas dela
+        run: node conferir-tabelas.mjs loja-fonte/src loja2_
+
+      - name: Conferir as contas de calendário da loja
+        working-directory: loja-fonte
+        run: node periodos.teste.mjs
+
+      - name: Conferir que a pasta /loja/ é a montagem da fonte
+        run: |
+          cd loja-fonte
+          GITHUB_SHA=nao-importa npm run build --silent
+          cd ..
+
+          # O versao.txt é o único arquivo que muda a cada montagem, de
+          # propósito: ele carrega o commit. Fica fora da comparação.
+          diferentes=""
+          for arq in $(cd loja-fonte/dist && find . -type f ! -name versao.txt | sed 's|^\./||'); do
+            if [ ! -f "loja/$arq" ]; then
+              diferentes="$diferentes $arq(falta)"
+            elif ! cmp -s "loja-fonte/dist/$arq" "loja/$arq"; then
+              diferentes="$diferentes $arq"
+            fi
+          done
+
+          # e o contrário: sobrou arquivo velho em loja/ que a montagem não gera?
+          for arq in $(cd loja && find . -type f ! -name versao.txt | sed 's|^\./||'); do
+            [ -f "loja-fonte/dist/$arq" ] || diferentes="$diferentes $arq(sobrando)"
+          done
+
+          if [ -n "$diferentes" ]; then
+            echo "::error::A pasta loja/ não é a montagem de loja-fonte/. Diferentes:${diferentes}"
+            echo "Conserto: cd loja-fonte && npm run build && cp -r dist/. ../loja/"
+            exit 1
+          fi
+          echo "A pasta loja/ é exatamente a montagem da fonte."
+
       - name: Conferir o site
         env:
           # Sobrescreva com a variável SITE_URL quando o domínio mudar; sem ela,
@@ -118,6 +171,8 @@ jobs:
           # se alguém copiá-los para lá um dia — então ela é conferida.
           for proibido in gestao/supabase/schema.sql \
                           gestao/supabase/functions/notificar-pedido/index.ts \
+                          loja-fonte/src/App.jsx \
+                          loja-fonte/package.json \
                           README.md; do
             c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
             if [ "$c" = "200" ]; then
@@ -151,7 +206,8 @@ jobs:
           ARQUIVOS="index.html produtos.html conta.html atendimento.html
                     assets/css/styles.css assets/js/app.js assets/js/loja.js
                     assets/js/cliente.js gestao/login.html gestao/assets/config.js
-                    gestao/assets/dados.js"
+                    gestao/assets/dados.js
+                    loja/index.html loja/diagnostico.html"
 
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"

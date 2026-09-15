@@ -1,0 +1,81 @@
+# Ajustes do servidor da Hostinger.
+#
+# REGRA DESTE ARQUIVO: nada aqui pode derrubar o site.
+#
+# Hospedagem compartilhada decide quais diretivas o .htaccess pode usar
+# (AllowOverride). Quando ele usa uma diretiva proibida, o Apache não ignora a
+# linha: ele recusa a pasta inteira, com 403 ou 500. Ou seja, um enfeite de
+# segurança aqui dentro é capaz de tirar a loja do ar — e foi o que aconteceu.
+#
+# Por isso: só entra aqui o que é necessário, e o que puder ser envolvido em
+# <IfModule> vai envolvido.
+#
+# O que JÁ derrubou a loja: `Options -Indexes -MultiViews`. Ela só evitava
+# listagem de pasta — e com o DirectoryIndex abaixo não existe listagem para
+# evitar. Saiu, e não volta.
+
+# ---------- acentos ----------
+#
+# Isto não é firula. Na Pharma Fit o Apache da Hostinger servia as páginas como
+# ISO-8859-1, e isso VENCE o <meta charset> escrito na página: o site foi para o
+# ar com "Ampolas" virando "Ampolas". Esta loja tem acento em quase toda linha.
+
+AddDefaultCharset UTF-8
+
+AddCharset UTF-8 .html
+AddCharset UTF-8 .css
+AddCharset UTF-8 .js
+AddCharset UTF-8 .json
+AddCharset UTF-8 .txt
+
+# ---------- tipos de arquivo ----------
+#
+# O navegador só executa o programa da loja se o servidor disser que aquilo é
+# javascript. Tipo errado: a loja abre branca com o arquivo existindo.
+
+AddType text/javascript .js
+AddType text/css .css
+AddType application/json .json
+AddType image/svg+xml .svg
+AddType image/webp .webp
+AddType image/avif .avif
+
+# ---------- quem atende o endereço ----------
+#
+# A Hostinger deixa um default.php de enfeite na pasta pública. Dependendo da
+# ordem que o servidor usa, é ele que atende em vez da loja — e aí a loja está
+# no ar e ninguém a vê.
+
+DirectoryIndex index.html
+
+# ---------- HTTPS ----------
+#
+# Endereço de loja aberto em http não inspira confiança em quem vai digitar CPF.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ---------- cache ----------
+#
+# O programa pode ficar em cache por muito tempo porque o nome do arquivo muda a
+# cada versão. A página e o arquivo de versão, não: eles precisam ser buscados de
+# novo, senão uma correção publicada não chega ao celular de quem já visitou.
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "^(index\.html|versao\.txt|diagnostico\.html)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

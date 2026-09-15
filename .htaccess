@@ -41,6 +41,12 @@ AddDefaultCharset UTF-8
 </FilesMatch>
 
 RedirectMatch 404 ^/gestao/supabase/.*$
+
+# A pasta loja-fonte é o CÓDIGO da loja, não a loja. Ela vem no repositório
+# porque a publicação monta a loja a partir dela — mas ninguém tem o que fazer
+# baixando src/App.jsx do site. Mesmo bloqueio que já vale para o schema do
+# banco logo acima, e provado funcionando pela conferência automática.
+RedirectMatch 404 ^/loja-fonte/.*$
 RedirectMatch 404 ^/\.git.*$
 
 # ---- o service worker precisa valer para toda a pasta ----

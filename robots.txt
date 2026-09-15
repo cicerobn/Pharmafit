@@ -2,5 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /gestao/
 Disallow: /parceiro.html
+# A loja nova é de outro negócio e ainda não está pronta para vender: está sem
+# nome, sem frete e sem chave PIX. Fora da busca até isso ser resolvido.
+Disallow: /loja/
+Disallow: /loja-fonte/
 
 Sitemap: /sitemap.xml

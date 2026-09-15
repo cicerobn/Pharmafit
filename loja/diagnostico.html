@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferência da loja</title>
+
+<!--
+  Esta página existe para um caso só: a loja abriu branca e ninguém sabe por quê.
+
+  Ela não usa nada do programa da loja. Não é módulo, não importa arquivo
+  nenhum, não depende de estilo externo. Se o endereço responde, ela aparece —
+  e aí ela testa peça por peça e diz qual está faltando.
+
+  É para ser aberta, fotografada e mandada. O print dela responde a pergunta.
+-->
+
+<style>
+  body { margin: 0; font: 15px/1.5 "Helvetica Neue", Arial, system-ui, sans-serif;
+         color: #121212; background: #f7f6f4; }
+  main { max-width: 620px; margin: 0 auto; padding: 26px 18px 60px; }
+  h1 { font-size: 19px; margin: 0 0 4px; }
+  .sub { color: #6b6b6b; font-size: 14px; margin: 0 0 22px; }
+
+  .linha { background: #fff; border: 1px solid #e6e3de; border-radius: 12px;
+           padding: 13px 15px; margin-bottom: 9px; }
+  .linha b { display: block; font-size: 14px; margin-bottom: 3px; }
+  .linha span { font-size: 13px; color: #555; word-break: break-all; }
+
+  .certo  { border-left: 5px solid #1f6b4a; }
+  .errado { border-left: 5px solid #b3261e; }
+  .espera { border-left: 5px solid #d6d1c8; }
+
+  .marca { font-weight: 700; font-size: 13px; }
+  .certo  .marca { color: #1f6b4a; }
+  .errado .marca { color: #b3261e; }
+
+  #veredito { border-radius: 14px; padding: 16px 18px; margin: 22px 0 0;
+              font-size: 14px; line-height: 1.6; }
+  #veredito.ok  { background: #eaf3ee; border: 1px solid #c3ddcf; color: #17543a; }
+  #veredito.ruim{ background: #fdeceb; border: 1px solid #f3c9c6; color: #8f1d17; }
+  #veredito h2 { font-size: 15px; margin: 0 0 8px; }
+  #veredito ol { margin: 8px 0 0; padding-left: 20px; }
+  #veredito li { margin-bottom: 5px; }
+  code { background: #f2efec; border-radius: 4px; padding: 1px 5px; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Conferência da loja</h1>
+  <p class="sub" id="onde"></p>
+
+  <div id="testes"></div>
+
+  <div id="veredito" style="display:none"></div>
+</main>
+
+<script>
+(function () {
+  var raiz = location.href.replace(/diagnostico\.html.*$/, '');
+  document.getElementById('onde').textContent = 'Conferindo ' + raiz;
+
+  var caixa = document.getElementById('testes');
+  var resultados = {};
+
+  function linha(chave, titulo) {
+    var d = document.createElement('div');
+    d.className = 'linha espera';
+    d.innerHTML = '<b>' + titulo + '</b><span class="marca">conferindo…</span><br><span></span>';
+    d.id = 'teste-' + chave;
+    caixa.appendChild(d);
+    return d;
+  }
+
+  function responder(chave, passou, marca, detalhe) {
+    resultados[chave] = passou;
+    var d = document.getElementById('teste-' + chave);
+    d.className = 'linha ' + (passou ? 'certo' : 'errado');
+    d.querySelector('.marca').textContent = (passou ? '✓ ' : '✗ ') + marca;
+    d.querySelectorAll('span')[1].textContent = detalhe || '';
+  }
+
+  /* ---------- 1. o index.html ---------- */
+
+  linha('pagina', 'A página da loja (index.html)');
+
+  /* ---------- 2. o programa da loja ---------- */
+
+  linha('programa', 'O programa da loja (o arquivo .js)');
+
+  /* ---------- 3. o .htaccess ---------- */
+
+  linha('htaccess', 'O arquivo .htaccess (acentos e tipos de arquivo)');
+
+  /* ---------- 4. a versão ---------- */
+
+  linha('versao', 'A marca de versão (versao.txt)');
+
+  /* ---------- 5. o banco ---------- */
+
+  linha('banco', 'O banco de dados (Supabase)');
+
+  function ler(caminho, comoTexto) {
+    return fetch(raiz + caminho, { cache: 'no-store' }).then(function (r) {
+      return (comoTexto ? r.text() : Promise.resolve('')).then(function (t) {
+        return { ok: r.ok, status: r.status, tipo: r.headers.get('content-type') || '(sem tipo)', texto: t };
+      });
+    });
+  }
+
+  /* 1 e 2: a página, e de dentro dela o endereço do programa. */
+  ler('index.html', true).then(function (r) {
+    if (!r.ok) {
+      responder('pagina', false, 'não encontrei', 'O servidor respondeu ' + r.status + '. O index.html não está nesta pasta.');
+      responder('programa', false, 'não deu para conferir', 'Sem o index.html não sei onde procurar o programa.');
+      return null;
+    }
+
+    responder('pagina', true, 'está aqui', 'Tipo: ' + r.tipo);
+
+    var m = /<script[^>]+src="([^"]+\.js)"/.exec(r.texto);
+    if (!m) {
+      responder('programa', false, 'a página não aponta para nenhum programa',
+        'O index.html que está no ar parece não ser o da loja.');
+      return null;
+    }
+
+    var alvo = m[1].replace(/^\.\//, '');
+    return ler(alvo, false).then(function (j) {
+      if (!j.ok) {
+        responder('programa', false, 'NÃO ESTÁ NO AR',
+          alvo + ' respondeu ' + j.status + '. É por isso que a loja abre branca: ' +
+          'este arquivo não está na MESMA pasta do index.html.');
+        return;
+      }
+
+      /* O navegador só executa módulo se o servidor disser que é javascript.
+         Tipo errado = tela branca com o arquivo existindo. */
+      var tipoOk = /javascript|ecmascript/i.test(j.tipo);
+      responder('programa', tipoOk, tipoOk ? 'está no ar' : 'está no ar, mas com o tipo errado',
+        alvo + ' · tipo: ' + j.tipo +
+        (tipoOk ? '' : ' — o navegador recusa executar assim. Falta o .htaccess.'));
+    });
+  }).catch(function (e) {
+    responder('pagina', false, 'erro ao conferir', String(e && e.message || e));
+  });
+
+  /* 3: se o .htaccess estiver valendo, a página vem declarada como UTF-8. */
+  ler('index.html', false).then(function (r) {
+    var temUtf8 = /utf-8/i.test(r.tipo);
+    responder('htaccess', temUtf8, temUtf8 ? 'está valendo' : 'não está valendo',
+      temUtf8
+        ? 'O servidor declara UTF-8. Os acentos vão aparecer certos.'
+        : 'O servidor respondeu "' + r.tipo + '". Sem UTF-8 os acentos aparecem trocados. ' +
+          'O .htaccess é um arquivo OCULTO: confira no gerenciador de arquivos se ele subiu.');
+  }).catch(function () {
+    responder('htaccess', false, 'não deu para conferir', '');
+  });
+
+  /* 4: qual versão está no ar. */
+  ler('versao.txt', true).then(function (r) {
+    if (!r.ok) {
+      responder('versao', false, 'não encontrei',
+        'versao.txt respondeu ' + r.status + '. Sem ele não dá para saber qual versão está no ar.');
+      return;
+    }
+    var l = r.texto.split('\n');
+    responder('versao', true, 'está aqui', 'Versão ' + (l[0] || '?').slice(0, 12) + ' · publicada em ' + (l[1] || '?'));
+  }).catch(function () {
+    responder('versao', false, 'não deu para conferir', '');
+  });
+
+  /* 5: o banco. A chave abaixo é a publishable, pública por natureza — é com
+        ela que qualquer visitante lê o catálogo. Segredo não mora aqui. */
+  var URL_BANCO = 'https://xqiujdwvmbaipxyzcpvt.supabase.co';
+  var CHAVE = 'sb_publishable_Gq9WhodN8Dp1csDGSkvnzw_Kx8nXKvt';
+
+  fetch(URL_BANCO + '/rest/v1/loja2_produtos?select=produto_id&situacao=eq.ativo', {
+    headers: { apikey: CHAVE, Authorization: 'Bearer ' + CHAVE }
+  }).then(function (r) {
+    return r.json().then(function (j) { return { ok: r.ok, status: r.status, j: j }; });
+  }).then(function (r) {
+    if (!r.ok) {
+      responder('banco', false, 'recusou',
+        'Respondeu ' + r.status + ': ' + (r.j && (r.j.message || r.j.hint) || ''));
+      return;
+    }
+    var quantos = (r.j && r.j.length) || 0;
+    responder('banco', quantos > 0, quantos > 0 ? 'respondendo' : 'respondeu vazio',
+      quantos + ' produto(s) à venda.');
+  }).catch(function (e) {
+    responder('banco', false, 'não respondeu',
+      String(e && e.message || e) + ' — pode ser internet do aparelho, ou o projeto do banco pausado.');
+  });
+
+  /* ---------- o veredito ---------- */
+
+  setTimeout(function () {
+    var v = document.getElementById('veredito');
+    v.style.display = 'block';
+
+    var passos = [];
+
+    if (resultados.pagina === false) {
+      passos.push('Os arquivos não estão na pasta que este endereço serve. Na Hostinger, ' +
+        'entre em Gerenciador de Arquivos e confira: o <code>index.html</code> tem que estar ' +
+        'DIRETO na pasta pública do endereço, não dentro de outra pasta.');
+    }
+    if (resultados.programa === false) {
+      passos.push('O arquivo do programa (o <code>.js</code>) tem que estar na MESMA pasta que o ' +
+        '<code>index.html</code>. Suba o zip de novo e extraia tudo no mesmo lugar.');
+    }
+    if (resultados.htaccess === false) {
+      passos.push('Falta o <code>.htaccess</code>. Ele é oculto — no gerenciador de arquivos ' +
+        'procure a opção de <b>mostrar arquivos ocultos</b> antes de conferir.');
+    }
+    if (resultados.banco === false) {
+      passos.push('O banco não respondeu. Confira no painel do Supabase se o projeto não está pausado.');
+    }
+
+    if (!passos.length) {
+      v.className = 'ok';
+      v.innerHTML = '<h2>Está tudo no lugar.</h2>' +
+        '<p>A página, o programa, o .htaccess e o banco respondem. Se a loja ainda abrir ' +
+        'branca, o problema é no programa e não na hospedagem — me mande este print e o ' +
+        'print da loja.</p>';
+      return;
+    }
+
+    v.className = 'ruim';
+    v.innerHTML = '<h2>Achei o problema.</h2><ol><li>' + passos.join('</li><li>') + '</li></ol>' +
+      '<p style="margin-top:10px">Me mande o print desta página se quiser que eu confirme.</p>';
+  }, 6000);
+})();
+</script>
+</body>
+</html>
