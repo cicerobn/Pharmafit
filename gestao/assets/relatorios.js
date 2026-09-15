@@ -72,6 +72,24 @@
     var lucro = document.getElementById('m-lucro');
     lucro.classList.toggle('is-negativo', r.lucro < 0);
 
+    /* O lucro só é confiável se toda venda do mês tiver custo cadastrado.
+       Quando não tem, a conta subtrai zero e o lucro aparece maior do que é —
+       então o aviso diz de quanto é a dúvida, em reais. */
+    var semCusto = document.getElementById('m-sem-custo');
+    if (r.semCusto) {
+      semCusto.hidden = false;
+      semCusto.textContent =
+        (r.semCusto === 1
+          ? '1 venda deste mês está sem o custo cadastrado'
+          : r.semCusto + ' vendas deste mês estão sem o custo cadastrado') +
+        ' (' + moeda(r.semCustoValor) + ' em ' + r.semCustoProdutos.join(', ') + '). ' +
+        'Custo em branco a conta trata como zero, então o lucro acima está MAIOR do que o real. ' +
+        'Para corrigir: Painel → Produtos → editar o produto e preencher o custo.';
+    } else {
+      semCusto.hidden = true;
+      semCusto.textContent = '';
+    }
+
     var pg = document.getElementById('m-pagamento');
     var hint = document.getElementById('m-pagamento-hint');
     if (r.pagamentoTop) {
@@ -186,6 +204,10 @@
         { titulo: 'Valor',      campo: function (p) { return Number(p.valor || 0); } },
         { titulo: 'Custo',      campo: function (p) { return Number(p.custo || 0); } },
         { titulo: 'Lucro',      campo: function (p) { return Number(p.valor || 0) - Number(p.custo || 0); } },
+        /* A planilha sai da tela e vive sozinha. Sem esta coluna, a linha sem
+           custo fica com o lucro inteiro e ninguém tem como saber, meses
+           depois, que aquele lucro era só custo não preenchido. */
+        { titulo: 'Custo informado', campo: function (p) { return Number(p.custo || 0) ? 'sim' : 'NÃO'; } },
         { titulo: 'Pagamento',  campo: 'pagamento' },
         { titulo: 'Vendedor',   campo: 'vendedor' }
       ], r.pedidos);

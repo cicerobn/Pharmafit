@@ -2,6 +2,19 @@
 
 Réplica das duas telas enviadas (Início e Produtos), em HTML/CSS/JS puro, sem build e sem dependências.
 
+> **As pastas `loja-fonte/` e `loja/` são de outro projeto**, uma loja que ainda
+> não está pronta para vender e que pegou carona nesta publicação por ser a que
+> já funciona. Ela aparece em `/loja/`, e está fora do `robots.txt`.
+>
+> `loja-fonte/` é a fonte (React) e `loja/` é a montagem dela — este repositório
+> é publicado como está, sem passo de montagem, então a montagem fica pronta
+> aqui dentro. O servidor não serve `loja-fonte/`.
+>
+> **As duas têm de andar juntas.** Depois de mexer na fonte:
+> `cd loja-fonte && npm run build && cp -r dist/. ../loja/`. A conferência
+> automática monta a fonte do zero e compara arquivo por arquivo com `loja/` —
+> se alguém esquecer de montar, ela falha e diz o que ficou diferente.
+
 ## Arquivos
 
 ```

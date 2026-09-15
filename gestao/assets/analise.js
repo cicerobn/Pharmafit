@@ -73,6 +73,23 @@
 
       var pagamentos = Analise.rankingPagamentos(vendas);
 
+      /* Venda sem custo cadastrado.
+       *
+       * Custo zerado não quer dizer "custou zero": quer dizer que ninguém
+       * preencheu. E a conta não sabe a diferença — ela subtrai zero e o lucro
+       * sai INTEIRO, do tamanho do faturamento, com cara de número certo.
+       *
+       * O catálogo tem um produto assim hoje (Tirzedral 15 mg — 4 ampolas). Os
+       * irmãos dele custam por volta de R$ 450, então o lucro dele apareceria
+       * uns R$ 450 maior do que é, por venda. Ninguém olha um lucro bom
+       * desconfiando dele.
+       *
+       * Eu não invento esse custo: é número do negócio, e quem sabe é o Brian.
+       * O que a tela pode fazer é não afirmar o que não sabe — então a conta
+       * continua igual, e vai junto o tamanho da dúvida. */
+      var semCusto = vendas.filter(function (p) { return !Number(p.custo || 0); });
+      var faturamentoSemCusto = semCusto.reduce(function (t, p) { return t + Number(p.valor || 0); }, 0);
+
       return {
         chave: chave,
         vendas: vendas.length,
@@ -84,6 +101,9 @@
         ticket: vendas.length ? faturamento / vendas.length : 0,
         pagamentoTop: pagamentos.length ? pagamentos[0] : null,
         pagamentos: pagamentos,
+        semCusto: semCusto.length,
+        semCustoValor: faturamentoSemCusto,
+        semCustoProdutos: Analise.ranking(semCusto, 'produto').map(function (i) { return i.nome; }),
         pedidos: vendas
       };
     },

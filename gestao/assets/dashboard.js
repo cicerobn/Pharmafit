@@ -106,6 +106,33 @@
       });
     }
 
+    /* Produto à venda sem custo cadastrado.
+     *
+     * Custo em branco a conta trata como zero, e aí o lucro daquela venda sai
+     * do tamanho do preço. O número não fica esquisito: fica BOM. É o jeito
+     * mais fácil de olhar um relatório e acreditar num lucro que não existe.
+     *
+     * O aviso é aqui, antes da primeira venda, porque depois o erro já entrou
+     * no fechamento do mês. A tabela de produtos mostra "—" na margem — está
+     * certo, mas quem está no relatório não passa por ela. */
+    var semCusto = estado.produtos.filter(function (p) {
+      return p.ativo !== false &&
+             Number(p.preco || p.venda || 0) > 0 &&
+             !Number(p.custo || 0);
+    });
+    if (semCusto.length) {
+      itens.push({
+        cor: 'vermelho',
+        titulo: semCusto.length === 1
+          ? '1 produto à venda sem custo cadastrado'
+          : semCusto.length + ' produtos à venda sem custo cadastrado',
+        texto: semCusto.slice(0, 2).map(function (p) { return p.nome; }).join(', ') +
+               (semCusto.length > 2 ? ' e mais' : '') +
+               ' — sem o custo, o lucro aparece maior do que é.',
+        link: 'index.html', acao: 'Preencher'
+      });
+    }
+
     var parados = Analise.inativos(estado.pedidos, cfg.DIAS_INATIVIDADE || 60);
     if (parados.length) {
       itens.push({
