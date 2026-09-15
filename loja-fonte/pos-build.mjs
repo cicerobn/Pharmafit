@@ -49,6 +49,6 @@ if (commit) {
   arquivos.forEach((n) => digital.update(readFileSync(join(pasta, n))));
   const marca = digital.digest('hex').slice(0, 12);
   writeFileSync(join(pasta, 'versao.txt'),
-    `${marca}\nmontado de loja-fonte/ e publicado junto com o site da Pharma Fit\n`, 'utf8');
+    `${marca}\nmarca = impressao digital dos arquivos montados (esta montagem nao sabe o commit)\n`, 'utf8');
   console.log(`versao.txt: ${marca} (impressao digital dos arquivos, sem commit)`);
 }

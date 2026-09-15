@@ -1,2 +1,2 @@
 4b2482be8f59
-montado de loja-fonte/ e publicado junto com o site da Pharma Fit
+marca = impressao digital dos arquivos montados (esta montagem nao sabe o commit)
