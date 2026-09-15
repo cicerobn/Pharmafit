@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Meu painel — Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="assets/gestao.css">
+</head>
+<body>
+
+<div class="admin admin--pessoal">
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <img src="../assets/img/logo-pf.svg" alt="">
+      <span>PHARMA FIT</span>
+      <span class="selo-privado">privado</span>
+    </div>
+    <div class="admin__user">
+      <span class="admin__ola">Olá, <b id="usuario">…</b></span>
+      <button class="btn--sair" type="button" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <nav class="admin__nav" data-menu aria-label="Seções do painel"></nav>
+
+  <div class="admin__wrap" id="carregando" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--cabeca">
+      <div class="skeleton__linha skeleton__linha--titulo"></div>
+      <div class="skeleton__linha skeleton__linha--sub"></div>
+    </div>
+    <div class="skeleton__cartoes">
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+    </div>
+    <div class="skeleton__bloco">
+      <div class="skeleton__linha"></div><div class="skeleton__linha"></div><div class="skeleton__linha"></div>
+    </div>
+    <span class="visually-hidden">Carregando…</span>
+  </div>
+
+  <div class="admin__wrap erro-carga" id="erro-carga" hidden>
+    <div class="vazio-bloco">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+      </svg>
+      <p class="vazio-bloco__titulo">Não conseguimos carregar</p>
+      <p class="vazio-bloco__texto" id="erro-carga-texto">Verifique sua conexão e tente de novo.</p>
+      <button class="btn btn--primary btn--block" type="button" id="tentar-de-novo">Tentar de novo</button>
+    </div>
+  </div>
+
+  <main class="admin__wrap" id="conteudo" hidden>
+
+    <div class="admin__head">
+      <div>
+        <h1 class="admin__title">Meu painel</h1>
+        <p class="admin__sub">Suas contas, separadas das da empresa. Só você vê esta tela.</p>
+      </div>
+      <button class="btn btn--primary btn--novo" type="button" id="novo-lancamento">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Novo lançamento
+      </button>
+    </div>
+
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Resumo do mês</h2>
+        <div class="field__box field__box--inline">
+          <select id="mes" aria-label="Escolher mês"></select>
+        </div>
+      </div>
+      <div class="card-block__body">
+        <div class="kpis kpis--dentro">
+          <article class="kpi">
+            <p class="kpi__label">Entrou</p>
+            <p class="kpi__value" id="p-entrou">—</p>
+            <p class="kpi__hint" id="p-entrou-hint"></p>
+          </article>
+          <article class="kpi">
+            <p class="kpi__label">Saiu</p>
+            <p class="kpi__value kpi__value--custo" id="p-saiu">—</p>
+            <p class="kpi__hint" id="p-saiu-hint"></p>
+          </article>
+          <article class="kpi kpi--destaque">
+            <p class="kpi__label">Sobrou</p>
+            <p class="kpi__value" id="p-saldo">—</p>
+            <p class="kpi__hint">entradas − saídas</p>
+          </article>
+          <article class="kpi">
+            <p class="kpi__label">Lucro da empresa no mês</p>
+            <p class="kpi__value" id="p-lucro-empresa">—</p>
+            <p class="kpi__hint">para comparação, não entra na conta</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Lançamentos do mês</h2>
+        <span class="card-block__hint" id="p-total-lancamentos"></span>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Data</th><th>Descrição</th><th>Categoria</th><th class="col-num">Valor</th><th></th></tr>
+            </thead>
+            <tbody id="tabela-pessoal"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="pessoal-vazio" hidden>Nenhum lançamento neste mês.</p>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card-block">
+        <div class="card-block__head"><h2 class="card-block__title">Onde vai seu dinheiro</h2></div>
+        <div class="card-block__body"><div id="rk-categorias"></div></div>
+      </section>
+
+      <section class="card-block">
+        <div class="card-block__head">
+          <h2 class="card-block__title">Mês a mês</h2>
+          <span class="card-block__hint">De agosto em diante</span>
+        </div>
+        <div class="card-block__body">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Mês</th><th class="col-num">Entrou</th><th class="col-num">Saiu</th><th class="col-num">Sobrou</th></tr>
+              </thead>
+              <tbody id="tabela-meses-pessoal"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+</div>
+
+<!-- novo lançamento -->
+<div class="modal" id="modal-pessoal" role="dialog" aria-modal="true" aria-label="Novo lançamento">
+  <div class="modal__scrim" data-fechar-pessoal></div>
+  <form class="modal__card" id="form-pessoal" novalidate>
+    <div class="modal__head">
+      <h2 class="modal__title">Novo lançamento</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-pessoal aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="segmento" role="group" aria-label="Tipo do lançamento">
+      <button class="segmento__op is-active" type="button" data-tipo="saida">Saiu</button>
+      <button class="segmento__op" type="button" data-tipo="entrada">Entrou</button>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="pl-descricao">Descrição</label>
+      <div class="field__box"><input type="text" id="pl-descricao" placeholder="Ex.: aluguel, mercado, retirada da empresa" required></div>
+    </div>
+    <div class="field">
+      <label class="field__label" for="pl-categoria">Categoria</label>
+      <div class="field__box"><select id="pl-categoria"></select></div>
+    </div>
+    <div class="field">
+      <label class="field__label" for="pl-valor">Valor (R$)</label>
+      <div class="field__box"><input type="number" id="pl-valor" min="0" step="0.01" placeholder="0,00" required></div>
+    </div>
+    <div class="field">
+      <label class="field__label" for="pl-data">Data</label>
+      <div class="field__box"><input type="date" id="pl-data" required></div>
+    </div>
+
+    <div class="modal__acoes">
+      <button class="btn btn--outline" type="button" data-fechar-pessoal>Cancelar</button>
+      <button class="btn btn--primary btn--block" type="submit" id="pl-salvar">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/util.js"></script>
+<script src="../assets/js/modal.js"></script>
+<script src="../assets/js/catalogo.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/dados.js"></script>
+<script src="assets/analise.js"></script>
+<script src="assets/menu.js"></script>
+<script src="assets/pessoal.js"></script>
+</body>
+</html>

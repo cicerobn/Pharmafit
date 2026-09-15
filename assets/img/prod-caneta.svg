@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" role="img" aria-label="Caneta aplicadora Pharma Fit">
+  <defs>
+    <linearGradient id="c-box" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#262626"/>
+      <stop offset=".55" stop-color="#141414"/>
+      <stop offset="1" stop-color="#0a0a0a"/>
+    </linearGradient>
+    <linearGradient id="c-side" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#313131"/>
+      <stop offset="1" stop-color="#171717"/>
+    </linearGradient>
+    <linearGradient id="c-pen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ded9cf"/>
+      <stop offset=".26" stop-color="#ffffff"/>
+      <stop offset=".74" stop-color="#f0ece4"/>
+      <stop offset="1" stop-color="#c9c2b5"/>
+    </linearGradient>
+    <linearGradient id="c-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eed9ae"/>
+      <stop offset=".5" stop-color="#b08c4a"/>
+      <stop offset="1" stop-color="#87682f"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="200" cy="302" rx="150" ry="16" fill="#2b2416" opacity=".13"/>
+
+  <!-- caixa -->
+  <g transform="translate(38 100)">
+    <path d="M0 16 118 0v176L0 192z" fill="url(#c-box)"/>
+    <path d="M118 0l36 13v166l-36 13z" fill="url(#c-side)"/>
+    <g transform="translate(16 56) rotate(-8.4)">
+      <text x="0" y="0" font-family="Inter,Arial,sans-serif" font-size="11" letter-spacing="2.6" fill="#e8d1a4">PHARMA FIT</text>
+      <line x1="0" y1="11" x2="70" y2="11" stroke="#b08c4a" stroke-width="1"/>
+      <text x="0" y="32" font-family="Inter,Arial,sans-serif" font-size="9.5" letter-spacing="1.2" fill="#ffffff">CANETA APLICADORA</text>
+    </g>
+    <g transform="translate(34 130) rotate(-8.4) scale(.3)">
+      <rect x="6" y="6" width="20" height="88" fill="#ffffff"/>
+      <rect x="26" y="6" width="50" height="17" fill="#ffffff"/>
+      <rect x="59" y="6" width="17" height="40" fill="#ffffff"/>
+      <rect x="26" y="38" width="58" height="16" fill="#c9a863"/>
+    </g>
+  </g>
+
+  <!-- caneta -->
+  <g transform="translate(266 60) rotate(8)">
+    <rect x="0" y="0" width="44" height="238" rx="21" fill="url(#c-pen)" stroke="#dcd6ca" stroke-width="1"/>
+    <rect x="9" y="14" width="7" height="204" rx="3.5" fill="#ffffff" opacity=".75"/>
+    <rect x="0" y="152" width="44" height="28" fill="#2b2b2b" opacity=".85"/>
+    <rect x="7" y="158" width="30" height="16" rx="3" fill="#f5f2eb" opacity=".9"/>
+    <rect x="0" y="210" width="44" height="28" rx="13" fill="url(#c-gold)"/>
+    <rect x="15" y="236" width="14" height="20" rx="6" fill="#cfc9be"/>
+    <text x="22" y="66" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="7"
+          letter-spacing="2.6" fill="#6e6a64" transform="rotate(90 22 66)">PHARMA FIT</text>
+  </g>
+</svg>

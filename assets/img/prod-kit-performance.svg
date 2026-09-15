@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" role="img" aria-label="Kit Performance Pharma Fit">
+  <defs>
+    <linearGradient id="k-lid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#242424"/>
+      <stop offset="1" stop-color="#0c0c0c"/>
+    </linearGradient>
+    <linearGradient id="k-base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1b1b"/>
+      <stop offset="1" stop-color="#070707"/>
+    </linearGradient>
+    <linearGradient id="k-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eed9ae"/>
+      <stop offset=".5" stop-color="#b08c4a"/>
+      <stop offset="1" stop-color="#87682f"/>
+    </linearGradient>
+    <linearGradient id="k-glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a3a3a"/>
+      <stop offset=".3" stop-color="#7c7568"/>
+      <stop offset="1" stop-color="#2a2a2a"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="200" cy="292" rx="160" ry="18" fill="#2b2416" opacity=".14"/>
+
+  <!-- tampa em pé (fundo) -->
+  <g transform="translate(40 66)">
+    <path d="M0 26 214 0v78L0 106z" fill="url(#k-lid)"/>
+    <g transform="translate(28 52) rotate(-7)">
+      <text x="0" y="0" font-family="Inter,Arial,sans-serif" font-size="13" letter-spacing="3" fill="#e8d1a4">KIT PERFORMANCE</text>
+      <text x="2" y="15" font-family="Inter,Arial,sans-serif" font-size="7" letter-spacing="2.6" fill="#8b8377">PHARMA FIT</text>
+    </g>
+  </g>
+
+  <!-- base aberta -->
+  <g transform="translate(40 150)">
+    <path d="M0 0 214 22v92L0 96z" fill="url(#k-base)"/>
+    <path d="M0 0 214 22 200 40 12 20z" fill="#151515"/>
+    <path d="M214 22v92l24-14V12z" fill="#0a0a0a"/>
+
+    <!-- frasco no encaixe -->
+    <g transform="translate(46 24)">
+      <rect x="0" y="10" width="30" height="62" rx="5" fill="url(#k-glass)"/>
+      <rect x="4" y="0" width="22" height="14" rx="3" fill="url(#k-gold)"/>
+      <rect x="0" y="34" width="30" height="22" fill="#efeae0" opacity=".92"/>
+      <text x="15" y="48" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="5" letter-spacing=".6" fill="#1a1a1a">PERFORM</text>
+    </g>
+
+    <!-- ampola dourada -->
+    <g transform="translate(96 30)">
+      <rect x="0" y="6" width="20" height="66" rx="4" fill="url(#k-gold)" opacity=".92"/>
+      <rect x="5" y="0" width="10" height="10" rx="2" fill="#2a2a2a"/>
+    </g>
+
+    <!-- frasco conta-gotas -->
+    <g transform="translate(134 22)">
+      <rect x="0" y="16" width="34" height="60" rx="6" fill="#151515" stroke="#2f2f2f"/>
+      <rect x="10" y="2" width="14" height="18" rx="3" fill="url(#k-gold)"/>
+      <rect x="3" y="38" width="28" height="20" fill="#0f0f0f"/>
+      <text x="17" y="52" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="5" letter-spacing=".8" fill="#c9a863">FOCUS</text>
+    </g>
+  </g>
+</svg>

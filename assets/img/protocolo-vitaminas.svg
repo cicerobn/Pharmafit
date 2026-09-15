@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 420" role="img" aria-label="Frasco Vitaminas Complex Pharma Fit">
+  <defs>
+    <linearGradient id="vg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2e4c6"/>
+      <stop offset=".5" stop-color="#cbb27f"/>
+      <stop offset="1" stop-color="#9e824c"/>
+    </linearGradient>
+    <linearGradient id="vglass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#dfd8ca"/>
+      <stop offset=".16" stop-color="#ffffff"/>
+      <stop offset=".58" stop-color="#f1ece1"/>
+      <stop offset="1" stop-color="#cdc5b4"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="120" cy="366" rx="76" ry="13" fill="#000" opacity=".12"/>
+  <g transform="translate(58 62)">
+    <rect x="12" y="0" width="80" height="44" rx="6" fill="url(#vg)"/>
+    <rect x="22" y="7" width="9" height="31" rx="4" fill="#fff" opacity=".4"/>
+    <rect x="8" y="42" width="88" height="14" rx="4" fill="#ddd6c7"/>
+    <rect x="2" y="54" width="100" height="246" rx="11" fill="url(#vglass)"/>
+    <rect x="8" y="238" width="88" height="58" rx="10" fill="#ded4bd" opacity=".5"/>
+    <rect x="2" y="108" width="100" height="112" fill="#fdfbf7"/>
+    <text x="52" y="140" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="12"
+          letter-spacing=".6" fill="#131313">VITAMINAS</text>
+    <text x="52" y="157" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="12"
+          letter-spacing=".6" fill="#131313">COMPLEX</text>
+    <line x1="26" y1="168" x2="78" y2="168" stroke="#cbb27f" stroke-width="1.1"/>
+    <text x="52" y="185" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="7"
+          letter-spacing="3" fill="#6e6a64">PHARMA FIT</text>
+    <g transform="translate(39 194) scale(.24)">
+      <rect x="6" y="6" width="20" height="88" fill="#101010"/>
+      <rect x="26" y="6" width="50" height="17" fill="#101010"/>
+      <rect x="59" y="6" width="17" height="40" fill="#101010"/>
+      <rect x="26" y="38" width="58" height="16" fill="#b08c4a"/>
+    </g>
+    <rect x="13" y="68" width="8" height="212" rx="4" fill="#ffffff" opacity=".6"/>
+  </g>
+</svg>

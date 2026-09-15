@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" role="img" aria-label="Caixa e caneta de Tirzepatida 2,5 mg">
+  <defs>
+    <linearGradient id="w-box" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ece7df"/>
+    </linearGradient>
+    <linearGradient id="w-side" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ded8ce"/>
+      <stop offset="1" stop-color="#cbc4b8"/>
+    </linearGradient>
+    <linearGradient id="w-pen" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e6e1d8"/>
+      <stop offset=".22" stop-color="#ffffff"/>
+      <stop offset=".72" stop-color="#f2eee7"/>
+      <stop offset="1" stop-color="#d3ccc0"/>
+    </linearGradient>
+    <linearGradient id="w-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e8d1a4"/>
+      <stop offset=".5" stop-color="#b08c4a"/>
+      <stop offset="1" stop-color="#8d6c33"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="200" cy="304" rx="150" ry="16" fill="#2b2416" opacity=".12"/>
+
+  <!-- caixa -->
+  <g transform="translate(36 96)">
+    <path d="M0 18 116 0v190L0 208z" fill="url(#w-box)"/>
+    <path d="M116 0l38 14v176l-38 14z" fill="url(#w-side)"/>
+    <path d="M0 18 116 0v190L0 208z" fill="none" stroke="#ded7cc" stroke-width="1"/>
+    <g transform="translate(14 58) rotate(-8.8)">
+      <text x="0" y="0" font-family="Inter,Arial,sans-serif" font-size="13" letter-spacing="1.1" fill="#1a1a1a">TIRZEPATIDA</text>
+      <text x="0" y="15" font-family="Inter,Arial,sans-serif" font-size="8" letter-spacing="1.6" fill="#8d6c33">2,5 mg · SOLUÇÃO INJETÁVEL</text>
+      <line x1="0" y1="26" x2="76" y2="26" stroke="#b08c4a" stroke-width="1"/>
+    </g>
+    <g transform="translate(38 140) rotate(-8.8) scale(.3)">
+      <rect x="6" y="6" width="20" height="88" fill="#101010"/>
+      <rect x="26" y="6" width="50" height="17" fill="#101010"/>
+      <rect x="59" y="6" width="17" height="40" fill="#101010"/>
+      <rect x="26" y="38" width="58" height="16" fill="#b08c4a"/>
+    </g>
+    <text x="14" y="188" font-family="Inter,Arial,sans-serif" font-size="6.5" letter-spacing="2" fill="#8b857c" transform="rotate(-8.8 14 188)">PHARMA FIT</text>
+  </g>
+
+  <!-- caneta aplicadora -->
+  <g transform="translate(268 62) rotate(9)">
+    <rect x="0" y="0" width="42" height="232" rx="20" fill="url(#w-pen)" stroke="#dcd5c9" stroke-width="1"/>
+    <rect x="8" y="12" width="7" height="200" rx="3.5" fill="#ffffff" opacity=".7"/>
+    <rect x="0" y="150" width="42" height="26" fill="#2c2c2c" opacity=".82"/>
+    <rect x="6" y="156" width="30" height="14" rx="3" fill="#f4f1ea" opacity=".85"/>
+    <rect x="0" y="206" width="42" height="26" rx="12" fill="url(#w-gold)"/>
+    <rect x="14" y="230" width="14" height="20" rx="6" fill="#cfc9be"/>
+    <text x="21" y="60" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="7"
+          letter-spacing="2.4" fill="#6e6a64" transform="rotate(90 21 60)">PHARMA FIT</text>
+  </g>
+</svg>

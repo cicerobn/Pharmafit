@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dashboard — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="assets/gestao.css">
+</head>
+<body>
+
+<div class="admin">
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <img src="../assets/img/logo-pf.svg" alt="">
+      <span>PHARMA FIT</span>
+    </div>
+    <div class="admin__user">
+      <span class="admin__ola">Olá, <b id="usuario">…</b></span>
+      <button class="btn--sair" type="button" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <nav class="admin__nav" data-menu aria-label="Seções do painel"></nav>
+
+  <div class="admin__wrap" id="carregando" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--cabeca">
+      <div class="skeleton__linha skeleton__linha--titulo"></div>
+      <div class="skeleton__linha skeleton__linha--sub"></div>
+    </div>
+    <div class="skeleton__cartoes">
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+    </div>
+    <div class="skeleton__bloco">
+      <div class="skeleton__linha"></div><div class="skeleton__linha"></div><div class="skeleton__linha"></div>
+    </div>
+    <span class="visually-hidden">Carregando…</span>
+  </div>
+
+  <div class="admin__wrap erro-carga" id="erro-carga" hidden>
+    <div class="vazio-bloco">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+      </svg>
+      <p class="vazio-bloco__titulo">Não conseguimos carregar</p>
+      <p class="vazio-bloco__texto" id="erro-carga-texto">Verifique sua conexão e tente de novo.</p>
+      <button class="btn btn--primary btn--block" type="button" id="tentar-de-novo">Tentar de novo</button>
+    </div>
+  </div>
+
+  <main class="admin__wrap" id="conteudo" hidden>
+
+    <div class="admin__head">
+      <div>
+        <h1 class="admin__title">Dashboard</h1>
+        <p class="admin__sub" id="periodo-titulo">Como está o mês.</p>
+      </div>
+      <div class="field__box field__box--inline">
+        <select id="mes" aria-label="Escolher mês"></select>
+      </div>
+    </div>
+
+    <!-- o que precisa de atenção -->
+    <section class="avisos" id="avisos" aria-label="Precisa de atenção"></section>
+
+    <!-- números do mês -->
+    <section class="kpis kpis--grandes" aria-label="Resumo do mês">
+      <article class="kpi">
+        <p class="kpi__label">Faturamento</p>
+        <p class="kpi__value" id="d-faturamento">—</p>
+        <p class="kpi__hint" id="d-faturamento-var"></p>
+      </article>
+      <article class="kpi kpi--destaque">
+        <p class="kpi__label">Lucro líquido</p>
+        <p class="kpi__value" id="d-lucro">—</p>
+        <p class="kpi__hint" id="d-margem"></p>
+      </article>
+      <article class="kpi">
+        <p class="kpi__label">Vendas</p>
+        <p class="kpi__value" id="d-vendas">—</p>
+        <p class="kpi__hint" id="d-vendas-var"></p>
+      </article>
+      <article class="kpi">
+        <p class="kpi__label">Ticket médio</p>
+        <p class="kpi__value" id="d-ticket">—</p>
+        <p class="kpi__hint" id="d-ticket-hint"></p>
+      </article>
+    </section>
+
+    <!-- meta do mês -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Meta do mês</h2>
+        <button class="btn-mini" type="button" id="editar-meta">Mudar meta</button>
+      </div>
+      <div class="card-block__body">
+        <div class="meta" id="meta"></div>
+      </div>
+    </section>
+
+    <!-- evolução -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Faturamento e lucro por mês</h2>
+        <span class="card-block__hint">Últimos meses</span>
+      </div>
+      <div class="card-block__body">
+        <div class="grafico" id="gr-meses"></div>
+      </div>
+    </section>
+
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Vendas do mês, dia a dia</h2>
+        <span class="card-block__hint" id="gr-dias-resumo"></span>
+      </div>
+      <div class="card-block__body">
+        <div class="grafico" id="gr-dias"></div>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card-block">
+        <div class="card-block__head">
+          <h2 class="card-block__title">Como recebem</h2>
+          <span class="card-block__hint">Meios de pagamento</span>
+        </div>
+        <div class="card-block__body">
+          <div class="grafico" id="gr-pagamentos"></div>
+        </div>
+      </section>
+
+      <section class="card-block">
+        <div class="card-block__head">
+          <h2 class="card-block__title">Para onde vai o dinheiro</h2>
+          <span class="card-block__hint">Gastos por categoria</span>
+        </div>
+        <div class="card-block__body">
+          <div class="grafico" id="gr-gastos"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid-2">
+      <section class="card-block">
+        <div class="card-block__head">
+          <h2 class="card-block__title">Produtos que mais vendem</h2>
+          <a class="linkish" href="relatorios.html">Ver relatórios</a>
+        </div>
+        <div class="card-block__body">
+          <div class="grafico" id="gr-produtos"></div>
+        </div>
+      </section>
+
+      <section class="card-block">
+        <div class="card-block__head">
+          <h2 class="card-block__title">Quem mais compra</h2>
+          <a class="linkish" href="clientes.html">Ver clientes</a>
+        </div>
+        <div class="card-block__body">
+          <div class="grafico" id="gr-clientes"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- onde o dinheiro do mês parou -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Do faturamento ao lucro</h2>
+        <span class="card-block__hint">O caminho do dinheiro no mês</span>
+      </div>
+      <div class="card-block__body">
+        <div class="cascata" id="cascata"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- definir a meta -->
+<div class="modal" id="modal-meta" role="dialog" aria-modal="true" aria-label="Meta do mês">
+  <div class="modal__scrim" data-fechar-meta></div>
+  <form class="modal__card modal__card--pequeno" id="form-meta" novalidate>
+    <div class="modal__head">
+      <h2 class="modal__title">Meta do mês</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-meta aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="modal__lead">Quanto você quer faturar por mês? Deixe em branco para não acompanhar meta.</p>
+
+    <div class="field">
+      <label class="field__label" for="meta-valor">Meta de faturamento (R$)</label>
+      <div class="field__box">
+        <input type="number" id="meta-valor" min="0" step="100" inputmode="decimal" placeholder="Ex.: 30000">
+      </div>
+    </div>
+
+    <div class="modal__acoes">
+      <button class="btn btn--outline" type="button" data-fechar-meta>Cancelar</button>
+      <button class="btn btn--primary btn--block" type="submit" id="meta-salvar">Salvar meta</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/util.js"></script>
+<script src="../assets/js/modal.js"></script>
+<script src="../assets/js/catalogo.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/dados.js"></script>
+<script src="assets/analise.js"></script>
+<script src="assets/grafico.js"></script>
+<script src="assets/menu.js"></script>
+<script src="assets/dashboard.js"></script>
+</body>
+</html>

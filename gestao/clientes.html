@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clientes — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="assets/gestao.css">
+</head>
+<body>
+
+<div class="admin">
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <img src="../assets/img/logo-pf.svg" alt="">
+      <span>PHARMA FIT</span>
+    </div>
+    <div class="admin__user">
+      <span class="admin__ola">Olá, <b id="usuario">…</b></span>
+      <button class="btn--sair" type="button" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <nav class="admin__nav" data-menu aria-label="Seções do painel"></nav>
+
+  <div class="admin__wrap" id="carregando" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--cabeca">
+      <div class="skeleton__linha skeleton__linha--titulo"></div>
+      <div class="skeleton__linha skeleton__linha--sub"></div>
+    </div>
+    <div class="skeleton__cartoes">
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+    </div>
+    <div class="skeleton__bloco">
+      <div class="skeleton__linha"></div><div class="skeleton__linha"></div><div class="skeleton__linha"></div>
+    </div>
+    <span class="visually-hidden">Carregando…</span>
+  </div>
+
+  <div class="admin__wrap erro-carga" id="erro-carga" hidden>
+    <div class="vazio-bloco">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+      </svg>
+      <p class="vazio-bloco__titulo">Não conseguimos carregar</p>
+      <p class="vazio-bloco__texto" id="erro-carga-texto">Verifique sua conexão e tente de novo.</p>
+      <button class="btn btn--primary btn--block" type="button" id="tentar-de-novo">Tentar de novo</button>
+    </div>
+  </div>
+
+  <main class="admin__wrap" id="conteudo" hidden>
+
+    <div class="admin__head">
+      <div>
+        <h1 class="admin__title">Clientes e parceiros</h1>
+        <p class="admin__sub">Recuperação, representantes, atacado e fila de interesse.</p>
+      </div>
+      <div class="field__box field__box--busca">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="6.4"/><path d="m15.8 15.8 4.4 4.4"/>
+        </svg>
+        <input type="search" id="busca-geral" placeholder="Buscar nome, produto ou cidade" aria-label="Buscar">
+      </div>
+    </div>
+
+    <!-- todos os clientes -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Todos os clientes
+          <span class="contador" id="todos-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint">Clique no nome para abrir a ficha</span>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th><th class="col-num">Compras</th><th class="col-num">Total</th>
+                <th>Última compra</th><th>Situação</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-todos"></tbody>
+          </table>
+        </div>
+        <div class="ver-mais" id="todos-mais" hidden></div>
+        <p class="empty" id="todos-vazio" hidden>Nenhum cliente encontrado.</p>
+      </div>
+    </section>
+
+    <!-- recuperação -->
+    <section class="card-block card-block--fila">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Para reativar
+          <span class="contador" id="inativos-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint" id="inativos-regra"></span>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th><th>Última compra</th><th>Parado há</th>
+                <th class="col-num">Já comprou</th><th>Último produto</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-inativos"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="inativos-vazio" hidden>Nenhum cliente parado. Bom sinal. ✨</p>
+      </div>
+    </section>
+
+    <!-- representantes -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Representantes
+          <span class="contador" id="rep-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint">Cadastros vindos de representantes.html</span>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Nome</th><th>Tipo</th><th>Cidade</th><th>Contato</th><th>Situação</th><th></th></tr>
+            </thead>
+            <tbody id="tabela-representantes"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="rep-vazio" hidden>Nenhum cadastro ainda.</p>
+      </div>
+    </section>
+
+    <!-- orçamentos -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Orçamentos em quantidade
+          <span class="contador" id="orc-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint">Pedidos de atacado</span>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Cliente</th><th>Produto</th><th class="col-num">Qtd.</th><th>Contato</th><th>Situação</th><th></th></tr>
+            </thead>
+            <tbody id="tabela-orcamentos"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="orc-vazio" hidden>Nenhum orçamento pedido ainda.</p>
+      </div>
+    </section>
+
+    <!-- fila de interesse -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Fila de interesse
+          <span class="contador" id="esp-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint">Quem quer ser avisado quando voltar</span>
+      </div>
+      <div class="card-block__body">
+        <div id="fila-espera"></div>
+        <p class="empty" id="esp-vazio" hidden>Ninguém na fila no momento.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/util.js"></script>
+<script src="../assets/js/modal.js"></script>
+<script src="../assets/js/catalogo.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/dados.js"></script>
+<script src="assets/analise.js"></script>
+<script src="assets/menu.js"></script>
+<script src="assets/clientes.js"></script>
+</body>
+</html>

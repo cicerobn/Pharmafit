@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" role="img" aria-label="Pote de Suporte Metabólico Pharma Fit">
+  <defs>
+    <linearGradient id="j-body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4a3418"/>
+      <stop offset=".18" stop-color="#8a6329"/>
+      <stop offset=".5" stop-color="#5d4119"/>
+      <stop offset=".85" stop-color="#2e2010"/>
+      <stop offset="1" stop-color="#5a4020"/>
+    </linearGradient>
+    <linearGradient id="j-lid" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#2c2c2c"/>
+      <stop offset=".25" stop-color="#4a4a4a"/>
+      <stop offset=".7" stop-color="#161616"/>
+      <stop offset="1" stop-color="#0b0b0b"/>
+    </linearGradient>
+    <linearGradient id="j-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eed9ae"/>
+      <stop offset=".5" stop-color="#b08c4a"/>
+      <stop offset="1" stop-color="#87682f"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="200" cy="292" rx="118" ry="16" fill="#2b2416" opacity=".16"/>
+
+  <g transform="translate(118 44)">
+    <rect x="10" y="0" width="144" height="46" rx="8" fill="url(#j-lid)"/>
+    <rect x="4" y="42" width="156" height="14" rx="5" fill="#1c1c1c"/>
+    <rect x="0" y="54" width="164" height="196" rx="16" fill="url(#j-body)"/>
+
+    <!-- rótulo -->
+    <rect x="0" y="92" width="164" height="126" fill="#0f0f0f" opacity=".94"/>
+    <line x1="18" y1="108" x2="146" y2="108" stroke="#b08c4a" stroke-width="1"/>
+    <g transform="translate(82 100) scale(.3)">
+      <rect x="-40" y="6" width="20" height="88" fill="#ffffff"/>
+      <rect x="-20" y="6" width="50" height="17" fill="#ffffff"/>
+      <rect x="13" y="6" width="17" height="40" fill="#ffffff"/>
+      <rect x="-20" y="38" width="58" height="16" fill="#c9a863"/>
+    </g>
+    <text x="82" y="168" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="12.5"
+          letter-spacing="1.2" fill="#ffffff">SUPORTE</text>
+    <text x="82" y="184" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="12.5"
+          letter-spacing="1.2" fill="#ffffff">METABÓLICO</text>
+    <line x1="18" y1="196" x2="146" y2="196" stroke="#b08c4a" stroke-width="1"/>
+    <text x="82" y="210" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="7"
+          letter-spacing="2.6" fill="url(#j-gold)">PHARMA FIT · 90 CÁPSULAS</text>
+    <rect x="10" y="60" width="10" height="182" rx="5" fill="#ffffff" opacity=".1"/>
+  </g>
+</svg>

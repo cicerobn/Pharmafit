@@ -1,0 +1,20 @@
+{
+  "name": "Pharma Fit — Gestão",
+  "short_name": "PF Gestão",
+  "description": "Painel de pedidos, faturamento e estoque da Pharma Fit.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f2ec",
+  "theme_color": "#111111",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "../assets/img/logo-pf.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

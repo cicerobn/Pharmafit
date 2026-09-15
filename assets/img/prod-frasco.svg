@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" role="img" aria-label="Frasco Pharma Fit">
+  <defs>
+    <linearGradient id="f-glass" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#cfc9bd"/>
+      <stop offset=".16" stop-color="#ffffff"/>
+      <stop offset=".58" stop-color="#f1ede5"/>
+      <stop offset=".88" stop-color="#c8c1b3"/>
+      <stop offset="1" stop-color="#e4dfd5"/>
+    </linearGradient>
+    <linearGradient id="f-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0dcae"/>
+      <stop offset=".45" stop-color="#c9a863"/>
+      <stop offset="1" stop-color="#8d6c33"/>
+    </linearGradient>
+    <linearGradient id="f-box" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#232323"/>
+      <stop offset="1" stop-color="#0b0b0b"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="200" cy="298" rx="140" ry="16" fill="#2b2416" opacity=".13"/>
+
+  <!-- caixa ao fundo -->
+  <g transform="translate(52 96)">
+    <path d="M0 14 96 0v176L0 190z" fill="url(#f-box)"/>
+    <path d="M96 0l28 10v170l-28 10z" fill="#151515"/>
+    <g transform="translate(14 58) rotate(-8)">
+      <text x="0" y="0" font-family="Inter,Arial,sans-serif" font-size="10" letter-spacing="2.6" fill="#e8d1a4">PHARMA FIT</text>
+      <line x1="0" y1="11" x2="58" y2="11" stroke="#b08c4a" stroke-width="1"/>
+    </g>
+    <g transform="translate(28 128) rotate(-8) scale(.26)">
+      <rect x="6" y="6" width="20" height="88" fill="#ffffff"/>
+      <rect x="26" y="6" width="50" height="17" fill="#ffffff"/>
+      <rect x="59" y="6" width="17" height="40" fill="#ffffff"/>
+      <rect x="26" y="38" width="58" height="16" fill="#c9a863"/>
+    </g>
+  </g>
+
+  <!-- frasco -->
+  <g transform="translate(196 84)">
+    <rect x="16" y="0" width="76" height="42" rx="6" fill="url(#f-gold)"/>
+    <rect x="26" y="7" width="9" height="29" rx="4" fill="#fff" opacity=".38"/>
+    <rect x="12" y="40" width="84" height="14" rx="4" fill="#d7d1c6"/>
+    <rect x="6" y="52" width="96" height="152" rx="11" fill="url(#f-glass)" stroke="#dad4c9" stroke-width="1"/>
+    <rect x="12" y="158" width="84" height="40" rx="9" fill="#cfc7b8" opacity=".4"/>
+    <rect x="6" y="92" width="96" height="66" fill="#ffffff"/>
+    <line x1="24" y1="108" x2="84" y2="108" stroke="#c9a863" stroke-width="1"/>
+    <g transform="translate(41 114) scale(.26)">
+      <rect x="6" y="6" width="20" height="88" fill="#101010"/>
+      <rect x="26" y="6" width="50" height="17" fill="#101010"/>
+      <rect x="59" y="6" width="17" height="40" fill="#101010"/>
+      <rect x="26" y="38" width="58" height="16" fill="#b08c4a"/>
+    </g>
+    <text x="54" y="150" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="7"
+          letter-spacing="2.8" fill="#6e6a64">PHARMA FIT</text>
+    <rect x="16" y="64" width="8" height="128" rx="4" fill="#ffffff" opacity=".55"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+{
+  "name": "Pharma Fit",
+  "short_name": "Pharma Fit",
+  "description": "Saúde, performance e bem-estar. Tirzepatida, peptídeos e retatrutida com acompanhamento.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f2ec",
+  "theme_color": "#f6f2ec",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "assets/img/logo-pf.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

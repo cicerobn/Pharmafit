@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ajustes — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="assets/gestao.css">
+</head>
+<body>
+
+<div class="admin">
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <img src="../assets/img/logo-pf.svg" alt="">
+      <span>PHARMA FIT</span>
+    </div>
+    <div class="admin__user">
+      <span class="admin__ola">Olá, <b id="usuario">…</b></span>
+      <button class="btn--sair" type="button" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <nav class="admin__nav" data-menu aria-label="Seções do painel"></nav>
+
+  <div class="admin__wrap" id="carregando" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--cabeca">
+      <div class="skeleton__linha skeleton__linha--titulo"></div>
+      <div class="skeleton__linha skeleton__linha--sub"></div>
+    </div>
+    <div class="skeleton__bloco">
+      <div class="skeleton__linha"></div><div class="skeleton__linha"></div><div class="skeleton__linha"></div>
+    </div>
+    <span class="visually-hidden">Carregando…</span>
+  </div>
+
+  <main class="admin__wrap" id="conteudo" hidden>
+
+    <div class="admin__head">
+      <div>
+        <h1 class="admin__title">Ajustes</h1>
+        <p class="admin__sub">Ligar o sistema ao banco e conferir se está tudo certo no ar.</p>
+      </div>
+    </div>
+
+    <!-- diagnóstico -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Como está agora</h2>
+        <button class="btn-mini" type="button" id="reconferir">Conferir de novo</button>
+      </div>
+      <div class="card-block__body">
+        <ul class="checklist" id="checklist"></ul>
+      </div>
+    </section>
+
+    <!-- ligar o supabase -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Ligar ao banco de dados</h2>
+        <span class="card-block__hint">Supabase → Project Settings → API</span>
+      </div>
+      <div class="card-block__body">
+        <p class="ajuste__texto">
+          Cole aqui os dois dados do seu projeto. A gente testa a conexão na hora e,
+          se estiver tudo certo, monta o arquivo pronto para você copiar.
+        </p>
+
+        <form id="form-conexao" novalidate>
+          <div class="field">
+            <label class="field__label" for="cfg-url">URL do projeto</label>
+            <div class="field__box">
+              <input type="url" id="cfg-url" placeholder="https://xxxxxxxxxxxx.supabase.co"
+                     autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="cfg-key">Chave pública (anon / publishable)</label>
+            <div class="field__box">
+              <textarea id="cfg-key" rows="3" placeholder="eyJhbGciOi…"
+                        autocomplete="off" spellcheck="false"></textarea>
+            </div>
+            <p class="field__dica">
+              Use a chave <b>anon</b>. Nunca cole aqui a <b>service_role</b> — ela dá acesso
+              total ao banco e ficaria visível para qualquer visitante.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label class="field__label" for="cfg-zap">WhatsApp da loja (com DDI)</label>
+              <div class="field__box">
+                <input type="tel" id="cfg-zap" placeholder="5592991234567" inputmode="numeric">
+              </div>
+            </div>
+            <div class="field">
+              <label class="field__label" for="cfg-dono">Seu e-mail (dono)</label>
+              <div class="field__box">
+                <input type="email" id="cfg-dono" placeholder="voce@pharmafit.com" autocomplete="off">
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn--primary" type="submit" id="testar">Testar conexão</button>
+        </form>
+
+        <div id="resultado-conexao" hidden></div>
+      </div>
+    </section>
+
+    <!-- arquivo pronto -->
+    <section class="card-block" id="bloco-arquivo" hidden>
+      <div class="card-block__head">
+        <h2 class="card-block__title">Arquivo pronto</h2>
+        <button class="btn-mini btn-mini--ok" type="button" id="copiar-config">Copiar tudo</button>
+      </div>
+      <div class="card-block__body">
+        <ol class="passos">
+          <li>Copie o texto abaixo.</li>
+          <li>Na Hostinger: <b>Arquivos → Gerenciador de arquivos</b>.</li>
+          <li>Abra <b>public_html/gestao/assets/</b> e clique com o botão direito em
+              <b>config.js → Editar</b>.</li>
+          <li>Apague tudo o que estiver lá, cole o texto copiado e salve.</li>
+          <li>Volte nesta página e toque em <b>Conferir de novo</b>.</li>
+        </ol>
+        <pre class="comprovante" id="config-texto"></pre>
+      </div>
+    </section>
+
+    <!-- cópia de segurança -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">Cópia de segurança</h2>
+        <span class="card-block__hint" id="backup-quando"></span>
+      </div>
+      <div class="card-block__body">
+        <p class="ajuste__texto" id="backup-aviso"></p>
+
+        <div class="backup__acoes">
+          <button class="btn btn--primary" type="button" id="baixar-backup">Baixar cópia</button>
+
+          <label class="btn btn--outline" for="arquivo-backup">Restaurar de um arquivo</label>
+          <input type="file" id="arquivo-backup" accept="application/json,.json" hidden>
+        </div>
+
+        <p class="field__dica backup__nota">
+          A restauração só <b>acrescenta</b> o que estiver faltando. Nada do que já existe
+          é apagado ou trocado.
+        </p>
+
+        <div id="resultado-backup" hidden></div>
+      </div>
+    </section>
+
+    <!-- tabelas -->
+    <section class="card-block" id="bloco-tabelas" hidden>
+      <div class="card-block__head">
+        <h2 class="card-block__title">Tabelas do banco</h2>
+        <span class="card-block__hint">O que já existe e o que falta criar</span>
+      </div>
+      <div class="card-block__body">
+        <ul class="checklist" id="tabelas"></ul>
+        <p class="ajuste__texto" id="dica-migracao" hidden>
+          Faltou tabela: abra o Supabase → <b>SQL Editor → New query</b>, cole o conteúdo de
+          <b>gestao/supabase/migracao-01-campos-novos.sql</b> (está na pasta do projeto,
+          no seu computador) e rode. Ele só acrescenta o que falta e não apaga nada.
+        </p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/util.js"></script>
+<script src="../assets/js/modal.js"></script>
+<script src="../assets/js/catalogo.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/dados.js"></script>
+<script src="assets/menu.js"></script>
+<script src="assets/ajustes.js"></script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#111111">
+<link rel="icon" href="../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PF Gestão">
+<link rel="apple-touch-icon" href="../assets/img/logo-pf.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="../assets/css/styles.css">
+<link rel="stylesheet" href="assets/gestao.css">
+</head>
+<body>
+
+<div class="admin">
+
+  <header class="admin__bar">
+    <div class="admin__brand">
+      <img src="../assets/img/logo-pf.svg" alt="">
+      <span>PHARMA FIT</span>
+    </div>
+    <div class="admin__user">
+      <button class="btn--aviso" type="button" id="ativar-avisos" hidden>Ativar avisos</button>
+      <span class="admin__ola">Olá, <b id="usuario">…</b></span>
+      <button class="btn--sair" type="button" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <nav class="admin__nav" data-menu aria-label="Seções do painel"></nav>
+
+  <div class="admin__wrap" id="carregando" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--cabeca">
+      <div class="skeleton__linha skeleton__linha--titulo"></div>
+      <div class="skeleton__linha skeleton__linha--sub"></div>
+    </div>
+    <div class="skeleton__cartoes">
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+      <div class="skeleton__cartao"></div><div class="skeleton__cartao"></div>
+    </div>
+    <div class="skeleton__bloco">
+      <div class="skeleton__linha"></div><div class="skeleton__linha"></div><div class="skeleton__linha"></div>
+    </div>
+    <span class="visually-hidden">Carregando…</span>
+  </div>
+
+  <div class="admin__wrap erro-carga" id="erro-carga" hidden>
+    <div class="vazio-bloco">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+      </svg>
+      <p class="vazio-bloco__titulo">Não conseguimos carregar</p>
+      <p class="vazio-bloco__texto" id="erro-carga-texto">Verifique sua conexão e tente de novo.</p>
+      <button class="btn btn--primary btn--block" type="button" id="tentar-de-novo">Tentar de novo</button>
+    </div>
+  </div>
+
+  <main class="admin__wrap" id="conteudo" hidden>
+
+    <div class="admin__head">
+      <div>
+        <h1 class="admin__title">Painel de gestão</h1>
+        <p class="admin__sub">Confirme as vendas fechadas no WhatsApp e acompanhe os números.</p>
+      </div>
+      <button class="btn btn--primary btn--novo" type="button" id="novo-pedido">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Lançar pedido
+      </button>
+    </div>
+
+    <div class="banner-demo" id="banner-demo" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+      </svg>
+      <span>
+        <b>Modo demonstração.</b> O Supabase ainda não está configurado — este acesso é
+        validado apenas no navegador e os dados ficam só neste aparelho.
+        Preencha <code>gestao/assets/config.js</code> para ligar no banco real.
+      </span>
+    </div>
+
+    <div class="banner-demo" id="banner-dados" hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+      </svg>
+      <span>
+        Login conectado, mas as tabelas <code>pedidos</code> e <code>produtos</code> ainda não
+        foram encontradas no Supabase. Rode o <code>gestao/supabase/schema.sql</code>.
+      </span>
+    </div>
+
+    <!-- fila de confirmação -->
+    <section class="card-block card-block--fila">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Aguardando confirmação
+          <span class="contador" id="fila-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint">Confirme depois de fechar a venda no WhatsApp</span>
+      </div>
+      <div class="card-block__body">
+        <div id="fila"></div>
+        <p class="empty" id="fila-vazia" hidden>Nenhum pedido aguardando. Tudo em dia. ✨</p>
+      </div>
+    </section>
+
+    <!-- indicadores -->
+    <section class="kpis" aria-label="Indicadores">
+      <article class="kpi">
+        <p class="kpi__label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3.2 8 4.2v9.2l-8 4.2-8-4.2V7.4z"/><path d="m4 7.4 8 4.2 8-4.2"/>
+          </svg>
+          Vendas hoje
+        </p>
+        <p class="kpi__value" id="kpi-pedidos">—</p>
+        <p class="kpi__hint" id="kpi-pedidos-hint"></p>
+      </article>
+
+      <article class="kpi">
+        <p class="kpi__label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.6 16.4 9 11l3.4 3.4 7.4-7.4"/><path d="M15.4 7h4.4v4.4"/>
+          </svg>
+          Faturamento do mês
+        </p>
+        <p class="kpi__value" id="kpi-faturamento">—</p>
+        <p class="kpi__hint">apenas vendas confirmadas</p>
+      </article>
+
+      <article class="kpi">
+        <p class="kpi__label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8.4"/><path d="M12 7.4v9.2M14.6 9.4H10.8a1.8 1.8 0 0 0 0 3.6h2.4a1.8 1.8 0 0 1 0 3.6H9.2"/>
+          </svg>
+          Ticket médio
+        </p>
+        <p class="kpi__value" id="kpi-ticket">—</p>
+      </article>
+
+      <article class="kpi">
+        <p class="kpi__label">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.8 4.8 5.9v5.4c0 4.3 2.9 7.9 7.2 9.9 4.3-2 7.2-5.6 7.2-9.9V5.9z"/>
+          </svg>
+          Produtos ativos
+        </p>
+        <p class="kpi__value" id="kpi-produtos">—</p>
+      </article>
+    </section>
+
+    <!-- vendas confirmadas -->
+    <section class="card-block">
+      <div class="card-block__head card-block__head--filtros">
+        <div>
+          <h2 class="card-block__title">Vendas confirmadas</h2>
+          <span class="card-block__hint" id="vendas-resumo"></span>
+        </div>
+        <div class="filtros">
+          <div class="field__box field__box--busca">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.4"/><path d="m15.8 15.8 4.4 4.4"/>
+            </svg>
+            <input type="search" id="busca-vendas" placeholder="Buscar cliente ou produto" aria-label="Buscar vendas">
+          </div>
+          <div class="field__box field__box--inline">
+            <select id="periodo-vendas" aria-label="Período">
+              <option value="tudo">Todo o período</option>
+              <option value="hoje">Hoje</option>
+              <option value="semana">Últimos 7 dias</option>
+              <option value="mes">Este mês</option>
+            </select>
+          </div>
+          <div class="field__box field__box--inline" id="caixa-vendedor" hidden>
+            <select id="vendedor-vendas" aria-label="Quem vendeu">
+              <option value="">Todo mundo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th><th>Produto</th><th class="col-num">Valor</th><th>Status</th><th>Data</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-pedidos"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="pedidos-vazio" hidden>Nenhuma venda confirmada ainda.</p>
+        <div class="ver-mais" id="vendas-mais" hidden></div>
+      </div>
+    </section>
+
+    <!-- produtos -->
+    <section class="card-block">
+      <div class="card-block__head card-block__head--filtros">
+        <h2 class="card-block__title">Produtos</h2>
+        <div class="filtros">
+          <div class="field__box field__box--busca">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6.4"/><path d="m15.8 15.8 4.4 4.4"/>
+            </svg>
+            <input type="search" id="busca-produtos" placeholder="Buscar produto" aria-label="Buscar produtos">
+          </div>
+          <button class="btn-mini btn-mini--ok" type="button" id="novo-produto">+ Novo produto</button>
+        </div>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th><th>Categoria</th><th class="col-num">Custo</th>
+                <th class="col-num">Venda</th><th class="col-num">Margem</th><th>Estoque</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tabela-produtos"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="produtos-vazio" hidden>Nenhum produto cadastrado ainda.</p>
+        <div class="ver-mais" id="produtos-mais" hidden></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- lançar pedido manualmente -->
+<div class="modal" id="modal-pedido" role="dialog" aria-modal="true" aria-label="Lançar pedido">
+  <div class="modal__scrim" data-fechar-modal></div>
+  <form class="modal__card" id="form-pedido" novalidate>
+    <div class="modal__head">
+      <h2 class="modal__title">Lançar pedido</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-modal aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="modal__lead">O pedido entra como pendente. Confirme depois que a venda fechar no WhatsApp.</p>
+
+    <div class="field">
+      <label class="field__label" for="np-cliente">Cliente</label>
+      <div class="field__box"><input type="text" id="np-cliente" placeholder="Nome do cliente" required></div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="np-telefone">WhatsApp (opcional)</label>
+      <div class="field__box"><input type="tel" id="np-telefone" inputmode="tel" placeholder="(92) 99123-4567"></div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="np-produto">Produto</label>
+      <div class="field__box"><select id="np-produto" required></select></div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="np-valor">Valor (R$)</label>
+      <div class="field__box"><input type="number" id="np-valor" min="0" step="0.01" inputmode="decimal" placeholder="0,00"></div>
+    </div>
+
+    <div class="modal__acoes">
+      <button class="btn btn--outline" type="button" data-fechar-modal>Cancelar</button>
+      <button class="btn btn--primary btn--block" type="submit" id="np-salvar">Lançar pedido</button>
+    </div>
+  </form>
+</div>
+
+<!-- confirmar venda informando o valor fechado -->
+<div class="modal" id="modal-valor" role="dialog" aria-modal="true" aria-label="Confirmar venda">
+  <div class="modal__scrim" data-fechar-valor></div>
+  <form class="modal__card" id="form-valor" novalidate>
+    <div class="modal__head">
+      <h2 class="modal__title">Confirmar venda</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-valor aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="modal__lead">
+      Venda de <b id="cv-quem"></b> — <span id="cv-produto"></span>.<br>
+      Informe o valor fechado no WhatsApp para entrar no faturamento.
+    </p>
+
+    <div class="field">
+      <label class="field__label" for="cv-valor">Valor da venda (R$)</label>
+      <div class="field__box"><input type="number" id="cv-valor" min="0" step="0.01" inputmode="decimal" placeholder="0,00" required></div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="cv-pagamento">Meio de pagamento</label>
+      <div class="field__box"><select id="cv-pagamento"></select></div>
+    </div>
+
+    <div class="modal__acoes">
+      <button class="btn btn--outline" type="button" data-fechar-valor>Cancelar</button>
+      <button class="btn btn--primary btn--block" type="submit" id="cv-salvar">Confirmar venda</button>
+    </div>
+  </form>
+</div>
+
+<!-- comprovante depois de confirmar -->
+<div class="modal" id="modal-comprovante" role="dialog" aria-modal="true" aria-label="Venda confirmada">
+  <div class="modal__scrim" data-fechar-comprovante></div>
+  <div class="modal__card modal__card--pequeno">
+    <div class="modal__head">
+      <h2 class="modal__title">Venda confirmada</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-comprovante aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="modal__lead" id="cp-resumo"></p>
+    <p class="comprovante__estoque" id="cp-estoque" hidden></p>
+
+    <pre class="comprovante" id="cp-texto"></pre>
+
+    <div class="modal__acoes modal__acoes--coluna">
+      <a class="btn btn--zap btn--block" id="cp-enviar" target="_blank" rel="noopener" href="#">
+        Enviar comprovante no WhatsApp
+      </a>
+      <button class="btn btn--outline btn--block" type="button" id="cp-copiar">Copiar texto</button>
+      <button class="btn btn--outline btn--block" type="button" id="cp-etiqueta" hidden>Imprimir etiqueta de envio</button>
+      <button class="linkish" type="button" data-fechar-comprovante>Agora não</button>
+    </div>
+  </div>
+</div>
+
+<!-- editar venda confirmada -->
+<div class="modal" id="modal-venda" role="dialog" aria-modal="true" aria-label="Editar venda">
+  <div class="modal__scrim" data-fechar-venda></div>
+  <form class="modal__card" id="form-venda" novalidate>
+    <div class="modal__head">
+      <h2 class="modal__title">Editar venda</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-venda aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="modal__lead"><b id="ev-produto"></b></p>
+
+    <div class="field">
+      <label class="field__label" for="ev-cliente">Cliente</label>
+      <div class="field__box"><input type="text" id="ev-cliente"></div>
+    </div>
+
+    <div class="form-card__linha">
+      <div class="field">
+        <label class="field__label" for="ev-valor">Valor (R$)</label>
+        <div class="field__box"><input type="number" id="ev-valor" min="0" step="0.01" inputmode="decimal"></div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="ev-pagamento">Pagamento</label>
+        <div class="field__box"><select id="ev-pagamento"></select></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="ev-status">Situação</label>
+      <div class="field__box">
+        <select id="ev-status">
+          <option value="confirmado">Confirmada</option>
+          <option value="enviado">Enviada</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal__acoes">
+      <button class="btn btn--outline" type="button" data-fechar-venda>Cancelar</button>
+      <button class="btn btn--primary btn--block" type="submit" id="ev-salvar">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<!-- editar produto: preço, custo e estoque -->
+<div class="modal" id="modal-produto" role="dialog" aria-modal="true" aria-label="Editar produto">
+  <div class="modal__scrim" data-fechar-produto></div>
+  <form class="modal__card" id="form-produto" novalidate>
+    <div class="modal__head">
+      <h2 class="modal__title" id="ep-titulo">Editar produto</h2>
+      <button class="icon-btn icon-btn--bare" type="button" data-fechar-produto aria-label="Fechar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="m6 6 12 12M18 6 6 18"/>
+        </svg>
+      </button>
+    </div>
+
+    <p class="modal__lead"><b id="ep-nome"></b></p>
+
+    <div class="field" id="ep-nome-campo" hidden>
+      <label class="field__label" for="ep-nome-input">Nome do produto</label>
+      <div class="field__box"><input type="text" id="ep-nome-input" placeholder="Ex.: Tirzec Pen 15 mg"></div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="ep-categoria">Categoria</label>
+      <div class="field__box">
+        <select id="ep-categoria">
+          <option>Tirzepatida</option><option>Peptídeos</option><option>Retatrutida</option><option>Outros</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-card__linha">
+      <div class="field">
+        <label class="field__label" for="ep-custo">Custo (R$)</label>
+        <div class="field__box"><input type="number" id="ep-custo" min="0" step="0.01" inputmode="decimal"></div>
+      </div>
+      <div class="field">
+        <label class="field__label" for="ep-venda">Venda (R$)</label>
+        <div class="field__box"><input type="number" id="ep-venda" min="0" step="0.01" inputmode="decimal"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="ep-antes">Preço antigo, para promoção (R$)</label>
+      <div class="field__box"><input type="number" id="ep-antes" min="0" step="0.01" inputmode="decimal" placeholder="0 = sem promoção"></div>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="ep-estoque">Estoque (unidades)</label>
+      <div class="field__box"><input type="number" id="ep-estoque" min="0" step="1" inputmode="numeric" placeholder="vazio = sem controle"></div>
+    </div>
+
+    <p class="modal__lead" style="margin:0">
+      Cada venda confirmada baixa uma unidade. Ao chegar em zero, o site troca o botão
+      por “Avise-me quando chegar”.
+    </p>
+
+    <label class="check">
+      <input type="checkbox" id="ep-ativo" checked>
+      Aparecer no site
+    </label>
+
+    <div class="modal__acoes">
+      <button class="btn btn--outline" type="button" data-fechar-produto>Cancelar</button>
+      <button class="btn btn--primary btn--block" type="submit" id="ep-salvar">Salvar</button>
+    </div>
+
+    <p class="acao-discreta"><button class="linkish linkish--perigo" type="button" id="ep-excluir">Excluir produto</button></p>
+  </form>
+</div>
+
+<!-- etiqueta de envio: só aparece na impressão -->
+<div class="etiqueta" id="etiqueta" aria-hidden="true">
+  <div class="etiqueta__folha">
+    <p class="etiqueta__rotulo">Destinatário</p>
+    <p class="etiqueta__nome" id="et-nome"></p>
+    <p class="etiqueta__endereco" id="et-endereco"></p>
+    <p class="etiqueta__contato" id="et-contato"></p>
+
+    <div class="etiqueta__linha"></div>
+
+    <p class="etiqueta__rotulo">Remetente</p>
+    <p class="etiqueta__remetente">
+      Pharma Fit<br>
+      Manaus — AM<br>
+      <span id="et-zap"></span>
+    </p>
+
+    <p class="etiqueta__ref" id="et-ref"></p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="assets/config.js"></script>
+<script src="assets/util.js"></script>
+<script src="../assets/js/modal.js"></script>
+<script src="../assets/js/catalogo.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/dados.js"></script>
+<script src="assets/analise.js"></script>
+<script src="assets/menu.js"></script>
+<script src="assets/notificacoes.js"></script>
+<script src="assets/painel.js"></script>
+</body>
+</html>
