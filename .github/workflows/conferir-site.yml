@@ -73,14 +73,16 @@ jobs:
 
       - name: Conferir que a pasta /loja/ é a montagem da fonte
         run: |
+          # GITHUB_SHA vazio de propósito: sem commit, a marca de versão é a
+          # impressão digital dos arquivos montados, que é determinística. Com o
+          # commit, ela mudaria a cada publicação e o versao.txt teria de ficar
+          # fora da comparação — assim ele entra nela também, e nada escapa.
           cd loja-fonte
-          GITHUB_SHA=nao-importa npm run build --silent
+          GITHUB_SHA= npm run build --silent
           cd ..
 
-          # O versao.txt é o único arquivo que muda a cada montagem, de
-          # propósito: ele carrega o commit. Fica fora da comparação.
           diferentes=""
-          for arq in $(cd loja-fonte/dist && find . -type f ! -name versao.txt | sed 's|^\./||'); do
+          for arq in $(cd loja-fonte/dist && find . -type f | sed 's|^\./||'); do
             if [ ! -f "loja/$arq" ]; then
               diferentes="$diferentes $arq(falta)"
             elif ! cmp -s "loja-fonte/dist/$arq" "loja/$arq"; then
@@ -89,7 +91,7 @@ jobs:
           done
 
           # e o contrário: sobrou arquivo velho em loja/ que a montagem não gera?
-          for arq in $(cd loja && find . -type f ! -name versao.txt | sed 's|^\./||'); do
+          for arq in $(cd loja && find . -type f | sed 's|^\./||'); do
             [ -f "loja-fonte/dist/$arq" ] || diferentes="$diferentes $arq(sobrando)"
           done
 
@@ -207,7 +209,7 @@ jobs:
                     assets/css/styles.css assets/js/app.js assets/js/loja.js
                     assets/js/cliente.js gestao/login.html gestao/assets/config.js
                     gestao/assets/dados.js
-                    loja/index.html loja/diagnostico.html"
+                    loja/index.html loja/diagnostico.html loja/versao.txt"
 
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
