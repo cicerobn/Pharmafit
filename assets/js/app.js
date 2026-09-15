@@ -110,7 +110,18 @@
 
     var paginaAtual = location.pathname.split('/').pop() || 'index.html';
 
+    /* Sem nome, o botão leva para ENTRAR; com nome, para a conta. O
+       destino tem de combinar com o que está escrito nele: "Entrar"
+       levando para uma tela de dados já preenchidos confunde, e "Brian"
+       levando para o login parece que o site esqueceu quem ele é. */
+    var destinoConta = primeiro ? 'conta.html' : 'entrar.html';
+
     document.querySelectorAll('[data-conta-botao]').forEach(function (b) {
+      /* No 404 os caminhos são absolutos: ele é servido em qualquer
+         endereço, e um caminho relativo ali aponta para o vazio. */
+      var absoluto = (b.getAttribute('href') || '').charAt(0) === '/';
+      b.setAttribute('href', (absoluto ? '/' : '') + destinoConta);
+
       var alvo = b.querySelector('[data-conta-nome]');
       if (alvo) alvo.textContent = primeiro || 'Entrar';
       b.classList.toggle('is-dentro', !!primeiro);
@@ -126,6 +137,8 @@
 
     var caixa = drawer && drawer.querySelector('[data-drawer-quem]');
     if (caixa) {
+      var absolutoGaveta = (caixa.getAttribute('href') || '').charAt(0) === '/';
+      caixa.setAttribute('href', (absolutoGaveta ? '/' : '') + destinoConta);
       caixa.querySelector('[data-drawer-inicial]').textContent =
         primeiro ? primeiro.charAt(0).toUpperCase() : '?';
       caixa.querySelector('[data-drawer-nome]').textContent = primeiro || 'Entrar na conta';

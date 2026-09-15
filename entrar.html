@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Descobrir meu protocolo — Pharma Fit</title>
-<meta name="description" content="Três perguntas rápidas para indicar o produto certo para o seu objetivo.">
+<title>Entrar — Pharma Fit</title>
+<meta name="description" content="Como a Pharma Fit trata as informações dos clientes.">
 <meta name="theme-color" content="#f6f2ec">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Pharma Fit">
 <meta property="og:locale" content="pt_BR">
-<meta property="og:title" content="Descobrir meu protocolo — Pharma Fit">
-<meta property="og:description" content="Três perguntas rápidas para indicar o produto certo para o seu objetivo.">
+<meta property="og:title" content="Seus dados — Pharma Fit">
+<meta property="og:description" content="Como a Pharma Fit trata as informações dos clientes.">
 <meta property="og:image" content="assets/img/logo-pf.svg">
 <meta name="twitter:card" content="summary">
 <link rel="manifest" href="site.webmanifest">
@@ -56,22 +56,51 @@
   </header>
 
   <section class="page-head">
-    <h1 class="page-title">Vamos achar<br>o seu protocolo</h1>
+    <h1 class="page-title">Entrar na sua conta</h1>
     <div class="rule"></div>
-    <p class="page-lead">Três perguntas rápidas. No fim, mostramos a indicação e você fala com a equipe.</p>
+    <p class="page-lead">Para acompanhar seus pedidos e suas compras.</p>
   </section>
 
-  <section class="wrap quiz-area">
-    <div class="quiz__barra"><span id="quiz-progresso"></span></div>
-    <p class="quiz__etapa" id="quiz-etapa"></p>
-    <div class="quiz-card" id="quiz"></div>
-  </section>
+  <section class="wrap">
+    <div class="entrada">
 
+      <div class="aviso-forma" id="recado" role="alert" hidden></div>
+
+      <form class="entrada__form" id="form-entrar" novalidate>
+        <div class="field">
+          <label class="field__label" for="email">E-mail</label>
+          <div class="field__box">
+            <input type="email" id="email" name="email" placeholder="seu@email.com" autocomplete="email" inputmode="email" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="senha">Senha</label>
+          <div class="field__box">
+            <input type="password" id="senha" name="senha" placeholder="Sua senha" autocomplete="current-password" required>
+            <button class="field__eye" type="button" data-ver-senha="senha" aria-label="Mostrar a senha" aria-pressed="false"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.8 12 5.8 21.5 12 21.5 12 18 18.2 12 18.2 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          </div>
+        </div>
+
+        <button class="btn btn--primary btn--block" type="submit" id="enviar">
+          <span data-texto>Entrar</span>
+        </button>
+
+        <p class="entrada__pe">
+          <button class="linkish" type="button" id="esqueci">Esqueci minha senha</button>
+        </p>
+      </form>
+
+      <p class="entrada__troca">
+        Não tem conta? <a class="linkish" href="criar-conta.html">Criar conta</a>
+      </p>
+
+    </div>
+  </section>
 
   <p class="footnote">
     Pharma Fit · Saúde, performance e bem-estar — atendimento em Manaus · AM 🇧🇷<br>
     Produtos de uso sob orientação profissional.<br>
-    <a class="linkish" data-zap-link href="https://wa.me/5545988140817" target="_blank" rel="noopener">WhatsApp (45) 98814-0817</a> · <a class="linkish" href="privacidade.html">Seus dados</a>
+    <a class="linkish" data-zap-link href="https://wa.me/5545988140817" target="_blank" rel="noopener">WhatsApp (45) 98814-0817</a>
   </p>
 
   <nav class="tabbar" aria-label="Navegação principal">
@@ -83,7 +112,7 @@
       </span>
       Início
     </a>
-    <a class="tab is-active" href="produtos.html" aria-current="page">
+    <a class="tab" href="produtos.html">
       <span class="tab__ico">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M19.4 4.6c.6 8.4-4.6 14-13 14.4-.6-8.4 4.6-14 13-14.4z"/>
@@ -109,7 +138,7 @@
       </span>
       Pedidos
     </a>
-    <a class="tab" href="conta.html">
+    <a class="tab is-active" href="conta.html" aria-current="page">
       <span class="tab__ico">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="8" r="3.4"/>
@@ -160,12 +189,14 @@
 <script src="gestao/assets/config.js?v=86cd5f3d"></script>
 <script src="assets/js/catalogo.js?v=dc692d11"></script>
 <script src="assets/js/nuvem.js?v=0433999d"></script>
-<script src="assets/js/loja.js?v=e9deca12"></script>
-<script src="assets/js/quiz.js?v=92f82156"></script>
-<script src="assets/js/app.js?v=99f85738"></script>
 <script src="assets/js/modal.js?v=9146042c"></script>
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/minha-area.js?v=d3d63621"></script>
+<script src="assets/js/favoritos.js?v=4a9ab8a7"></script>
+<script src="assets/js/paginas.js?v=08afdc52"></script>
+<script src="assets/js/app.js?v=99f85738"></script>
+<script src="assets/js/conta.js?v=727ddcc1"></script>
+<script src="assets/js/tela-entrar.js?v=c08792d7"></script>
 <script src="assets/js/pedido.js?v=c0315875"></script>
 </body>
 </html>

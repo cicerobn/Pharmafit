@@ -2126,3 +2126,68 @@ textarea:focus-visible{
   .linha-item{flex-direction:column;align-items:stretch;gap:10px}
   .contador-qtd{align-self:flex-end}
 }
+
+/* =========================================================
+   Entrar e criar conta
+   ========================================================= */
+
+.entrada{
+  max-width:430px;
+  margin:0 auto;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:26px 22px 24px;
+  box-shadow:var(--shadow-sm);
+}
+
+.entrada__form{display:flex;flex-direction:column;gap:16px}
+
+/* A dica embaixo do campo. Sem esta classe ela saía no tamanho do texto
+   corrido, competindo com o rótulo em vez de ajudar — apareceu na foto
+   da tela de criar conta. */
+.field__hint{
+  margin:6px 0 0;
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--muted);
+}
+
+.entrada__pe{margin:2px 0 0;text-align:center}
+.entrada__troca{
+  margin:20px 0 0;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+  text-align:center;
+  font-size:14px;
+  color:var(--muted);
+}
+.entrada__nota{
+  margin:14px 0 0;
+  font-size:12px;
+  line-height:1.6;
+  color:var(--muted);
+  text-align:center;
+}
+
+/* O recado de erro ou de sucesso do formulário. O site não tinha um
+   (o `.alert` é da folha da gestão), e recado de erro é justamente o
+   que não pode ficar sem desenho: ele aparece na pior hora. */
+.aviso-forma{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  font-size:13.5px;
+  line-height:1.5;
+  border-radius:12px;
+  padding:12px 14px;
+  margin-bottom:18px;
+}
+.aviso-forma--erro{background:#fdeeee;color:#8f2b2b;border:1px solid #f3d4d4}
+.aviso-forma--ok{background:#eef7f0;color:#2c6338;border:1px solid #cfe6d6}
+.aviso-forma svg{flex:none;margin-top:1px}
+
+/* O botão enquanto espera o servidor. Sem isto a pessoa toca em
+   "Entrar" e nada parece acontecer, então ela toca de novo — e duas
+   tentativas seguidas caem no limite do servidor. */
+.btn[aria-busy="true"]{opacity:.7;pointer-events:none}
