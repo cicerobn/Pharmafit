@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Seus dados — Pharma Fit</title>
+<title>Meu carrinho — Pharma Fit</title>
 <meta name="description" content="Como a Pharma Fit trata as informações dos clientes.">
 <meta name="theme-color" content="#f6f2ec">
 <meta property="og:type" content="website">
@@ -63,37 +63,78 @@
   </header>
 
   <section class="page-head">
-    <h1 class="page-title">Seus dados</h1>
+    <h1 class="page-title">Meu carrinho</h1>
     <div class="rule"></div>
-    <p class="page-lead">Transparência sobre o que guardamos e o que fica só com você.</p>
+    <p class="page-lead" id="carrinho-lead">O que você escolheu até agora.</p>
   </section>
 
-  <section class="wrap texto-longo">
-    <h2>O que guardamos</h2>
-    <p>Quando você faz um pedido pelo site, guardamos apenas o necessário para atender:
-    <b>nome, WhatsApp, endereço de entrega, produto e quantidade</b>. É o que a nossa equipe
-    usa para confirmar a venda com você.</p>
+  <section class="wrap">
+    <div class="carrinho">
 
-    <h2>O que fica só no seu aparelho</h2>
-    <p>Favoritos, histórico de pedidos e os dados que você salva em "Minha conta" ficam
-    guardados <b>no seu próprio navegador</b>, não nos nossos servidores. Você pode apagar
-    a qualquer momento nos botões dessas telas.</p>
+      <!-- vazio -->
+      <div class="vazio-bloco" id="vazio" hidden>
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+          <path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>
+        </svg>
+        <p class="vazio-bloco__titulo">Seu carrinho está vazio</p>
+        <p class="vazio-bloco__texto">Escolha os produtos e eles aparecem aqui.</p>
+        <a class="btn btn--primary" href="produtos.html">Ver os produtos</a>
+      </div>
 
-    <h2>O que não fazemos</h2>
-    <p>Não vendemos, alugamos nem compartilhamos seus dados com terceiros para publicidade.
-    Não usamos rastreadores de anúncios no site.</p>
+      <div id="cheio" hidden>
 
-    <h2>Cadastro de parceiros e orçamentos</h2>
-    <p>Se você preenche o cadastro de representante ou pede um orçamento de atacado, os dados
-    informados ficam disponíveis para a equipe comercial responder seu contato.</p>
+        <!-- produto que saiu de linha depois de entrar no carrinho -->
+        <div class="aviso-forma aviso-forma--erro" id="perdidos" role="alert" hidden></div>
 
-    <h2>Seus direitos</h2>
-    <p>Você pode pedir a qualquer momento para ver, corrigir ou apagar os dados que temos sobre
-    você. É só chamar no WhatsApp <a class="linkish" data-zap-link href="https://wa.me/5545988140817" target="_blank" rel="noopener">(45) 98814-0817</a>.</p>
+        <div id="itens"></div>
 
-    <h2>Produtos</h2>
-    <p>Os produtos vendidos são de uso sob orientação profissional. As informações do site não
-    substituem consulta, diagnóstico ou prescrição. Resultados variam de pessoa para pessoa.</p>
+        <div class="resumo" style="margin-top:22px">
+          <h2 class="resumo__titulo">Resumo do pedido</h2>
+
+          <div class="resumo__linha">
+            <span id="resumo-qtd">—</span>
+            <span id="resumo-soma">—</span>
+          </div>
+          <div class="resumo__linha">
+            <span>Entrega</span>
+            <span id="resumo-entrega">combinada no WhatsApp</span>
+          </div>
+
+          <div class="resumo__total">
+            <span class="resumo__total-rotulo">Total</span>
+            <span class="resumo__total-valor" id="resumo-total">—</span>
+          </div>
+
+          <div class="resumo__moedas" id="resumo-moedas" hidden></div>
+          <p class="resumo__cotacao" id="resumo-cotacao" hidden></p>
+
+          <p style="margin:18px 0 0">
+            <a class="btn btn--primary btn--block" id="fechar" href="#" target="_blank" rel="noopener">
+              Fechar pedido no WhatsApp
+            </a>
+          </p>
+
+          <p class="resumo__aviso">
+            A equipe confirma com você o estoque, o valor final e a entrega antes
+            de qualquer pagamento. Nada é cobrado por aqui.
+          </p>
+
+          <p style="margin:14px 0 0;text-align:center">
+            <a class="linkish" href="produtos.html">Continuar escolhendo</a>
+            <span style="color:var(--line);margin:0 8px">·</span>
+            <button class="linkish" type="button" id="limpar">Limpar o carrinho</button>
+          </p>
+        </div>
+
+        <p style="margin:18px 0 0;text-align:center;font-size:13px;color:var(--muted)">
+          Vai levar bastante quantidade?
+          <a class="linkish" href="atacado.html">Pedir orçamento de atacado</a>
+        </p>
+
+      </div>
+    </div>
   </section>
 
   <p class="footnote">
@@ -194,8 +235,10 @@
 <script src="assets/js/minha-area.js?v=d3d63621"></script>
 <script src="assets/js/favoritos.js?v=4a9ab8a7"></script>
 <script src="assets/js/paginas.js?v=08afdc52"></script>
-<script src="assets/js/carrinho.js?v=e0c04a3e"></script>
 <script src="assets/js/app.js?v=27e381fb"></script>
+<script src="assets/js/carrinho.js?v=e0c04a3e"></script>
+<script src="assets/js/moedas.js?v=ddbb4a9b"></script>
+<script src="assets/js/tela-carrinho.js?v=09091964"></script>
 <script src="assets/js/pedido.js?v=c0315875"></script>
 </body>
 </html>

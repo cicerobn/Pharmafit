@@ -72,6 +72,58 @@
     }
   }
 
+  /* ---------- o carrinho ----------
+   *
+   * O contador do topo e o botão "Adicionar" dos cartões. Ficam aqui, no
+   * app.js, porque o topo existe em toda página — e não só nas que têm
+   * grade de produtos.
+   */
+  (function () {
+    var C = window.PharmaFitCarrinho;
+    if (!C) return;
+
+    function contar() {
+      var quantos = C.quantos();
+      document.querySelectorAll('[data-carrinho-contador]').forEach(function (b) {
+        b.hidden = quantos === 0;
+        b.textContent = quantos > 99 ? '99+' : String(quantos);
+      });
+    }
+
+    contar();
+    window.addEventListener(C.EVENTO, contar);
+    /* Outra aba mexeu no carrinho: o contador desta também acompanha. */
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'pharmafit_carrinho') contar();
+    });
+
+    /* O botão é delegado no documento porque a grade de produtos é
+       desenhada depois deste código rodar — ligar um a um pegaria só os
+       cartões que já existissem. */
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-por-no-carrinho]');
+      if (!b) return;
+
+      C.por(b.getAttribute('data-por-no-carrinho'), 1);
+
+      /* O aviso vai no próprio botão, por um instante. Somar ao carrinho
+         sem nenhum sinal deixa a pessoa clicando de novo e levando três. */
+      var texto = b.querySelector('span');
+      if (b.dataset.ocupado === '1') return;
+      b.dataset.ocupado = '1';
+
+      var antes = texto ? texto.textContent : '';
+      b.classList.add('is-feito');
+      if (texto) texto.textContent = 'No carrinho';
+
+      setTimeout(function () {
+        b.classList.remove('is-feito');
+        if (texto) texto.textContent = antes;
+        b.dataset.ocupado = '0';
+      }, 1400);
+    });
+  })();
+
   /* ---------- quem está usando: botão do topo e alto do menu ----------
    *
    * Hoje o site não tem senha: a "conta" é o nome e o WhatsApp guardados

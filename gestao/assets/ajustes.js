@@ -491,3 +491,147 @@
     await pintarBackup();
   })();
 })();
+
+/* =========================================================
+   PHARMA FIT — a cotação das moedas
+
+   O Brian digita, e vale até ele trocar. Não busco cotação
+   automática: sem ele me dizer qual fonte aceita como boa, eu
+   estaria escolhendo por ele um número que vira preço na tela do
+   cliente.
+
+   O CUIDADO QUE IMPORTA AQUI: A DIREÇÃO DA CONTA
+
+   "Quantos reais vale 1 dólar" é 5,40. "Quantos reais vale 1
+   guarani" é 0,00074 — um número que é fácil de digitar errado, e
+   errar a direção não dá erro nenhum: dá um preço absurdo na loja.
+
+   Por isso cada campo mostra, embaixo, quanto ficaria um produto
+   de R$ 1.099,00 com aquele número. Se a pessoa inverter, o
+   exemplo aparece absurdo na hora — antes de salvar. É a única
+   proteção honesta possível: só quem conhece o mercado sabe se
+   "G$ 1.485.135" está certo, e esse é o Brian, não eu.
+   ========================================================= */
+(function () {
+  'use strict';
+
+  var form = document.getElementById('form-cotacao');
+  if (!form) return;
+
+  var Dados = window.PharmaFitDados;
+  var Moedas = window.PharmaFitMoedas;
+  var EXEMPLO = 1099;
+
+  function numeroDe(texto) {
+    var t = String(texto || '').trim().replace(/\s/g, '');
+    if (!t) return null;
+    /* Aceita "5,40" e "5.40": ninguém deve errar por causa de vírgula. */
+    var n = Number(t.replace(',', '.'));
+    return (isFinite(n) && n > 0) ? n : null;
+  }
+
+  function pintarExemplo(id) {
+    var campo = document.querySelector('[data-cotacao="' + id + '"]');
+    var onde = document.querySelector('[data-exemplo="' + id + '"]');
+    if (!campo || !onde) return;
+
+    var taxa = numeroDe(campo.value);
+    if (!taxa) {
+      onde.textContent = campo.value.trim()
+        ? 'Isto não parece um número. Escreva só números, como 5,40.'
+        : 'Vazio: esta moeda não aparece na loja.';
+      onde.style.color = campo.value.trim() ? '#8f2b2b' : '';
+      return;
+    }
+
+    var m = (Moedas.MOEDAS || []).filter(function (x) { return x.id === id; })[0];
+    if (!m) return;
+
+    var convertido = EXEMPLO / taxa;
+    var texto = m.simbolo + ' ' + convertido.toLocaleString(m.local, {
+      minimumFractionDigits: m.casas, maximumFractionDigits: m.casas
+    });
+
+    onde.textContent = 'Um produto de R$ 1.099,00 apareceria como ' + texto +
+      '. Se este valor parecer absurdo, o número está invertido.';
+    onde.style.color = '';
+  }
+
+  function dizer(msg, tipo) {
+    var caixa = document.getElementById('cotacao-recado');
+    caixa.hidden = false;
+    caixa.className = 'alert alert--' + (tipo || 'erro') + ' is-visible';
+    caixa.textContent = msg;
+  }
+
+  /* ---------- carregar o que está salvo ---------- */
+
+  (async function () {
+    for (var i = 0; i < Moedas.MOEDAS.length; i++) {
+      var m = Moedas.MOEDAS[i];
+      try {
+        var valor = await Dados.lerConfig(Moedas.chaveDe(m.id), '');
+        var campo = document.querySelector('[data-cotacao="' + m.id + '"]');
+        if (campo && valor) campo.value = String(valor).replace('.', ',');
+      } catch (e) {}
+      pintarExemplo(m.id);
+    }
+
+    var quando = await Moedas.desdeQuando();
+    if (quando) document.getElementById('cotacao-quando').textContent = 'Salva: ' + quando + '.';
+  })();
+
+  /* O exemplo acompanha a digitação, para o erro aparecer antes de salvar. */
+  form.querySelectorAll('[data-cotacao]').forEach(function (campo) {
+    campo.addEventListener('input', function () {
+      pintarExemplo(campo.getAttribute('data-cotacao'));
+    });
+  });
+
+  /* ---------- salvar ---------- */
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    var botao = document.getElementById('salvar-cotacao');
+    botao.setAttribute('disabled', '');
+    botao.textContent = 'Salvando…';
+
+    var erros = [];
+    var salvos = 0;
+
+    for (var i = 0; i < Moedas.MOEDAS.length; i++) {
+      var m = Moedas.MOEDAS[i];
+      var campo = document.querySelector('[data-cotacao="' + m.id + '"]');
+      var bruto = campo ? campo.value.trim() : '';
+      var n = numeroDe(bruto);
+
+      /* Campo preenchido com coisa que não é número não pode ser salvo
+         em silêncio: viraria "sem cotação" e o Brian pensaria que salvou. */
+      if (bruto && !n) {
+        erros.push(m.nome);
+        continue;
+      }
+
+      try {
+        await Dados.salvarConfig(Moedas.chaveDe(m.id), n ? String(n) : '');
+        if (n) salvos++;
+      } catch (err) {
+        erros.push(m.nome + ' (' + (err && err.message ? err.message : 'erro ao salvar') + ')');
+      }
+    }
+
+    botao.removeAttribute('disabled');
+    botao.textContent = 'Salvar a cotação';
+
+    if (erros.length) {
+      return dizer('Não salvei: ' + erros.join(', ') + '. Escreva só números.', 'erro');
+    }
+
+    Moedas.recarregar();
+    dizer(salvos
+      ? salvos + (salvos === 1 ? ' moeda salva.' : ' moedas salvas.') +
+        ' Para a loja mostrar, falta aplicar a migração 04 — ela libera a leitura da cotação no site.'
+      : 'Cotação apagada. A loja volta a falar só em real.', 'ok');
+  });
+})();

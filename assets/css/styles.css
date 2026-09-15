@@ -2191,3 +2191,199 @@ textarea:focus-visible{
    "Entrar" e nada parece acontecer, então ela toca de novo — e duas
    tentativas seguidas caem no limite do servidor. */
 .btn[aria-busy="true"]{opacity:.7;pointer-events:none}
+
+/* =========================================================
+   Carrinho
+   ========================================================= */
+
+/* Os dois botões do cartão de produto, lado a lado. Em tela estreita
+   empilham, porque dois botões de 150px não cabem em 160px. */
+.product__acoes{display:flex;gap:8px;flex-wrap:wrap}
+.product__acoes .btn{flex:1 1 auto;min-width:0;justify-content:center}
+.btn--carrinho{gap:8px}
+.btn--carrinho svg{flex:none}
+
+/* O botão diz que deu certo, no próprio botão. Um item somado ao
+   carrinho sem nenhum sinal deixa a pessoa clicando de novo. */
+.btn--carrinho.is-feito{
+  background:linear-gradient(135deg,#3f8b7a,#2f6f62);
+  border-color:transparent;
+}
+
+/* ---- a bolinha do carrinho no topo ---- */
+.carrinho-contador{
+  position:absolute;
+  top:2px;right:0;
+  min-width:17px;height:17px;
+  padding:0 4px;
+  display:grid;place-items:center;
+  border-radius:999px;
+  background:var(--gold);
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+}
+
+/* ---- a página do carrinho ---- */
+.carrinho{max-width:680px;margin:0 auto}
+
+.carrinho__item{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+  padding:16px 0;
+  border-top:1px solid var(--line);
+}
+.carrinho__item:first-child{border-top:0}
+
+.carrinho__foto{
+  flex:none;
+  width:76px;height:76px;
+  object-fit:contain;
+  border-radius:12px;
+  background:var(--cream);
+  padding:7px;
+}
+
+.carrinho__corpo{flex:1;min-width:0}
+.carrinho__nome{
+  font-size:15.5px;
+  font-weight:600;
+  margin:0 0 3px;
+  line-height:1.35;
+}
+.carrinho__unidade{font-size:13px;color:var(--muted);margin:0}
+
+/* Aparece só quando o produto tem faixa de atacado e falta pouco para
+   a próxima. É a única frase da tela que pede mais quantidade, e ela
+   só existe quando há desconto de verdade esperando. */
+.carrinho__faixa{
+  margin:7px 0 0;
+  font-size:12.5px;
+  line-height:1.5;
+  color:#2f6f62;
+  background:#e9f2ef;
+  border-radius:9px;
+  padding:7px 10px;
+}
+
+.carrinho__quantidade{
+  display:inline-flex;
+  align-items:center;
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  overflow:hidden;
+  background:var(--card);
+}
+.carrinho__qbtn{
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  color:var(--ink-2);
+  transition:background .16s ease;
+}
+.carrinho__qbtn:hover{background:var(--cream)}
+.carrinho__qbtn[disabled]{opacity:.35;pointer-events:none}
+.carrinho__qnum{
+  min-width:40px;
+  text-align:center;
+  font-size:15px;
+  font-weight:600;
+}
+
+.carrinho__lado{
+  flex:none;
+  text-align:right;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:6px;
+}
+.carrinho__subtotal{
+  font-family:var(--serif);
+  font-size:19px;
+  margin:0;
+  white-space:nowrap;
+}
+.carrinho__cada{font-size:12px;color:var(--muted);margin:0;white-space:nowrap}
+.carrinho__tirar{
+  font-size:12.5px;
+  color:var(--muted);
+  border-bottom:1px solid transparent;
+  transition:color .18s ease,border-color .18s ease;
+}
+.carrinho__tirar:hover{color:#8f2b2b;border-color:#e0b4b4}
+
+/* ---- o resumo ---- */
+.resumo{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:20px;
+  box-shadow:var(--shadow-sm);
+}
+.resumo__titulo{
+  font-family:var(--serif);
+  font-size:20px;
+  font-weight:500;
+  margin:0 0 16px;
+}
+.resumo__linha{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  font-size:14px;
+  padding:7px 0;
+}
+.resumo__linha span:last-child{font-weight:600;white-space:nowrap}
+.resumo__total{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.resumo__total-rotulo{font-size:15px;font-weight:600}
+.resumo__total-valor{
+  font-family:var(--serif);
+  font-size:clamp(22px,6.5vw,28px);
+  white-space:nowrap;
+}
+
+/* As outras moedas. Aparecem só quando a cotação está preenchida no
+   painel — sem cotação, nenhuma linha, em vez de "G$ 0". */
+.resumo__moedas{
+  margin:12px 0 0;
+  padding-top:12px;
+  border-top:1px dashed var(--line);
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 18px;
+  font-size:13px;
+  color:var(--muted);
+}
+.resumo__moeda b{color:var(--ink-2);font-weight:600}
+.resumo__cotacao{
+  margin:8px 0 0;
+  font-size:11.5px;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+.resumo__aviso{
+  margin:14px 0 0;
+  font-size:12.5px;
+  line-height:1.55;
+  color:var(--muted);
+  background:var(--cream);
+  border-radius:10px;
+  padding:11px 13px;
+}
+
+@media (max-width:640px){
+  .carrinho__foto{width:62px;height:62px}
+  .carrinho__item{gap:11px}
+}

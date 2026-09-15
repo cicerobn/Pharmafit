@@ -79,11 +79,24 @@
   function cartao(p, etiqueta) {
     if (etiqueta === undefined) etiqueta = p.antes ? 'PROMOÇÃO' : p.destaque;
 
+    /* Fora de estoque não ganha botão de carrinho: pôr no carrinho o que
+       não pode ser entregue só empurra a decepção para o fim da compra. */
     var acao = semEstoque(p)
       ? '<button class="btn btn--outline btn--espera" type="button" data-avise="' + esc(p.nome) + '">' +
           'Avise-me quando chegar' + setaHtml + '</button>'
-      : '<a class="btn btn--outline" href="#contato" data-pedido="' + esc(p.nome) + '">' +
-          'Saiba mais' + setaHtml + '</a>';
+      : '<div class="product__acoes">' +
+          '<button class="btn btn--primary btn--carrinho" type="button" ' +
+            'data-por-no-carrinho="' + esc(p.nome) + '">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
+            '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
+            '</svg>' +
+            '<span>Adicionar</span>' +
+          '</button>' +
+          '<a class="btn btn--outline" href="#contato" data-pedido="' + esc(p.nome) + '">' +
+            'Saiba mais' + setaHtml + '</a>' +
+        '</div>';
 
     return '' +
       '<article class="product' + (semEstoque(p) ? ' is-indisponivel' : '') +
