@@ -128,8 +128,13 @@
     var botoes = ['<button class="chip is-active" type="button" ' +
       'data-chip="todos" aria-pressed="true">Todos</button>'];
 
-    categorias.forEach(function (c) {
+    /* Cada categoria leva um numero de cor, e o CSS decide qual cor e.
+       Por indice e nao por nome: renomear "Peptideos" nao deve trocar a
+       cor de lugar. O rodizio de 4 garante que a quinta categoria ainda
+       receba uma cor definida, em vez de nascer sem nenhuma. */
+    categorias.forEach(function (c, i) {
       botoes.push('<button class="chip" type="button" ' +
+        'data-cor="' + ((i % 4) + 1) + '" ' +
         'data-chip="' + chave(c) + '" aria-pressed="false">' + esc(c) + '</button>');
     });
 

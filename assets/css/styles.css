@@ -31,6 +31,23 @@
   --shadow-lg:0 24px 60px rgba(40,30,10,.14);
 
   --nav-h:74px;
+
+  /* ---- uma cor para cada categoria do catalogo ----------------
+     Escolhidas para conviver com o creme e o dourado da casa: sao
+     tons fundos e quebrados, nao cores puras. Cor pura ao lado de
+     dourado briga e deixa a vitrine com cara de promocao de
+     supermercado.
+
+     O tom 1 e o cheio (fundo do chip marcado) e o 2 e o mais claro
+     (topo do degrade), para o chip marcado ter volume.
+
+     Sao QUATRO para tres categorias de proposito: no dia em que
+     entrar uma quarta, ela ja tem cor. Da quinta em diante o
+     rodizio recomeca, e nenhuma fica sem cor definida. */
+  --cat1:#2f6f62;  --cat1-2:#3f8b7a;   /* verde fundo    */
+  --cat2:#a4552f;  --cat2-2:#c06a3d;   /* terracota      */
+  --cat3:#6a4270;  --cat3-2:#85558b;   /* ameixa         */
+  --cat4:#3a5a7a;  --cat4-2:#4d739a;   /* azul ardosia   */
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -424,21 +441,67 @@ ul{margin:0;padding:0;list-style:none}
 
 .chip{
   flex:none;
-  border:1px solid var(--gold);
-  color:var(--gold);
+  /* --c e --c2 sao a cor DESTE chip. O "Todos" fica no dourado da
+     casa; cada categoria recebe a sua em data-cor, logo abaixo. */
+  --c:var(--gold);
+  --c2:var(--gold-2);
+  border:1px solid var(--c);
+  color:var(--c);
   background:transparent;
   border-radius:999px;
   padding:9px 16px;
   font-size:13.5px;
   white-space:nowrap;
-  transition:background .2s ease,color .2s ease;
+  /* border-color e box-shadow entraram na lista: sem eles, a borda e a
+     sombra trocavam de uma vez enquanto o resto ia devagar, e o chip
+     dava um "pulo" no meio da transicao. */
+  transition:background .24s ease,color .24s ease,
+             border-color .24s ease,box-shadow .24s ease,
+             transform .12s ease;
 }
-.chip:hover{background:rgba(176,140,74,.1)}
+
+/* A cor entra por indice, e nao pelo nome da categoria: assim voce pode
+   renomear "Peptideos" amanha sem que a cor troque de lugar. */
+.chip[data-cor="1"]{--c:var(--cat1);--c2:var(--cat1-2)}
+.chip[data-cor="2"]{--c:var(--cat2);--c2:var(--cat2-2)}
+.chip[data-cor="3"]{--c:var(--cat3);--c2:var(--cat3-2)}
+.chip[data-cor="4"]{--c:var(--cat4);--c2:var(--cat4-2)}
+
+/* Um ponto da cor antes do texto, so no chip NAO marcado: e o que deixa a
+   fila de botoes legivel como "categorias diferentes" antes de clicar em
+   nada. No marcado ele sai, porque ali a cor ja e o fundo inteiro. */
+.chip::before{
+  content:"";
+  display:inline-block;
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--c);
+  margin-right:8px;
+  vertical-align:1px;
+  transition:opacity .2s ease,width .2s ease,margin .2s ease;
+}
+.chip[data-chip="todos"]::before,
+.chip.is-active::before{
+  opacity:0;
+  width:0;
+  margin-right:0;
+}
+
+.chip:hover{background:color-mix(in srgb,var(--c) 12%,transparent)}
+.chip:active{transform:scale(.97)}
+
 .chip.is-active{
-  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  background:linear-gradient(135deg,var(--c2),var(--c));
   color:#fff;
   border-color:transparent;
-  box-shadow:0 10px 22px rgba(176,140,74,.28);
+  box-shadow:0 10px 22px color-mix(in srgb,var(--c) 34%,transparent);
+}
+
+/* color-mix e recente. Onde nao existir, cai para um cinza-dourado
+   discreto em vez de ficar sem nada. */
+@supports not (background:color-mix(in srgb,red 10%,transparent)){
+  .chip:hover{background:rgba(176,140,74,.1)}
+  .chip.is-active{box-shadow:0 10px 22px rgba(40,30,10,.22)}
 }
 
 .promo{
@@ -727,6 +790,34 @@ ul{margin:0;padding:0;list-style:none}
 }
 
 .is-hidden{display:none !important}
+
+/* ---- a troca de categoria tem movimento -----------------------
+   O filtro esconde com `display:none`, e display NAO transiciona: nao
+   existe meio caminho entre "na tela" e "fora do layout". Entao a
+   animacao nao e na saida, e na ENTRADA — quem fica visivel entra de
+   novo, com um atraso crescente que faz a grade se montar em cascata
+   em vez de piscar toda de uma vez.
+
+   O atraso e limitado no JS: numa vitrine grande, o ultimo cartao
+   apareceria segundos depois, e ai o site parece travado. */
+@keyframes entraCartao{
+  from{opacity:0;transform:translateY(12px) scale(.985)}
+  to  {opacity:1;transform:none}
+}
+
+.product.is-entrando{
+  animation:entraCartao .34s cubic-bezier(.22,.7,.3,1) backwards;
+  animation-delay:calc(var(--i,0) * 26ms);
+}
+
+/* Quem pediu menos movimento no sistema nao recebe nenhum. Nao e
+   enfeite opcional: animacao em quem tem enjoo de movimento passa mal
+   de verdade. */
+@media (prefers-reduced-motion:reduce){
+  .product.is-entrando{animation:none}
+  .chip{transition:none}
+  .chip:active{transform:none}
+}
 [hidden]{display:none !important}
 
 /* ---------- campos de formulário ---------- */

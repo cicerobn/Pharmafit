@@ -140,11 +140,51 @@
         document.querySelectorAll('[data-category]').forEach(function (card) {
           card.classList.remove('is-hidden');
         });
+        animarEntrada(document.querySelector('[data-grade]'));
         conferirVitrine();
       });
     }
 
     aviso.hidden = visiveis > 0;
+  }
+
+  /* ---------- movimento na troca de categoria ---------- */
+
+  var MENOS_MOVIMENTO = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /**
+   * Reanima os cartoes que ficaram visiveis.
+   *
+   * A animacao e na ENTRADA, e nao na saida: o filtro esconde com
+   * `display:none`, e display nao tem meio caminho para transicionar.
+   *
+   * O atraso cresce por cartao, para a grade se montar em cascata — mas
+   * PARA de crescer no 12o. Sem esse limite, numa vitrine de cinquenta
+   * produtos o ultimo apareceria mais de um segundo depois, e um site que
+   * demora a desenhar nao parece elegante, parece quebrado.
+   */
+  function animarEntrada(grade) {
+    if (MENOS_MOVIMENTO || !grade) return;
+
+    var visiveis = grade.querySelectorAll('.product:not(.is-hidden)');
+
+    Array.prototype.forEach.call(visiveis, function (card, i) {
+      /* Tirar e repor a classe nao basta: o navegador junta as duas
+         mudancas no mesmo quadro e a animacao nao recomeca. Ler uma
+         medida do elemento no meio obriga ele a aplicar a remocao antes
+         — e sem isso, filtrar duas vezes seguidas nao anima na segunda. */
+      card.classList.remove('is-entrando');
+      void card.offsetWidth;
+
+      card.style.setProperty('--i', String(Math.min(i, 12)));
+      card.classList.add('is-entrando');
+
+      card.addEventListener('animationend', function () {
+        card.classList.remove('is-entrando');
+        card.style.removeProperty('--i');
+      }, { once: true });
+    });
   }
 
   /* ---------- filtro de categorias ---------- */
@@ -168,6 +208,7 @@
           card.classList.toggle('is-hidden', !show);
         });
 
+        animarEntrada(document.querySelector('[data-grade]'));
         conferirVitrine();
       });
     });
@@ -191,6 +232,7 @@
         other.setAttribute('aria-pressed', 'false');
       });
       products.forEach(function (card) { card.classList.remove('is-hidden'); });
+      animarEntrada(document.querySelector('[data-grade]'));
       conferirVitrine();
     });
   });
@@ -199,6 +241,10 @@
   var searchField = document.querySelector('[data-search-field]');
 
   if (searchField && products.length) {
+    /* A busca NAO anima, de proposito. Ela dispara a cada letra: animar
+       aqui faria a grade tremer enquanto a pessoa digita, o que atrapalha
+       exatamente quem esta procurando algo. Movimento na troca de
+       categoria ajuda a entender que a lista mudou; na busca, estorva. */
     searchField.addEventListener('input', function () {
       var term = searchField.value.trim().toLowerCase();
       products.forEach(function (card) {
