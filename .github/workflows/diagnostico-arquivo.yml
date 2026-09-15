@@ -27,15 +27,60 @@ jobs:
 
           # A PERGUNTA DE AGORA
           #
-          # `gestao/assets/gestao.css` mudou e nao chegou: dez tentativas em
-          # cinco minutos, nenhuma bateu. Mas as paginas agora pedem o arquivo
-          # COM a marca de versao (`gestao.css?v=31bbb5fe`), e endereco com
-          # marca e outra chave de cache. Pode ser que o visitante esteja
-          # recebendo o arquivo certo e a conferencia esteja olhando o endereco
-          # errado — o sem marca, que ninguem mais pede.
+          # A conferencia reprovou tres publicacoes seguidas dizendo que
+          # `gestao/assets/gestao.css` e `gestao/assets/painel.js` nao chegaram.
+          # Mas o relatorio dela se contradiz: `dados.js` aparece como AUSENTE
+          # na tentativa 1, PRESENTE na 3, ausente de novo na 4 e presente na 5.
           #
-          # Se for isso, o site esta bom e a conferencia esta ruim. Os dois
-          # precisam de conserto diferente, entao a pergunta importa.
+          # Arquivo publicado nao despublica. Uma lista que oscila desse jeito
+          # nao esta medindo se o arquivo chegou — esta medindo outra coisa.
+          #
+          # A SUSPEITA: a conferencia pede ~101 arquivos, ate duas vezes cada,
+          # dez vezes seguidas. Sao uns 2000 pedidos ao mesmo servidor em cinco
+          # minutos. Se ele comeca a recusar ou a demorar, o `curl -fsS` falha,
+          # a saida vem VAZIA, e o md5 do vazio nunca bate com o md5 do arquivo.
+          # Pedido recusado e conteudo errado viram a mesma coisa no relatorio.
+          #
+          # Isto NAO conserta nada. Pede o mesmo arquivo 40 vezes em sequencia e
+          # imprime o codigo HTTP de cada pedido, para a causa aparecer:
+          #
+          #   · se todos derem 200 com o md5 certo → a suspeita esta errada e o
+          #     problema e outro (edge do CDN com copias diferentes, por ex.)
+          #   · se os primeiros derem 200 e os seguintes 429/503/000 → e limite
+          #     de pedidos, e o conserto e na conferencia, nao no site
+          alvo2="$alvo"
+          for arq in gestao/assets/gestao.css gestao/assets/painel.js; do
+            marca=$(grep -ho "$(basename "$arq")?v=[a-f0-9]*" gestao/*.html *.html 2>/dev/null | head -1 | sed 's/.*?v=//')
+            aqui=$(md5sum "$arq" | cut -d' ' -f1)
+            echo "================================================================"
+            echo "  40 pedidos seguidos de $arq?v=$marca"
+            echo "  md5 no repositorio: ${aqui:0:12}"
+            echo "================================================================"
+            certos=0; errados=0; recusados=0
+            linha=""
+            for n in $(seq 1 40); do
+              cod=$(curl -s -o /tmp/veio2 -w '%{http_code}' --max-time 20 \
+                    "$alvo2/$arq?v=$marca" 2>/dev/null || echo 000)
+              la=$(md5sum /tmp/veio2 | cut -d' ' -f1)
+              if [ "$cod" = "200" ] && [ "$la" = "$aqui" ]; then
+                linha="$linha."; certos=$((certos+1))
+              elif [ "$cod" = "200" ]; then
+                linha="$linha?"; errados=$((errados+1))
+                echo "    pedido $n: HTTP 200 mas md5 ${la:0:12} (conteudo diferente)"
+              else
+                linha="$linha X"; recusados=$((recusados+1))
+                echo "    pedido $n: HTTP $cod (o servidor nao entregou)"
+              fi
+            done
+            echo "    $linha"
+            echo "    certos=$certos  conteudo-diferente=$errados  nao-entregues=$recusados"
+            echo "    ( . = certo   ? = 200 com outro conteudo   X = nao entregue )"
+            echo
+          done
+
+          echo "================================================================"
+          echo "  E agora o exame de sempre, arquivo por arquivo"
+          echo "================================================================"
           for arq in gestao/assets/gestao.css assets/css/styles.css; do
             marca=$(grep -ho "$(basename "$arq")?v=[a-f0-9]*" gestao/*.html *.html 2>/dev/null | head -1 | sed 's/.*?v=//')
             aqui=$(md5sum "$arq" | cut -d' ' -f1)
