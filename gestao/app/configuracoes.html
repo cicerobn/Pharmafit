@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mais — Gestão Pharma Fit</title>
+<title>Configurações — Gestão Pharma Fit</title>
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#1d1b18">
 <link rel="icon" href="../../assets/img/logo-pf.svg" type="image/svg+xml">
@@ -18,19 +18,52 @@
 
 <div class="app">
   <main>
+
     <div class="pagina">
-      <h1 class="pagina__titulo">Mais</h1>
-      <p class="pagina__sub">O resto do painel</p>
+      <a class="pagina__volta" href="mais.html" data-volta aria-label="Voltar"></a>
+      <h1 class="pagina__titulo">Configurações</h1>
     </div>
 
+    <!-- o cartão do negócio, com o que está cadastrado de verdade -->
     <section class="bloco">
-      <div class="bloco__topo"><h2 class="bloco__titulo">Números</h2></div>
-      <ul class="lista" data-atalhos-numeros></ul>
+      <a class="empresa" href="../ajustes.html#bloco-banco">
+        <span class="empresa__marca">
+          <img src="../../assets/img/logo-pf.svg" alt="">
+        </span>
+        <span class="empresa__corpo">
+          <span class="empresa__nome">Pharma Fit</span>
+          <span class="empresa__linha" data-empresa-onde>Saúde, performance e bem-estar</span>
+          <span class="empresa__dado" data-empresa-zap></span>
+          <span class="empresa__dado" data-empresa-dono></span>
+        </span>
+        <span class="empresa__seta" data-empresa-seta></span>
+      </a>
     </section>
 
+    <p class="rotulo-secao">Geral</p>
     <section class="bloco">
-      <div class="bloco__topo"><h2 class="bloco__titulo">Cadastros e ajustes</h2></div>
-      <ul class="lista" data-atalhos-ajustes></ul>
+      <ul class="lista" data-geral></ul>
+    </section>
+
+    <p class="rotulo-secao">Sistema</p>
+    <section class="bloco">
+      <ul class="lista" data-sistema></ul>
+    </section>
+
+    <!-- O que a foto do Brian tem e a Pharma Fit ainda não tem.
+         Fica escrito na tela em vez de virar linha que não abre nada. -->
+    <section class="bloco" data-bloco-falta hidden>
+      <div class="bloco__topo">
+        <h2 class="bloco__titulo">Ainda não existe</h2>
+      </div>
+      <div class="bloco__corpo">
+        <p class="falta__lead">
+          Estas telas aparecem no modelo que você me mandou e a Pharma Fit
+          ainda não tem. Preferi dizer aqui do que pôr um botão que não abre
+          nada:
+        </p>
+        <ul class="falta" data-falta></ul>
+      </div>
     </section>
 
     <section class="bloco">
@@ -55,6 +88,6 @@
 <script src="../assets/dados.js?v=3e7d09d1"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
 <script src="app.js?v=198c6c76"></script>
-<script src="mais.js?v=75f31ec7"></script>
+<script src="configuracoes.js?v=d1e21de1"></script>
 </body>
 </html>

@@ -985,3 +985,163 @@ body.travado{overflow:hidden}
   .gaveta{transform:none;visibility:hidden;display:none}
   .gaveta.is-aberta{display:flex;visibility:visible}
 }
+
+/* ---------------------------------------------------------
+   Voltar no cabeçalho da página
+   --------------------------------------------------------- */
+
+/* Telas de dentro (Configurações, Relatórios) precisam de caminho de
+   volta. A aba de baixo continua marcada em "Mais", porque é de lá que
+   se chega — mas a aba sozinha não é caminho de volta: ela recarrega a
+   lista em vez de voltar para ela. */
+.pagina--dentro{display:flex;align-items:center;gap:10px}
+.pagina__volta{
+  flex:none;
+  width:38px;height:38px;
+  margin-left:-8px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  color:var(--ink);
+  transition:background .18s ease;
+}
+.pagina__volta:hover{background:var(--line-2)}
+
+/* ---------------------------------------------------------
+   Rótulo de seção (GERAL, SISTEMA)
+   --------------------------------------------------------- */
+
+.rotulo-secao{
+  margin:18px 18px 8px;
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted-2);
+}
+
+/* ---------------------------------------------------------
+   Cartão do negócio
+   --------------------------------------------------------- */
+
+.empresa{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  padding:16px 18px;
+}
+.empresa__marca{
+  flex:none;
+  width:52px;height:52px;
+  border-radius:14px;
+  background:var(--line-2);
+  display:grid;place-items:center;
+}
+.empresa__marca img{width:32px;height:32px}
+/* minmax(0,1fr) não serve aqui porque é flex: o min-width:0 é o que
+   deixa o texto encolher em vez de empurrar a seta fora da tela. */
+.empresa__corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.empresa__nome{
+  font-family:var(--serif);
+  font-size:18px;
+  font-weight:500;
+}
+.empresa__linha{font-size:13px;color:var(--muted)}
+.empresa__dado{
+  font-size:12px;
+  color:var(--muted-2);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.empresa__seta{flex:none;color:var(--muted-2)}
+
+/* ---------------------------------------------------------
+   O que ainda não existe
+   --------------------------------------------------------- */
+
+.falta__lead{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.55}
+.falta{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.falta__item{
+  font-size:12.5px;
+  color:var(--muted);
+  line-height:1.55;
+  padding-left:12px;
+  border-left:2px solid var(--line);
+}
+.falta__item b{color:var(--ink);font-weight:600}
+
+/* ---------------------------------------------------------
+   Relatórios: variação, gráfico de linha e rosca
+   --------------------------------------------------------- */
+
+/* "+15% vs mês anterior". A cor vem do sinal, não do gosto: verde só
+   quando subiu de verdade. Sem mês anterior para comparar, esta linha
+   não aparece — porcentagem contra zero não quer dizer nada. */
+.variacao{display:flex;align-items:center;gap:4px}
+.variacao b{font-weight:600}
+.variacao--sobe{color:#1f7a4d}
+.variacao--desce{color:#a8322a}
+
+.periodo__nota{font-size:12.5px;color:var(--muted-2);white-space:nowrap}
+
+/* O aviso de lucro inflado. Vermelho de propósito: ele não tira o
+   número da tela, ele diz que o número está por cima. */
+.aviso-conta{
+  margin:12px 18px 0;
+  padding:11px 13px;
+  border-radius:12px;
+  background:#fbeae8;
+  border:1px solid #f0cdc8;
+  color:#8f2b2b;
+  font-size:12.5px;
+  line-height:1.5;
+}
+
+/* ---- gráfico de linha ---- */
+
+.linha-graf{display:block;width:100%;height:auto}
+.linha-graf__area{fill:url(#gradLinha)}
+.linha-graf__traco{fill:none;stroke:var(--gold);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.linha-graf__ponto{fill:var(--gold)}
+.linha-graf__grade{stroke:var(--line);stroke-width:1}
+.linha-graf__eixo{fill:var(--muted-2);font-size:9px;font-family:var(--sans)}
+
+/* ---- rosca ---- */
+
+/* A rosca ao lado da legenda deixava 150px para o nome do produto, e
+   com isso "Tirzec Pen 15 mg" e "Tirzec 15 mg — 4 ampolas" viravam os
+   dois "Tirzec …" na tela: duas coisas diferentes com o mesmo rótulo,
+   que é pior que rótulo nenhum. Medido na foto, não deduzido.
+
+   Então no celular a rosca vai para cima, centralizada, e a legenda
+   fica com a largura toda. Lado a lado só a partir de 480px, onde
+   sobra espaço para o nome inteiro. */
+.rosca-area{display:flex;flex-direction:column;align-items:center;gap:14px}
+.rosca{flex:none;width:132px;height:132px}
+.rosca__fatia{transition:opacity .2s ease}
+.rosca__meio{fill:var(--ink);font-family:var(--serif);font-size:13px;text-anchor:middle}
+.rosca__meio-pe{fill:var(--muted-2);font-family:var(--sans);font-size:6.5px;text-anchor:middle}
+
+/* min-width:0 para o nome comprido encolher em vez de estourar a linha */
+.rosca__legenda{
+  width:100%;
+  min-width:0;
+  display:flex;flex-direction:column;gap:9px;
+  margin:0;padding:0;list-style:none;
+}
+.rosca__linha{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.rosca__cor{flex:none;width:10px;height:10px;border-radius:3px}
+.rosca__nome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.rosca__fatia-pct{flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
+.rosca__valor{flex:none;font-weight:600;font-variant-numeric:tabular-nums}
+
+@media (min-width:480px){
+  .rosca-area{flex-direction:row;align-items:center;gap:18px}
+  .rosca__legenda{width:auto;flex:1}
+}
+
+/* Em tela muito estreita a porcentagem sai: ela é a informação menos
+   útil das três, e o nome do produto é a mais. */
+@media (max-width:339px){
+  .rosca__fatia-pct{display:none}
+}

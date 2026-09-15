@@ -13,7 +13,10 @@
   var Moldura = window.PharmaFitMoldura;
 
   var NUMEROS = [
-    { rotulo: 'Relatórios', pe: 'Fechamento do mês e rankings', icone: 'grafico', href: '../relatorios.html' },
+    /* Relatórios agora abre a tela do app (gráficos, no celular). O
+       relatório completo, com comparação de meses e planilha, continua
+       na tela grande e está linkado lá dentro. */
+    { rotulo: 'Relatórios', pe: 'Faturamento, lucro e gráficos do mês', icone: 'grafico', href: 'relatorios.html' },
     { rotulo: 'Gastos', pe: 'Lançar e ver as despesas', icone: 'dinheiro', href: '../despesas.html' },
     { rotulo: 'Dashboard', pe: 'A visão geral em tela grande', icone: 'casa', href: '../dashboard.html' }
   ];
@@ -21,7 +24,7 @@
   var AJUSTES = [
     { rotulo: 'Clientes', pe: 'Quem já comprou', icone: 'gente', href: 'clientes.html' },
     { rotulo: 'Fila de pedidos', pe: 'Confirmar, separar e enviar', icone: 'caixa', href: '../index.html' },
-    { rotulo: 'Ajustes', pe: 'WhatsApp, notificações e cópia de segurança', icone: 'engrenagem', href: '../ajustes.html' }
+    { rotulo: 'Configurações', pe: 'Dados da empresa, cotação e cópia de segurança', icone: 'engrenagem', href: 'configuracoes.html' }
   ];
 
   function linhas(lista) {

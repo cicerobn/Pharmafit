@@ -31,7 +31,15 @@
     engrenagem: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
     sair: '<path d="M15 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4"/><path d="M10 17l-5-5 5-5M5 12h10"/>',
     seta: '<path d="m9 5 7 7-7 7"/>',
-    volta: '<path d="m14 5-7 7 7 7"/>'
+    volta: '<path d="m14 5-7 7 7 7"/>',
+
+    /* para a tela de Configurações e a de Relatórios */
+    predio: '<path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16"/><path d="M15 10h4a1 1 0 0 1 1 1v10"/><path d="M8 8h3M8 12h3M8 16h3"/><path d="M2 21h20"/>',
+    moeda: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3 3 0 0 0-3-1.5c-1.7 0-3 .9-3 2s1.3 2 3 2 3 .9 3 2-1.3 2-3 2a3 3 0 0 1-3-1.5"/>',
+    escudo: '<path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',
+    tabela: '<path d="M3 5h18v14H3z"/><path d="M3 10h18M3 15h18M9 5v14M15 5v14"/>',
+    calendario: '<path d="M4 6h16v14H4z"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+    rosca: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/>'
   };
 
   function svg(nome, tamanho, grossura) {

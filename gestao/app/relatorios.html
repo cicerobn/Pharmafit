@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Relatórios — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1d1b18">
+<link rel="icon" href="../../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="app.css?v=290de48e">
+</head>
+<body>
+
+<div class="app">
+  <main>
+
+    <div class="pagina pagina--dentro">
+      <a class="pagina__volta" href="mais.html" data-volta aria-label="Voltar"></a>
+      <h1 class="pagina__titulo">Relatórios</h1>
+      <label class="periodo">
+        <span class="visually-hidden">Escolher o mês</span>
+        <select data-mes></select>
+      </label>
+    </div>
+
+    <!-- enquanto carrega, o osso, e não a tela vazia -->
+    <div data-carregando>
+      <div class="bloco"><div class="bloco__corpo">
+        <div class="osso osso--destaque"></div>
+      </div></div>
+      <div class="bloco"><div class="bloco__corpo">
+        <div class="osso osso--cartao"></div>
+      </div></div>
+    </div>
+
+    <div data-conteudo hidden>
+
+      <!-- Os dois números do topo usam a grade `.numeros` que já existe
+           no painel, e não uma classe nova: ela já tem o
+           minmax(0,1fr) que impede valor grande de empurrar a grade
+           fora da tela no celular. -->
+      <div class="numeros">
+        <article class="numero">
+          <p class="numero__rotulo">Faturamento</p>
+          <p class="numero__valor" data-faturamento>—</p>
+          <p class="numero__pe variacao" data-faturamento-delta></p>
+        </article>
+        <article class="numero">
+          <p class="numero__rotulo">Lucro líquido</p>
+          <p class="numero__valor" data-lucro>—</p>
+          <p class="numero__pe variacao" data-lucro-delta></p>
+        </article>
+      </div>
+
+      <!-- Sem isto o lucro sai do tamanho do faturamento e parece certo.
+           Aparece só quando alguma venda do mês está sem custo. -->
+      <p class="aviso-conta" data-sem-custo hidden></p>
+
+      <section class="bloco">
+        <div class="bloco__topo">
+          <h2 class="bloco__titulo">Vendas</h2>
+          <span class="periodo__nota" data-vendas-total></span>
+        </div>
+        <div class="bloco__corpo">
+          <div data-linha></div>
+          <p class="vazio__texto" data-linha-vazio hidden></p>
+        </div>
+      </section>
+
+      <section class="bloco">
+        <div class="bloco__topo">
+          <h2 class="bloco__titulo">Vendas por produto</h2>
+        </div>
+        <div class="bloco__corpo">
+          <div class="rosca-area" data-rosca></div>
+          <p class="vazio__texto" data-rosca-vazio hidden></p>
+        </div>
+      </section>
+
+      <section class="bloco">
+        <div class="bloco__corpo" style="padding-top:14px">
+          <a class="item" href="../relatorios.html">
+            <span class="item__corpo">
+              <span class="item__nome">Relatório completo</span>
+              <span class="item__linha">Comparar meses, gastos, rankings e planilha</span>
+            </span>
+            <span class="item__seta" data-seta-completo></span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+</div>
+
+<script src="../assets/config.js?v=86cd5f3d"></script>
+<script src="../assets/util.js?v=a2c25918"></script>
+<script src="../../assets/js/catalogo.js?v=47d1a5bc"></script>
+<script src="../assets/auth.js?v=4cb1bc04"></script>
+<script src="../assets/dados.js?v=3e7d09d1"></script>
+<script src="../assets/analise.js?v=e2445f21"></script>
+<script src="app.js?v=198c6c76"></script>
+<script src="relatorios.js?v=4eb92498"></script>
+</body>
+</html>

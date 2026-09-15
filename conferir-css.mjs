@@ -27,6 +27,9 @@
    2. comentário aberto que nunca fecha — engole o resto do arquivo
    3. chaves desbalanceadas
    4. declaração (`coisa: valor;`) solta fora de qualquer bloco
+   5. `var(--nome)` de variável que não existe — eu inventei três nomes
+      (`--texto`, `--fundo-2`, `--linha`) numa tela nova; os certos eram
+      `--ink`, `--line-2` e `--line`, e a tela só saiu "sem graça"
 
    Ele NÃO sabe se a regra está bonita nem se ela se aplica a alguém.
    Para isso é o navegador. Ele só garante que o que eu escrevi chega
@@ -153,6 +156,62 @@ function conferir(caminho, texto) {
   return problemas;
 }
 
+/**
+ * Variável de cor usada e nunca definida.
+ *
+ * Escrevendo a tela de Configurações eu usei `var(--texto)`,
+ * `var(--fundo-2)` e `var(--linha)`. Nenhuma das três existe: os nomes
+ * certos são `--ink`, `--line-2` e `--line`. CSS não reclama — a
+ * propriedade fica sem valor, e o texto sai preto padrão, a borda
+ * some. Na tela parece só "um pouco sem graça", e ninguém procura
+ * defeito nisso.
+ *
+ * A conferência olha o repositório inteiro de uma vez, e não folha por
+ * folha, porque as páginas do painel carregam DUAS folhas: o
+ * `gestao.css` usa quinze variáveis definidas no `styles.css`, e isso
+ * está certo. Olhar folha por folha acusaria as quinze.
+ *
+ * Variável definida na marra no HTML (`style="--i:3"`, que é o atraso
+ * da animação em cascata) também vale como definida.
+ */
+function conferirVariaveis(arquivosCss) {
+  const definidas = new Set();
+  const usadas = new Map();   /* nome -> onde apareceu primeiro */
+
+  for (const caminho of arquivosCss) {
+    const txt = readFileSync(caminho, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
+    for (const m of txt.matchAll(/(--[\w-]+)\s*:/g)) definidas.add(m[1]);
+    for (const m of txt.matchAll(/var\(\s*(--[\w-]+)/g)) {
+      if (!usadas.has(m[1])) usadas.set(m[1], relative(RAIZ, caminho));
+    }
+  }
+
+  /* as que o HTML e o JavaScript definem na marra */
+  for (const caminho of acharPorExtensao(RAIZ, ['.html', '.js'])) {
+    const txt = readFileSync(caminho, 'utf8');
+    for (const m of txt.matchAll(/(--[\w-]+)\s*:/g)) definidas.add(m[1]);
+  }
+
+  const orfas = [];
+  for (const [nome, onde] of usadas) {
+    if (!definidas.has(nome)) {
+      orfas.push(`${onde}: usa ${nome}, que não é definida em lugar nenhum ` +
+                 `— a propriedade fica sem valor e o CSS não reclama`);
+    }
+  }
+  return orfas;
+}
+
+function acharPorExtensao(dir, exts, achados = []) {
+  for (const nome of readdirSync(dir)) {
+    if (FORA.has(nome)) continue;
+    const caminho = join(dir, nome);
+    if (statSync(caminho).isDirectory()) acharPorExtensao(caminho, exts, achados);
+    else if (exts.some((e) => nome.endsWith(e))) achados.push(caminho);
+  }
+  return achados;
+}
+
 /* ---------------------------------------------------------------- */
 
 const arquivos = acharCss(RAIZ);
@@ -172,6 +231,15 @@ for (const caminho of arquivos) {
     console.log(`  ACHEI ${curto}`);
     problemas.forEach((p) => console.log(`          · ${p}`));
   }
+}
+
+const orfas = conferirVariaveis(arquivos);
+if (!orfas.length) {
+  console.log(`  ok    nenhuma variável de cor usada sem existir`);
+} else {
+  ruim += orfas.length;
+  console.log(`  ACHEI variável de cor que não existe`);
+  orfas.forEach((o) => console.log(`          · ${o}`));
 }
 
 console.log('');
