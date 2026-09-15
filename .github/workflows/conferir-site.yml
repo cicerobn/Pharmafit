@@ -329,52 +329,77 @@ jobs:
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
 
-          # O SERVIDOR GUARDA COPIA VELHA, E ISSO FOI MEDIDO.
+          # A HOSTINGER TEM UM CDN NA FRENTE, E ISSO FOI MEDIDO.
           #
-          # Pedindo assets/js/app.js dez vezes seguidas, a resposta alterna
-          # entre duas versoes: a deste commit e uma de 4 bytes a mais, que e a
-          # de ANTES da troca de "protocolos" por "produtos". Ou seja, a
-          # hospedagem tem mais de um lugar guardando o arquivo, e um deles
-          # responde com o antigo — por sorteio, a cada pedido.
+          # As respostas vem com `server: hcdn` e `cache-control: max-age=86400`.
+          # Pedindo `gestao/assets/gestao.css` depois de mudar o arquivo:
           #
-          # Isso muda o que "chegou" pode significar. Um pedido que bate nao
-          # prova que todos batem, e um que nao bate nao prova que nao chegou.
-          # Entao cada arquivo diferente e pedido mais TRES vezes: se alguma
-          # delas bater, a versao nova esta no servidor e o que sobra e cache —
-          # isso vira AVISO, com o nome dos arquivos, e nao reprova a
-          # publicacao. Se nenhuma bater nas dez tentativas, ai sim nao chegou.
+          #   sem marca         35228 bytes  HIT   (age 2220)  = a versao VELHA
+          #   com marca ?v=...  38624 bytes  MISS              = a versao nova
+          #   com ?nocache=...  38624 bytes  MISS              = a versao nova
           #
-          # Nao e tolerancia para passar: e a diferenca entre "a Hostinger nao
-          # publicou" e "a Hostinger publicou e esta servindo copia velha por
-          # um tempo". As duas precisam de coisas diferentes, e reprovar as
-          # duas do mesmo jeito ensina a ignorar o vermelho.
-          confirmar() {
-            arq="$1"; aqui="$2"
-            for _ in 1 2 3; do
-              la=$(curl -fsS --max-time 20 "$achou/$arq" 2>/dev/null | md5sum | cut -d' ' -f1)
-              [ "$aqui" = "$la" ] && return 0
-            done
-            return 1
+          # Quer dizer: o arquivo novo ESTA no servidor. O que esta velho e a
+          # copia guardada pelo CDN no endereco SEM marca — e esse endereco
+          # nenhuma pagina pede mais, porque agora todas pedem com a marca.
+          #
+          # Foi assim que esta conferencia reprovou um site que estava certo:
+          # ela pedia um endereco que ninguem usa. Conferencia que reprova o
+          # site certo e a pior especie, porque ensina a ignorar o vermelho.
+          #
+          # ENTAO A PERGUNTA CERTA E "O QUE O VISITANTE RECEBE?", e o endereco
+          # que ele pede e o com marca. Como a marca E o md5 do arquivo, este
+          # passo consegue montar esse endereco sozinho, sem procurar no HTML.
+          #
+          # A diferenca entre os dois casos importa e nao pode ser apagada:
+          #
+          #   · arquivo ESTAMPADO (o HTML pede com ?v=): se a versao certa
+          #     responde no endereco com marca, o visitante esta recebendo o
+          #     certo. Velho no endereco sem marca e inofensivo — some em 24h.
+          #
+          #   · pagina HTML e arquivo sem marca (sitemap, webmanifest, a loja):
+          #     o visitante pede o endereco pelado mesmo. Velho ali E problema
+          #     de verdade, e continua reprovando.
+          esperado8() { md5sum "$1" | cut -c1-8; }
+
+          # O `--` tem de vir DEPOIS do --include, senao o grep trata o
+          # "--include=*.html" como nome de arquivo, reclama que nao existe, e
+          # sai procurando em TODO arquivo do repositorio. Ele ainda achava a
+          # marca e devolvia a resposta certa, por sorte — com um erro impresso
+          # no meio do relatorio. Resposta certa por sorte nao serve.
+          estampado() {
+            grep -qr --include='*.html' --exclude-dir=node_modules \
+              -e "?v=$(esperado8 "$1")" . 2>/dev/null
           }
 
+          baixar() { curl -fsS --max-time 20 "$1" 2>/dev/null | md5sum | cut -d' ' -f1; }
+
           ausentes=""
-          decache=""
+          cdn_velho=""
           for tentativa in 1 2 3 4 5 6 7 8 9 10; do
             ausentes=""
             for arq in $ARQUIVOS; do
               aqui=$(md5sum "$arq" | cut -d' ' -f1)
-              la=$(curl -fsS --max-time 20 "$achou/$arq" 2>/dev/null | md5sum | cut -d' ' -f1)
-              [ "$aqui" = "$la" ] && continue
 
-              if confirmar "$arq" "$aqui"; then
-                case " $decache " in *" $arq "*) ;; *) decache="$decache $arq" ;; esac
+              # 1. o endereco pelado bateu? entao nao ha nada a discutir
+              [ "$aqui" = "$(baixar "$achou/$arq")" ] && continue
+
+              # 2. e no endereco com a marca — o que o visitante realmente pede?
+              if [ "$aqui" = "$(baixar "$achou/$arq?v=$(esperado8 "$arq")")" ]; then
+                if estampado "$arq"; then
+                  # O visitante recebe o certo. O velho ficou num endereco orfao.
+                  case " $cdn_velho " in *" $arq "*) ;; *) cdn_velho="$cdn_velho $arq" ;; esac
+                  continue
+                fi
+                # Nao e estampado: o arquivo esta no servidor, mas o visitante
+                # pede o endereco pelado e recebe o velho. Isso e problema.
+                ausentes="$ausentes $arq(cache)"
               else
                 ausentes="$ausentes $arq"
               fi
             done
 
             if [ -z "$ausentes" ]; then
-              echo "Chegou: os $(echo $ARQUIVOS | wc -w) arquivos no ar são os deste commit."
+              echo "Chegou: os $(echo $ARQUIVOS | wc -w) arquivos que o visitante pede são os deste commit."
               break
             fi
 
@@ -382,8 +407,8 @@ jobs:
             [ "$tentativa" = "10" ] || sleep 30
           done
 
-          if [ -n "$decache" ]; then
-            echo "::warning::A versão nova está no servidor, mas ele ainda serve cópia velha às vezes:${decache}. É cache da Hostinger, não falta de publicação — passa sozinho. Enquanto durar, um visitante pode pegar o arquivo antigo."
+          if [ -n "$cdn_velho" ]; then
+            echo "::notice::O CDN da Hostinger ainda guarda a versão anterior destes, no endereço SEM a marca de versão:${cdn_velho}. Não afeta ninguém — as páginas pedem o endereço com marca, e ali já vem a versão nova. Some sozinho em até 24h."
           fi
 
           if [ -n "$ausentes" ]; then
