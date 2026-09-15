@@ -40,6 +40,15 @@ AddDefaultCharset UTF-8
   </IfModule>
 </FilesMatch>
 
+# `conferir-tabelas.mjs` é ferramenta de publicação e estava sendo servido. Ele
+# não faz nada no navegador, mas lista os nomes das tabelas dos outros negócios
+# do mesmo banco — e isso não tem por que ficar aberto. Todas as tabelas têm
+# RLS, então não era buraco; é só não entregar o mapa de graça.
+#
+# Pelo NOME, e não por `\.mjs$`: a loja é montada, e no dia em que a montagem
+# resolver gerar um pedaço `.mjs` uma regra por extensão derrubaria a loja sem
+# dizer por quê. Regra que pode quebrar o site no futuro não vale a economia.
+RedirectMatch 404 ^/conferir-tabelas\.mjs$
 RedirectMatch 404 ^/gestao/supabase/.*$
 
 # A pasta loja-fonte é o CÓDIGO da loja, não a loja. Ela vem no repositório

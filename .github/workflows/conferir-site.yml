@@ -209,6 +209,7 @@ jobs:
                           loja-fonte/src/App.jsx \
                           loja-fonte/package.json \
                           loja/.htaccess \
+                          conferir-tabelas.mjs \
                           README.md; do
             c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
             if [ "$c" = "200" ]; then
@@ -237,23 +238,45 @@ jobs:
           # o arquivo publicado tem que ser BYTE POR BYTE o arquivo do commit.
           # Se diferir, a Hostinger ainda não pegou (ou pegou pela metade).
           #
-          # O .htaccess e o README ficam fora: o próprio servidor recusa servi-los,
-          # de propósito.
-          ARQUIVOS="index.html produtos.html conta.html atendimento.html
-                    assets/css/styles.css assets/js/app.js assets/js/loja.js
-                    assets/js/cliente.js gestao/login.html gestao/assets/config.js
-                    gestao/assets/dados.js"
-
-          # A loja entra inteira, e a lista vem da pasta em vez de escrita à
-          # mão: os nomes montados mudam a cada mudança na fonte, e uma lista
-          # à mão ficaria conferindo o arquivo velho — que continua igual — e
-          # deixando o novo passar sem ninguém olhar.
+          # A LISTA VEM DO REPOSITÓRIO, e não escrita à mão.
           #
-          # O `.htaccess` da loja fica fora pelo mesmo motivo que o da raiz: o
-          # Apache se recusa a servi-lo, de propósito. Comparar um arquivo que
-          # o servidor não entrega dá diferença para sempre. Que ele continue
-          # recusando é conferido na lista de proibidos, ali acima.
-          ARQUIVOS="$ARQUIVOS $(find loja -type f ! -name '.htaccess' | sort | tr '\n' ' ')"
+          # Ela era escrita à mão, com onze arquivos, e isso é uma armadilha:
+          # a lista não acompanha o trabalho. Os arquivos que eu mudo hoje não
+          # são os que eu listei ontem — mudei cinco arquivos da gestão e
+          # NENHUM DOS CINCO estava na lista. A conferência teria dito "chegou"
+          # depois de comparar onze arquivos que ninguém tocou.
+          #
+          # Aprovar por ter olhado só onde nada mudou é a mesma falha que eu já
+          # tinha cometido no conferidor de tabelas, que aprovava por não ter
+          # olhado nada. Então agora a lista é TUDO o que o site publica, e o
+          # que fica fora fica fora por um motivo dito aqui:
+          #
+          #   .htaccess       o Apache se recusa a servir (é a configuração dele)
+          #   .md .sql .ts    o próprio .htaccess recusa, de propósito
+          #   .yml .yaml      idem
+          #   *.mjs           ferramenta de publicação; o .htaccess recusa pelo nome
+          #   .git* .gitignore não é para o navegador
+          #   loja-fonte/     RedirectMatch 404 — é a fonte, não o site
+          #   .github/        não é publicado
+          #
+          # Que esses continuem recusados é conferido na lista de proibidos, ali
+          # acima — as duas metades se fecham: o que está aqui tem que chegar
+          # igual, e o que está lá tem que não chegar.
+          ARQUIVOS=$(find . -type f \
+            -not -path './.git/*' \
+            -not -path './.github/*' \
+            -not -path './loja-fonte/*' \
+            -not -name '.htaccess' \
+            -not -name '.gitignore' \
+            -not -name '*.md' \
+            -not -name '*.sql' \
+            -not -name '*.ts' \
+            -not -name '*.yml' \
+            -not -name '*.yaml' \
+            -not -name '*.mjs' \
+            | sed 's|^\./||' | sort | tr '\n' ' ')
+
+          echo "Vão ser conferidos $(echo $ARQUIVOS | wc -w) arquivos."
 
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
