@@ -1,0 +1,85 @@
+# Diagnóstico de um arquivo que não chega igual ao do repositório.
+#
+# Por que existe: a rede de onde o desenvolvimento acontece é bloqueada para o
+# domínio da Hostinger. Este arquivo é o único lugar de onde se consegue OLHAR.
+#
+# A conferência completa (79 arquivos) apontou dois:
+#
+#   robots.txt            diferente SEMPRE
+#   assets/js/app.js      diferente em 5 de 10 tentativas — ou seja, o mesmo
+#                         endereço devolve bytes diferentes em pedidos
+#                         diferentes, o que é pior do que estar errado
+#
+# Adivinhar a causa é o erro que já custou uma manhã neste projeto. Então isto
+# não conserta nada: só mostra o que o servidor devolve, com cabeçalhos, tamanho
+# e conteúdo, várias vezes seguidas.
+#
+# Roda só quando alguém pede (workflow_dispatch). É diagnóstico, não guarda.
+
+name: Diagnóstico de arquivo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  olhar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pegar o código
+        uses: actions/checkout@v5
+
+      - name: Olhar o que o servidor devolve
+        run: |
+          alvo="https://darkblue-deer-373108.hostingersite.com"
+
+          for arq in robots.txt assets/js/app.js; do
+            echo "================================================================"
+            echo "  $arq"
+            echo "================================================================"
+            echo
+            echo "--- no repositório: $(wc -c < "$arq") bytes, md5 $(md5sum "$arq" | cut -d' ' -f1)"
+            echo
+            echo "--- cabeçalhos do servidor:"
+            curl -sI --max-time 20 "$alvo/$arq" | tr -d '\r' | sed 's/^/    /'
+            echo
+            echo "--- dez pedidos seguidos (tamanho e md5 de cada um):"
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              corpo=$(curl -fsS --max-time 20 "$alvo/$arq" 2>/dev/null || echo '<<falhou>>')
+              printf '    %2d  %6d bytes  %s\n' "$i" \
+                "$(printf '%s' "$corpo" | wc -c)" \
+                "$(printf '%s' "$corpo" | md5sum | cut -d' ' -f1)"
+            done
+            echo
+          done
+
+          echo "================================================================"
+          echo "  robots.txt: o que o repositório tem contra o que o servidor dá"
+          echo "================================================================"
+          echo
+          echo "--- repositório:"
+          sed 's/^/    /' robots.txt
+          echo
+          echo "--- servidor:"
+          curl -fsS --max-time 20 "$alvo/robots.txt" | sed 's/^/    /' || echo "    (não respondeu)"
+          echo
+          echo "--- diferença (< repositório, > servidor):"
+          curl -fsS --max-time 20 "$alvo/robots.txt" > /tmp/robots-no-ar.txt 2>/dev/null || true
+          diff robots.txt /tmp/robots-no-ar.txt | sed 's/^/    /' || true
+          echo
+
+          echo "================================================================"
+          echo "  app.js: onde os bytes divergem, quando divergem"
+          echo "================================================================"
+          echo
+          echo "--- tamanho no repositório: $(wc -c < assets/js/app.js) bytes"
+          for i in 1 2 3 4 5; do
+            curl -fsS --max-time 20 "$alvo/assets/js/app.js" > "/tmp/app-$i.js" 2>/dev/null || true
+            echo "    pedido $i: $(wc -c < "/tmp/app-$i.js") bytes"
+            if ! cmp -s assets/js/app.js "/tmp/app-$i.js"; then
+              echo "      primeira diferença: $(cmp assets/js/app.js "/tmp/app-$i.js" 2>&1 | head -1)"
+              echo "      últimas linhas do que veio:"
+              tail -3 "/tmp/app-$i.js" | sed 's/^/        /'
+            fi
+          done
+          echo
+          echo "Fim do diagnóstico. Nada foi alterado."
