@@ -228,6 +228,36 @@ jobs:
             echo "::warning::Endereço inexistente respondeu HTTP $c e não parece ser o 404.html da casa."
           fi
 
+          # ---- 5b. o robots.txt é o da Hostinger, e ele barra o Google ----
+          #
+          # MEDIDO, não suposto. O arquivo do repositório NÃO chega na web: a
+          # Hostinger serve o dela, e o dela diz
+          #
+          #     User-agent: Googlebot
+          #     Disallow: /
+          #
+          # ou seja, o Google está barrado do site INTEIRO. Isso é o normal em
+          # endereço de teste `*.hostingersite.com`, e por enquanto até ajuda —
+          # é o que mantém a loja inacabada fora da busca, e não o
+          # `Disallow: /loja/` que eu tinha escrito, que nunca valeu.
+          #
+          # O QUE IMPORTA É O DIA DO DOMÍNIO PRÓPRIO: se essa regra continuar
+          # valendo, o site entra no ar invisível para o Google e ninguém
+          # descobre por meses. Então isto fica conferido a cada dia: enquanto
+          # for o endereço de teste, é só um recado; quando o robots mudar de
+          # cara, o recado muda junto e a gente fica sabendo.
+          curl -fsS --max-time 20 "$achou/robots.txt" > /tmp/robots-no-ar.txt 2>/dev/null || true
+          if grep -qi 'Googlebot' /tmp/robots-no-ar.txt && grep -qi 'Disallow: /' /tmp/robots-no-ar.txt; then
+            echo "robots.txt: é o da Hostinger e barra o Google do site todo (esperado em endereço de teste)"
+            echo "::notice::O Google está barrado deste site pelo robots.txt da Hostinger. Correto agora, por ser endereço de teste — mas no dia do domínio próprio isto tem de sair, ou o site fica invisível na busca."
+          elif ! cmp -s robots.txt /tmp/robots-no-ar.txt; then
+            echo "::warning::O robots.txt no ar não é o da Hostinger nem o do repositório. Vale olhar: é ele que decide se o site aparece na busca."
+            sed 's/^/    /' /tmp/robots-no-ar.txt
+          else
+            echo "robots.txt: agora é o do repositório — a Hostinger parou de sobrescrever."
+            echo "::notice::A Hostinger parou de sobrescrever o robots.txt: agora vale o do repositório. Confira se ele libera o que deve liberar."
+          fi
+
           # ---- 6. a publicação CHEGOU? ----
           #
           # Os testes acima provam que o site está no ar. Não provam que está na
@@ -258,6 +288,7 @@ jobs:
           #   .git* .gitignore não é para o navegador
           #   loja-fonte/     RedirectMatch 404 — é a fonte, não o site
           #   .github/        não é publicado
+          #   robots.txt      a Hostinger serve o DELA, não o nosso (medido — veja abaixo)
           #
           # Que esses continuem recusados é conferido na lista de proibidos, ali
           # acima — as duas metades se fecham: o que está aqui tem que chegar
@@ -274,6 +305,7 @@ jobs:
             -not -name '*.yml' \
             -not -name '*.yaml' \
             -not -name '*.mjs' \
+            -not -name 'robots.txt' \
             | sed 's|^\./||' | sort | tr '\n' ' ')
 
           echo "Vão ser conferidos $(echo $ARQUIVOS | wc -w) arquivos."
@@ -281,26 +313,65 @@ jobs:
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
 
+          # O SERVIDOR GUARDA COPIA VELHA, E ISSO FOI MEDIDO.
+          #
+          # Pedindo assets/js/app.js dez vezes seguidas, a resposta alterna
+          # entre duas versoes: a deste commit e uma de 4 bytes a mais, que e a
+          # de ANTES da troca de "protocolos" por "produtos". Ou seja, a
+          # hospedagem tem mais de um lugar guardando o arquivo, e um deles
+          # responde com o antigo — por sorteio, a cada pedido.
+          #
+          # Isso muda o que "chegou" pode significar. Um pedido que bate nao
+          # prova que todos batem, e um que nao bate nao prova que nao chegou.
+          # Entao cada arquivo diferente e pedido mais TRES vezes: se alguma
+          # delas bater, a versao nova esta no servidor e o que sobra e cache —
+          # isso vira AVISO, com o nome dos arquivos, e nao reprova a
+          # publicacao. Se nenhuma bater nas dez tentativas, ai sim nao chegou.
+          #
+          # Nao e tolerancia para passar: e a diferenca entre "a Hostinger nao
+          # publicou" e "a Hostinger publicou e esta servindo copia velha por
+          # um tempo". As duas precisam de coisas diferentes, e reprovar as
+          # duas do mesmo jeito ensina a ignorar o vermelho.
+          confirmar() {
+            arq="$1"; aqui="$2"
+            for _ in 1 2 3; do
+              la=$(curl -fsS --max-time 20 "$achou/$arq" 2>/dev/null | md5sum | cut -d' ' -f1)
+              [ "$aqui" = "$la" ] && return 0
+            done
+            return 1
+          }
+
+          ausentes=""
+          decache=""
           for tentativa in 1 2 3 4 5 6 7 8 9 10; do
-            diferentes=""
+            ausentes=""
             for arq in $ARQUIVOS; do
               aqui=$(md5sum "$arq" | cut -d' ' -f1)
               la=$(curl -fsS --max-time 20 "$achou/$arq" 2>/dev/null | md5sum | cut -d' ' -f1)
-              [ "$aqui" != "$la" ] && diferentes="$diferentes $arq"
+              [ "$aqui" = "$la" ] && continue
+
+              if confirmar "$arq" "$aqui"; then
+                case " $decache " in *" $arq "*) ;; *) decache="$decache $arq" ;; esac
+              else
+                ausentes="$ausentes $arq"
+              fi
             done
 
-            if [ -z "$diferentes" ]; then
-              echo "Chegou: os $(echo $ARQUIVOS | wc -w) arquivos no ar são iguais aos deste commit."
-              diferentes=""
+            if [ -z "$ausentes" ]; then
+              echo "Chegou: os $(echo $ARQUIVOS | wc -w) arquivos no ar são os deste commit."
               break
             fi
 
-            echo "Tentativa ${tentativa}: ainda diferente →${diferentes}"
+            echo "Tentativa ${tentativa}: ainda não chegou →${ausentes}"
             [ "$tentativa" = "10" ] || sleep 30
           done
 
-          if [ -n "$diferentes" ]; then
-            echo "::error::A publicação não chegou depois de 5 minutos. Diferentes:${diferentes}"
+          if [ -n "$decache" ]; then
+            echo "::warning::A versão nova está no servidor, mas ele ainda serve cópia velha às vezes:${decache}. É cache da Hostinger, não falta de publicação — passa sozinho. Enquanto durar, um visitante pode pegar o arquivo antigo."
+          fi
+
+          if [ -n "$ausentes" ]; then
+            echo "::error::A publicação não chegou depois de 5 minutos, nem em pedidos repetidos. Não chegaram:${ausentes}"
             echo "Confira se a Hostinger está ligada no Git desta branch (main) e com deploy automático."
             falhou=1
           fi

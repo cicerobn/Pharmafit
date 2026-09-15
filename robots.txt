@@ -1,10 +1,33 @@
+# ATENÇÃO: HOJE ESTE ARQUIVO NÃO CHEGA NA WEB.
+#
+# Medido em 15/09/2026, pedindo /robots.txt ao servidor: a Hostinger serve o
+# robots.txt DELA, não este, e o dela é
+#
+#     User-agent: Googlebot
+#     Disallow: /
+#
+# isto é, o Google está barrado do site inteiro. É o comportamento normal dos
+# endereços de teste `*.hostingersite.com`, e por enquanto até convém: é o que
+# mantém a loja inacabada fora da busca — e não as linhas abaixo, que nunca
+# valeram.
+#
+# NO DIA DO DOMÍNIO PRÓPRIO isto tem de ser verificado. Se a regra da Hostinger
+# continuar valendo, o site entra no ar invisível para o Google e ninguém
+# descobre por meses. A conferência automática olha isso todo dia e avisa
+# quando o robots.txt no ar mudar de cara.
+#
+# As linhas abaixo ficam prontas para quando ele passar a valer.
+
 User-agent: *
 Allow: /
 Disallow: /gestao/
 Disallow: /parceiro.html
+
 # A loja nova é de outro negócio e ainda não está pronta para vender: está sem
 # nome, sem frete e sem chave PIX. Fora da busca até isso ser resolvido.
 Disallow: /loja/
 Disallow: /loja-fonte/
 
+# Quando o domínio próprio existir, este endereço precisa ser o completo
+# (https://dominio/sitemap.xml) — a regra do robots pede endereço absoluto.
 Sitemap: /sitemap.xml
