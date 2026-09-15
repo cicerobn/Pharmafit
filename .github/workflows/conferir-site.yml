@@ -47,6 +47,21 @@ jobs:
       - name: Conferir que a gestão só fala com as tabelas dela
         run: node conferir-tabelas.mjs gestao pf_
 
+      # A marca de versão nos endereços de script e estilo.
+      #
+      # Medido em 15/09/2026: a hospedagem responde com cópia ANTIGA de
+      # `app.js` em metade dos pedidos, e o `.htaccess` ainda manda o navegador
+      # guardar script por um dia. Junto, dá o defeito mais chato de todos: a
+      # mudança funciona para quem publicou e o cliente continua vendo o site de
+      # ontem, sem erro nenhum na tela.
+      #
+      # A marca resolve porque muda o ENDEREÇO — não existe cópia velha de um
+      # endereço que ninguém pediu ainda. Mas marca velha faz o CONTRÁRIO do que
+      # promete: garante que o cliente continue no arquivo antigo. Então ela é
+      # conferida aqui, e a publicação para se alguma ficou atrás do arquivo.
+      - name: Conferir as marcas de versão dos scripts
+        run: node marcar-versao.mjs --conferir
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela
@@ -210,6 +225,7 @@ jobs:
                           loja-fonte/package.json \
                           loja/.htaccess \
                           conferir-tabelas.mjs \
+                          marcar-versao.mjs \
                           README.md; do
             c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
             if [ "$c" = "200" ]; then
