@@ -32,6 +32,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Pegar o código
+        uses: actions/checkout@v5
+
+      - name: Preparar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # O banco do Supabase é compartilhado por oito negócios, e tem 81 tabelas
+      # sem prefixo com nomes genéricos (`produtos`, `notas`, `leads`). Gravar
+      # na tabela do vizinho não dá erro na tela — só mistura os dados, e depois
+      # não separa. Isto para a publicação antes disso acontecer.
+      - name: Conferir que a gestão só fala com as tabelas dela
+        run: node conferir-tabelas.mjs gestao pf_
+
       - name: Conferir o site
         env:
           # Sobrescreva com a variável SITE_URL quando o domínio mudar; sem ela,

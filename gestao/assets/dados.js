@@ -393,13 +393,18 @@
         return;
       }
 
+      /* O tempo real tambem precisa do prefixo. Sem ele o painel ficaria
+         escutando a tabela `pedidos` de OUTRO negocio deste banco — ou
+         escutando o vazio, sem avisar que nao esta escutando nada. */
+      var tabPedidos = T('pedidos');
+
       try {
         sb.channel('pedidos-painel')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' },
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: tabPedidos },
             function (msg) { callback({ tipo: 'novo', pedido: msg.new }); })
-          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pedidos' },
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: tabPedidos },
             function () { callback({ tipo: 'mudou' }); })
-          .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'pedidos' },
+          .on('postgres_changes', { event: 'DELETE', schema: 'public', table: tabPedidos },
             function () { callback({ tipo: 'mudou' }); })
           .subscribe();
       } catch (e) {
