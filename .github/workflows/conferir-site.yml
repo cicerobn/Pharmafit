@@ -1,0 +1,129 @@
+# Confere o site no ar depois que a Hostinger publica.
+#
+# Este repositório não tem passo de montagem: a Hostinger publica a branch
+# `main` direto, então não há nada para este arquivo construir. O que ele faz é
+# a outra metade, a que costuma faltar: OLHAR o site depois.
+#
+# Ele existe porque a rede de onde o desenvolvimento acontece é bloqueada para
+# o domínio da Hostinger. O runner do GitHub não é — então é daqui que se
+# consegue ver se a publicação chegou, e o que ele imprime é o que se lê depois.
+#
+# Ele confere exatamente as coisas que já quebraram neste site:
+#
+#   - a página abre (e diz o código quando não abre)
+#   - vem em UTF-8 — sem isso "saúde" viraria "saÃºde", e já virou
+#   - o estilo e o script principais abrem, e com o tipo certo
+#   - o schema do banco e o código da função de servidor NÃO são servidos
+#   - o 404 é a página própria e não a do servidor
+
+name: Conferir o site no ar
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  # Uma vez por dia: hospedagem que quebra sozinha existe, e é melhor saber
+  # por um aviso do que por um cliente.
+  schedule:
+    - cron: '0 11 * * *'
+
+jobs:
+  conferir:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conferir o site
+        env:
+          # Sobrescreva com a variável SITE_URL quando o domínio mudar; sem ela,
+          # a lista de candidatos abaixo é tentada uma por uma.
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          candidatos="
+          https://darkblue-deer-373108.hostingersite.com
+          https://powderblue-pony-338424.hostingersite.com
+          "
+          [ -n "$SITE_URL" ] && candidatos="$SITE_URL"
+
+          achou=""
+          echo "Procurando a Pharma Fit:"
+          for bruto in $candidatos; do
+            alvo="${bruto%/}"
+            codigo=$(curl -s -o /tmp/home.html -w '%{http_code}' --max-time 20 "$alvo/" || echo 000)
+            titulo=$(grep -oiE '<title>[^<]*' /tmp/home.html | head -1 | sed 's/<title>//I')
+            echo "  $alvo → HTTP $codigo  ${titulo}"
+            if [ "$codigo" = "200" ] && printf '%s' "$titulo" | grep -qi "pharma"; then
+              achou="$alvo"
+            fi
+          done
+
+          if [ -z "$achou" ]; then
+            echo "::error::A Pharma Fit não respondeu em nenhum dos endereços acima."
+            exit 1
+          fi
+
+          echo
+          echo "Conferindo $achou"
+          falhou=0
+
+          # ---- 1. acentos ----
+          tipo=$(curl -sI --max-time 20 "$achou/" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          echo "página:  $tipo"
+          case "$tipo" in
+            *utf-8*|*UTF-8*) ;;
+            *) echo "::error::A página vem como \"$tipo\". Sem UTF-8 os acentos aparecem trocados — já aconteceu neste site."; falhou=1 ;;
+          esac
+
+          # ---- 2. as páginas todas abrem ----
+          for pagina in index.html produtos.html atendimento.html parceiro.html atacado.html \
+                        conta.html quiz.html representantes.html privacidade.html \
+                        pedidos.html favoritos.html gestao/login.html; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$pagina" || echo 000)
+            if [ "$c" != "200" ]; then
+              echo "::error::$pagina respondeu HTTP $c"
+              falhou=1
+            fi
+          done
+          echo "as 12 páginas: conferidas"
+
+          # ---- 3. estilo e script, com o tipo certo ----
+          for par in "assets/css/styles.css:css" "assets/js/app.js:javascript"; do
+            arq="${par%%:*}"; esperado="${par##*:}"
+            t=$(curl -sI --max-time 20 "$achou/$arq" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+            echo "$arq → $t"
+            case "$t" in
+              *"$esperado"*) ;;
+              *) echo "::error::$arq vem como \"$t\", e o navegador precisa de $esperado."; falhou=1 ;;
+            esac
+          done
+
+          # ---- 4. o que NÃO pode ser servido ----
+          #
+          # O .htaccess recusa .sql, .ts e .md, e bloqueia gestao/supabase/.
+          # Os arquivos nem estão neste repositório, mas a regra é o que segura
+          # se alguém copiá-los para lá um dia — então ela é conferida.
+          for proibido in gestao/supabase/schema.sql \
+                          gestao/supabase/functions/notificar-pedido/index.ts \
+                          README.md; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
+            if [ "$c" = "200" ]; then
+              echo "::error::$proibido está sendo servido ao público (HTTP 200). Isso entrega a estrutura do banco a quem passar."
+              falhou=1
+            else
+              echo "$proibido → HTTP $c (bloqueado, certo)"
+            fi
+          done
+
+          # ---- 5. o 404 é a página da casa ----
+          c=$(curl -s -o /tmp/perdido.html -w '%{http_code}' --max-time 20 "$achou/pagina-que-nao-existe-$RANDOM" || echo 000)
+          if [ "$c" = "404" ] && grep -qi "pharma" /tmp/perdido.html; then
+            echo "404: mostra a página própria, certo"
+          else
+            echo "::warning::Endereço inexistente respondeu HTTP $c e não parece ser o 404.html da casa."
+          fi
+
+          echo
+          if [ "$falhou" = "1" ]; then
+            echo "::error::O site está no ar, mas com problema — está apontado acima."
+            exit 1
+          fi
+          echo "A Pharma Fit está no ar e inteira: $achou"
