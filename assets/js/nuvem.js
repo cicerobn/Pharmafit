@@ -9,29 +9,91 @@
   'use strict';
 
   var cfg = window.PHARMAFIT_CONFIG || {};
+
+  /* A BIBLIOTECA VEM DO PRÓPRIO SITE, E NÃO DE UM CDN.
+   *
+   * Entrar e criar conta dependiam de `cdn.jsdelivr.net` responder em 6
+   * segundos. Quando não respondia, `sb` ficava nulo e a tela dizia "A
+   * conta ainda não está ligada neste site" — uma frase falsa, porque o
+   * site está ligado; era a biblioteca que não tinha chegado. E numa
+   * conexão de celular fraca 6 segundos passam fácil.
+   *
+   * Nada disso aparecia no servidor: sem a biblioteca, o pedido de
+   * cadastro nem era feito, então o log do Supabase ficava em branco e
+   * o defeito não deixava rastro em lugar nenhum.
+   *
+   * Agora o arquivo é servido daqui, do mesmo domínio que a pessoa já
+   * abriu. A versão está NO NOME do arquivo de propósito: versão nova é
+   * endereço novo, e nenhum cache guarda uma resposta velha para um
+   * endereço que ainda não existia.
+   *
+   * O CDN continua como segunda tentativa, para o caso de alguém
+   * publicar sem a pasta `vendor/`. */
+  var LOCAL = 'assets/js/vendor/supabase-2.116.0.js';
   var CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
   var PREFIXO = 'pharmafit_demo_';
   var sb = null;
 
-  var pronto = (async function () {
-    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return;
+  /* Por que a biblioteca não carregou. A tela usa isto para falar a
+     verdade em vez de chutar um motivo. */
+  var motivo = '';
 
-    await new Promise(function (resolve) {
-      if (window.supabase && window.supabase.createClient) return resolve();
+  /** Quantos "../" para chegar à raiz do site a partir desta página.
+   *
+   *  As páginas do site ficam na raiz, mas o 404 pode ser servido em
+   *  QUALQUER endereço — inclusive /pasta/que/nao/existe — e lá um
+   *  caminho fixo apontaria para o lugar errado. Contar a profundidade
+   *  do endereço atual acerta nos dois casos, e é o mesmo cálculo que o
+   *  auth.js do painel faz (ele mora em /gestao/ e em /gestao/app/). */
+  function daRaiz(caminho) {
+    var pasta = location.pathname.replace(/[^/]*$/, '');
+    var fundo = pasta.split('/').filter(Boolean).length;
+    return new Array(fundo + 1).join('../') + caminho;
+  }
+
+
+
+  function carregar(src, limite) {
+    return new Promise(function (resolve) {
+      var pronto = false;
+      function acabou(ok) {
+        if (pronto) return;
+        pronto = true;
+        resolve(ok && !!(window.supabase && window.supabase.createClient));
+      }
       var s = document.createElement('script');
-      s.src = CDN;
+      s.src = src;
       s.async = true;
-      s.onload = resolve;
-      s.onerror = resolve;
+      s.onload = function () { acabou(true); };
+      s.onerror = function () { acabou(false); };
       document.head.appendChild(s);
-      setTimeout(resolve, 6000);
+      setTimeout(function () { acabou(true); }, limite);
     });
+  }
+
+  var pronto = (async function () {
+    if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
+      motivo = 'sem-configuracao';
+      return;
+    }
+
+    if (!(window.supabase && window.supabase.createClient)) {
+      /* Do próprio site: 12 segundos, porque aqui a demora é a conexão da
+         pessoa, e desistir rápido de um arquivo que vai chegar é pior
+         que esperar. */
+      var deu = await carregar(daRaiz(LOCAL), 12000);
+      /* Só então o CDN, como reserva. */
+      if (!deu) deu = await carregar(CDN, 8000);
+      if (!deu) {
+        motivo = 'biblioteca-nao-carregou';
+        return;
+      }
+    }
 
     try {
-      if (window.supabase && window.supabase.createClient) {
-        sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      }
+      sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
     } catch (e) {
+      motivo = 'biblioteca-nao-carregou';
       console.warn('[Pharma Fit] Supabase indisponível:', e);
     }
   })();
@@ -44,6 +106,36 @@
 
     pronto: pronto,
     cliente: function () { return sb; },
+
+    /**
+     * Por que não há banco. Devolve 'sem-configuracao' (ninguém preencheu
+     * a URL e a chave) ou 'biblioteca-nao-carregou' (está tudo
+     * configurado, mas o arquivo não chegou). São problemas diferentes e
+     * a pessoa merece saber qual é o dela: um é obra do dono do site, o
+     * outro é conexão e resolve tentando de novo.
+     */
+    porQueNao: function () { return motivo; },
+
+    /**
+     * Tenta carregar outra vez, para o botão "Tentar de novo" existir de
+     * verdade em vez de só recarregar a página e dar no mesmo.
+     */
+    tentarDeNovo: async function () {
+      if (sb) return true;
+      if (motivo === 'sem-configuracao') return false;
+      motivo = '';
+      var deu = (window.supabase && window.supabase.createClient)
+        || await carregar(daRaiz(LOCAL), 12000)
+        || await carregar(CDN, 8000);
+      if (!deu) { motivo = 'biblioteca-nao-carregou'; return false; }
+      try {
+        sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+        return true;
+      } catch (e) {
+        motivo = 'biblioteca-nao-carregou';
+        return false;
+      }
+    },
 
     /** Lê uma coleção. Sem banco, lê do navegador. */
     buscar: async function (colecao, ordem) {

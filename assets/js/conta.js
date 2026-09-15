@@ -59,6 +59,31 @@
     return Nuvem.cliente();
   }
 
+  /* O recado de quando não há banco.
+   *
+   * As três telas diziam a mesma frase: "A conta ainda não está ligada
+   * neste site." Ela é FALSA no caso que acontece de verdade — o site
+   * está ligado, e há 89 contas criadas para provar. O que falha é a
+   * biblioteca não chegar; e aí a pessoa lê que o site não tem conta,
+   * desiste, e nada aparece no log do servidor, porque sem a biblioteca
+   * o pedido nem chega a ser feito. Defeito sem rastro nenhum.
+   *
+   * São dois problemas com donos diferentes, e cada um merece a frase
+   * dele: um é obra de quem monta o site, o outro é conexão — e esse
+   * resolve tentando de novo. */
+  function recadoSemBanco() {
+    var motivo = Nuvem && Nuvem.porQueNao ? Nuvem.porQueNao() : '';
+    if (motivo === 'sem-configuracao') {
+      return { ok: false, erro: 'A conta ainda não está ligada neste site.', podeTentar: false };
+    }
+    return {
+      ok: false,
+      erro: 'Não conseguimos carregar a área de conta agora. Isso quase sempre é a ' +
+            'conexão — tente de novo em alguns segundos.',
+      podeTentar: true
+    };
+  }
+
   var Conta = {
 
     /** A conta está ligada neste site? (sem Supabase, não está) */
@@ -88,7 +113,7 @@
 
     entrar: async function (email, senha) {
       var sb = await cliente();
-      if (!sb) return { ok: false, erro: 'A conta ainda não está ligada neste site.' };
+      if (!sb) return recadoSemBanco();
 
       try {
         var r = await sb.auth.signInWithPassword({
@@ -117,7 +142,7 @@
 
     criar: async function (dados) {
       var sb = await cliente();
-      if (!sb) return { ok: false, erro: 'A conta ainda não está ligada neste site.' };
+      if (!sb) return recadoSemBanco();
 
       try {
         var r = await sb.auth.signUp({
@@ -160,7 +185,7 @@
 
     esqueciSenha: async function (email) {
       var sb = await cliente();
-      if (!sb) return { ok: false, erro: 'A conta ainda não está ligada neste site.' };
+      if (!sb) return recadoSemBanco();
       try {
         var volta = location.href.replace(/[^/]*$/, 'entrar.html');
         var r = await sb.auth.resetPasswordForEmail(String(email || '').trim(), {

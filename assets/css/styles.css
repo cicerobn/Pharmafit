@@ -1666,6 +1666,12 @@ ul{margin:0;padding:0;list-style:none}
   border:0;
 }
 
+/* O "Tentar de novo" dentro do aviso.
+   flex-basis:100% joga ele para a linha de baixo, inteiro — dentro de um
+   flex row ele ficaria colado no texto, e um <br> ali não teria efeito
+   nenhum. */
+.aviso-forma__tentar{flex-basis:100%;margin-top:2px;text-align:left}
+
 /* ---------- link discreto (.linkish) ----------
 
    Ele aparece nas 16 páginas: "Criar conta", "Esqueci minha senha",
@@ -2254,6 +2260,7 @@ textarea:focus-visible{
 .aviso-forma{
   display:flex;
   align-items:flex-start;
+  flex-wrap:wrap;
   gap:9px;
   font-size:13.5px;
   line-height:1.5;

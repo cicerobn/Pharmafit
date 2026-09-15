@@ -14,8 +14,32 @@
   'use strict';
 
   var cfg = window.PHARMAFIT_CONFIG || {};
+
+  /* A BIBLIOTECA VEM DO PRÓPRIO SITE.
+   *
+   * Antes ela vinha só de `cdn.jsdelivr.net`, com 6 segundos de paciência.
+   * Aqui isso é pior que no site do cliente: quando a biblioteca não
+   * chegava, o painel caía em MODO DEMONSTRAÇÃO — a equipe abriria a
+   * tela, veria dados que não são do negócio e poderia achar que não
+   * houve venda nenhuma. Falha que mostra número errado sem dizer que
+   * está errado é a pior que existe num painel.
+   *
+   * Agora o arquivo é servido do mesmo domínio, e o CDN é só reserva.
+   * A versão está no NOME do arquivo: versão nova é endereço novo, e
+   * nenhum cache guarda resposta velha de endereço que não existia. */
+  var ARQUIVO = 'assets/js/vendor/supabase-2.116.0.js';
   var CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  var TIMEOUT_LIB = 6000;
+  var TIMEOUT_LOCAL = 12000;
+  var TIMEOUT_CDN = 8000;
+
+  /** Quantos "../" para chegar à raiz do site a partir desta página.
+      O painel mora em /gestao/ e o painel novo em /gestao/app/, então o
+      caminho não pode ser fixo. */
+  function daRaiz(caminho) {
+    var pasta = location.pathname.replace(/[^/]*$/, '');
+    var fundo = pasta.split('/').filter(Boolean).length;
+    return new Array(fundo + 1).join('../') + caminho;
+  }
 
   var configurado = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY);
   var DEMO_KEY = (cfg.STORAGE_KEY || 'pharmafit_gestao_auth') + '_demo';
@@ -23,22 +47,33 @@
 
   /* ---------- carga da biblioteca (não bloqueia a página) ---------- */
 
-  function carregarLib() {
+
+
+  function buscar(src, limite) {
     return new Promise(function (resolve) {
-      if (window.supabase && window.supabase.createClient) return resolve(true);
-
       var pronto = false;
-      function fim(ok) { if (!pronto) { pronto = true; resolve(ok); } }
-
+      function fim(ok) {
+        if (pronto) return;
+        pronto = true;
+        resolve(ok && !!(window.supabase && window.supabase.createClient));
+      }
       var s = document.createElement('script');
-      s.src = CDN;
+      s.src = src;
       s.async = true;
-      s.onload = function () { fim(!!(window.supabase && window.supabase.createClient)); };
+      s.onload = function () { fim(true); };
       s.onerror = function () { fim(false); };
       document.head.appendChild(s);
-
-      setTimeout(function () { fim(false); }, TIMEOUT_LIB);
+      /* Estourar o tempo não é "não veio": o arquivo pode ter chegado
+         logo depois. Por isso fim(true) aqui — quem decide é a checagem
+         de `window.supabase` lá dentro. */
+      setTimeout(function () { fim(true); }, limite);
     });
+  }
+
+  async function carregarLib() {
+    if (window.supabase && window.supabase.createClient) return true;
+    if (await buscar(daRaiz(ARQUIVO), TIMEOUT_LOCAL)) return true;
+    return await buscar(CDN, TIMEOUT_CDN);
   }
 
   var pronto = (async function iniciar() {

@@ -4,6 +4,8 @@
 (function () {
   'use strict';
 
+  var Nuvem = window.PharmaFitNuvem;
+
   var Conta = window.PharmaFitConta;
   var U = window.PharmaFitValidacao;
   var form = document.getElementById('form-criar');
@@ -18,6 +20,43 @@
     recado.className = 'aviso-forma aviso-forma--' + (tipo || 'erro');
     recado.textContent = msg;
     recado.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* "Tentar de novo" que TENTA DE NOVO.
+   *
+   * Quando a biblioteca da conta não chega, recarregar a página só
+   * repete a mesma espera. Este botão manda o nuvem.js buscar o arquivo
+   * outra vez e, se vier, reenvia o formulário — a pessoa não digita
+   * nada de novo.
+   *
+   * Botão que não faz nada é pior que botão nenhum, então ele só
+   * aparece quando há o que tentar (`podeTentar`). Se o site é que não
+   * está ligado ao banco, não há nada a tentar e o recado sai seco. */
+  function dizerComTentativa(r, refazer) {
+    dizer(r.erro);
+    if (!r.podeTentar || !Nuvem || !Nuvem.tentarDeNovo) return;
+
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'linkish aviso-forma__tentar';
+    b.textContent = 'Tentar de novo';
+    b.addEventListener('click', async function () {
+      b.disabled = true;
+      b.textContent = 'Tentando…';
+      var deu = await Nuvem.tentarDeNovo();
+      if (!deu) {
+        b.disabled = false;
+        b.textContent = 'Tentar de novo';
+        dizer('Ainda não deu. Confira a conexão e tente mais uma vez.');
+        return;
+      }
+      calar();
+      refazer();
+    });
+    /* Sem <br>: o `.aviso-forma` é um flex row e ali a quebra de linha
+       não faz nada. Quem põe o botão embaixo é o CSS
+       (`.aviso-forma__tentar{flex-basis:100%}`). */
+    recado.appendChild(b);
   }
 
   function calar() { recado.hidden = true; recado.textContent = ''; }
@@ -66,7 +105,13 @@
     var r = await Conta.criar({ nome: nome, email: email, telefone: telefone, senha: senha });
     esperando(false);
 
-    if (!r.ok) return dizer(r.erro);
+    if (!r.ok) {
+      /* `podeTentar` significa que a biblioteca não chegou: aí o botão
+         busca de novo e refaz o cadastro sem a pessoa redigitar nada.
+         Erro de verdade do servidor (e-mail já usado, por exemplo) sai
+         sem botão, porque tentar de novo daria no mesmo. */
+      return dizerComTentativa(r, function () { form.requestSubmit(); });
+    }
 
     /* O projeto pode exigir confirmação por e-mail. Quando exige, não
        há sessão de volta — e mandar a pessoa para o login sem avisar
