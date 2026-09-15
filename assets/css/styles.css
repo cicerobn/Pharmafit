@@ -2387,3 +2387,178 @@ textarea:focus-visible{
   .carrinho__foto{width:62px;height:62px}
   .carrinho__item{gap:11px}
 }
+
+/* =========================================================
+   Página de um produto
+   ========================================================= */
+
+.caminho{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  padding:16px 20px 0;
+  font-size:12.5px;
+  color:var(--muted);
+}
+.caminho a{color:var(--muted)}
+.caminho a:hover{color:var(--gold)}
+.caminho span[aria-hidden]{opacity:.5}
+
+.osso-linha{
+  background:linear-gradient(90deg,var(--line) 25%,var(--cream-2) 50%,var(--line) 75%);
+  background-size:220% 100%;
+  animation:brilhoLinha 1.3s ease-in-out infinite;
+  border-radius:8px;
+}
+@keyframes brilhoLinha{from{background-position:120% 0}to{background-position:-20% 0}}
+
+.ficha{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:22px;
+  align-items:start;
+}
+@media (min-width:860px){
+  .ficha{grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:40px}
+}
+
+.ficha__foto{
+  position:relative;
+  background:var(--cream-2);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:22px;
+  display:grid;
+  place-items:center;
+}
+.ficha__foto img{width:100%;max-width:340px;height:auto}
+
+.ficha__categoria{
+  font-size:11.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin:0 0 7px;
+}
+.ficha__nome{
+  font-family:var(--serif);
+  font-weight:500;
+  font-size:clamp(24px,6.4vw,33px);
+  line-height:1.15;
+  margin:0;
+}
+.ficha__desc{
+  font-size:14.5px;
+  line-height:1.6;
+  color:var(--ink-2);
+  margin:12px 0 0;
+}
+
+/* ---- as faixas de preço, lado a lado ---- */
+
+.faixas{
+  display:grid;
+  /* minmax(0,1fr): sem isso um preço grande empurra a grade para fora
+     da tela, e o .ficha corta o que passa. */
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));
+  gap:10px;
+  margin:20px 0 0;
+}
+
+.faixa{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:13px;
+  background:var(--card);
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+.faixa__nome{
+  font-size:10.5px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:0 0 5px;
+}
+.faixa__valor{
+  font-family:var(--serif);
+  font-size:clamp(18px,5vw,22px);
+  margin:0;
+  line-height:1.1;
+}
+.faixa__quantas{font-size:11.5px;color:var(--muted);margin:5px 0 0}
+
+/* A faixa que vale para a quantidade escolhida. Sem esta marca, três
+   preços na tela é confusão em vez de informação: a pessoa não sabe
+   qual é o dela. */
+.faixa.is-valendo{
+  border-color:var(--gold);
+  background:rgba(176,140,74,.06);
+  box-shadow:0 0 0 1px var(--gold);
+}
+.faixa.is-valendo .faixa__nome{color:var(--gold)}
+
+/* ---- preço, quando não há faixas ---- */
+
+.ficha__preco{margin:20px 0 0}
+.ficha__antes{
+  font-size:14px;
+  color:var(--muted);
+  text-decoration:line-through;
+  margin:0 0 3px;
+}
+.ficha__valor{
+  font-family:var(--serif);
+  font-size:clamp(26px,7.2vw,34px);
+  line-height:1.05;
+  margin:0;
+}
+.ficha__parcelas{font-size:13px;color:var(--muted);margin:5px 0 0}
+
+.ficha__moedas{
+  margin:12px 0 0;
+  font-size:13px;
+  color:var(--muted);
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 10px;
+  align-items:baseline;
+}
+.ficha__moedas b{color:var(--ink-2);font-weight:600}
+.ficha__sep{opacity:.45}
+
+/* ---- quantidade ---- */
+
+.ficha__quantidade{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:22px 0 0;
+  padding-top:20px;
+  border-top:1px solid var(--line);
+}
+.ficha__qrotulo{font-size:13.5px;color:var(--muted)}
+.ficha__estoque{font-size:12.5px;color:var(--muted)}
+
+.ficha__conta{
+  margin:16px 0 0;
+  padding:14px 16px;
+  background:var(--cream);
+  border-radius:14px;
+}
+.ficha__conta-linha{font-size:13px;color:var(--muted);margin:0}
+.ficha__conta-total{
+  font-family:var(--serif);
+  font-size:clamp(22px,6vw,27px);
+  margin:3px 0 0;
+  line-height:1.1;
+}
+
+/* ---- botões ---- */
+
+.ficha__acoes{margin:20px 0 0;display:flex;flex-direction:column;gap:10px}
+.ficha__acoes-linha{display:flex;gap:10px;flex-wrap:wrap}
+.ficha__acoes-linha .btn{flex:1 1 150px;justify-content:center;min-width:0}
+.ficha__acoes .linkish{align-self:center;margin-top:4px}
+.ficha__acoes .btn.is-salvo{border-color:#e0b4b4;color:#c0392b}

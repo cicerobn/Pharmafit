@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Meus favoritos — Pharma Fit</title>
-<meta name="description" content="Os produtos que você salvou, guardados neste aparelho.">
+<title>Produto — Pharma Fit</title>
+<meta name="description" content="Como a Pharma Fit trata as informações dos clientes.">
 <meta name="theme-color" content="#f6f2ec">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Pharma Fit">
 <meta property="og:locale" content="pt_BR">
-<meta property="og:title" content="Meus favoritos — Pharma Fit">
-<meta property="og:description" content="Os produtos que você salvou, guardados neste aparelho.">
+<meta property="og:title" content="Seus dados — Pharma Fit">
+<meta property="og:description" content="Como a Pharma Fit trata as informações dos clientes.">
 <meta property="og:image" content="assets/img/logo-pf.svg">
 <meta name="twitter:card" content="summary">
 <link rel="manifest" href="site.webmanifest">
@@ -62,28 +62,119 @@
     </div>
   </header>
 
-  <section class="page-head">
-    <h1 class="page-title">Meus favoritos</h1>
-    <div class="rule"></div>
-    <p class="page-lead">Salvos neste aparelho, sem precisar criar conta.</p>
-  </section>
+  <!-- Desenhada por tela-produto.js a partir de ?p=<nome do produto> -->
 
-  <section class="grid-products" data-favoritos-grade hidden></section>
+  <nav class="caminho" aria-label="Onde você está">
+    <a href="index.html">Início</a>
+    <span aria-hidden="true">›</span>
+    <a href="produtos.html">Produtos</a>
+    <span aria-hidden="true">›</span>
+    <span data-caminho-nome>…</span>
+  </nav>
 
-  <div class="vazio-bloco" data-favoritos-vazio hidden>
-    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 1 1 19.4 13z"/>
-    </svg>
-    <p class="vazio-bloco__titulo">Você ainda não salvou nada</p>
-    <p class="vazio-bloco__texto">Toque no coração de qualquer produto para guardá-lo aqui.</p>
-    <a class="btn btn--primary btn--block" href="produtos.html">Ver produtos</a>
+  <div class="wrap" id="carregando" aria-live="polite" aria-busy="true">
+    <div class="osso-linha" style="height:26px;width:60%;margin-bottom:14px"></div>
+    <div class="osso-linha" style="height:220px;border-radius:18px"></div>
+    <span class="visually-hidden">Carregando o produto…</span>
   </div>
 
+  <!-- endereço com produto que não existe -->
+  <section class="wrap" id="nao-achei" hidden>
+    <div class="vazio-bloco">
+      <p class="vazio-bloco__titulo">Não achamos este produto</p>
+      <p class="vazio-bloco__texto" id="nao-achei-texto">
+        Ele pode ter saído do catálogo.
+      </p>
+      <a class="btn btn--primary" href="produtos.html">Ver todos os produtos</a>
+    </div>
+  </section>
+
+  <section class="wrap" id="produto" hidden>
+    <div class="ficha">
+
+      <div class="ficha__foto">
+        <span class="product__badge" data-selo hidden></span>
+        <img data-foto src="" alt="" width="420" height="420">
+      </div>
+
+      <div class="ficha__corpo">
+
+        <p class="ficha__categoria" data-categoria></p>
+        <h1 class="ficha__nome" data-nome>…</h1>
+        <p class="ficha__desc" data-desc></p>
+
+        <!-- as faixas de preço. Só aparece quando o produto tem faixas. -->
+        <div class="faixas" data-faixas hidden></div>
+
+        <!-- o preço, quando não há faixas -->
+        <div class="ficha__preco" data-preco-simples hidden>
+          <p class="ficha__antes" data-antes hidden></p>
+          <p class="ficha__valor" data-valor></p>
+          <p class="ficha__parcelas" data-parcelas></p>
+        </div>
+
+        <!-- as outras moedas, quando há cotação -->
+        <p class="ficha__moedas" data-moedas hidden></p>
+
+        <!-- quantidade -->
+        <div class="ficha__quantidade" data-bloco-quantidade>
+          <span class="ficha__qrotulo">Quantidade</span>
+          <div class="carrinho__quantidade">
+            <button class="carrinho__qbtn" type="button" data-menos aria-label="Tirar um">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+            </button>
+            <span class="carrinho__qnum" data-qtd>1</span>
+            <button class="carrinho__qbtn" type="button" data-mais aria-label="Pôr um a mais">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+          </div>
+          <span class="ficha__estoque" data-estoque></span>
+        </div>
+
+        <!-- a conta desta quantidade -->
+        <div class="ficha__conta" data-conta hidden>
+          <p class="ficha__conta-linha" data-conta-linha></p>
+          <p class="ficha__conta-total" data-conta-total></p>
+          <p class="carrinho__faixa" data-proxima hidden></p>
+        </div>
+
+        <!-- os botões -->
+        <div class="ficha__acoes">
+          <button class="btn btn--primary btn--block btn--carrinho" type="button" data-adicionar>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
+              <path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>
+            </svg>
+            <span>Adicionar ao carrinho</span>
+          </button>
+
+          <button class="btn btn--outline btn--block btn--espera" type="button" data-avisar hidden>
+            Avise-me quando chegar
+          </button>
+
+          <div class="ficha__acoes-linha">
+            <a class="btn btn--outline" data-zap href="#" target="_blank" rel="noopener">
+              Pedir no WhatsApp
+            </a>
+            <button class="btn btn--outline" type="button" data-favoritar>
+              <span data-fav-texto>Favoritar</span>
+            </button>
+          </div>
+
+          <button class="linkish" type="button" data-compartilhar>Compartilhar</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
 
   <p class="footnote">
     Pharma Fit · Saúde, performance e bem-estar — atendimento em Manaus · AM 🇧🇷<br>
     Produtos de uso sob orientação profissional.<br>
-    <a class="linkish" data-zap-link href="https://wa.me/5545988140817" target="_blank" rel="noopener">WhatsApp (45) 98814-0817</a> · <a class="linkish" href="privacidade.html">Seus dados</a>
+    <a class="linkish" data-zap-link href="https://wa.me/5545988140817" target="_blank" rel="noopener">WhatsApp (45) 98814-0817</a>
   </p>
 
   <nav class="tabbar" aria-label="Navegação principal">
@@ -173,15 +264,15 @@
 <script src="gestao/assets/config.js?v=86cd5f3d"></script>
 <script src="assets/js/catalogo.js?v=47d1a5bc"></script>
 <script src="assets/js/nuvem.js?v=0433999d"></script>
-<script src="assets/js/loja.js?v=e704347e"></script>
-<script src="assets/js/favoritos.js?v=4a9ab8a7"></script>
-<script src="assets/js/formularios.js?v=0464d39f"></script>
-<script src="assets/js/avise.js?v=06cacbaa"></script>
-<script src="assets/js/carrinho.js?v=e0c04a3e"></script>
-<script src="assets/js/app.js?v=27e381fb"></script>
 <script src="assets/js/modal.js?v=9146042c"></script>
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/minha-area.js?v=d3d63621"></script>
+<script src="assets/js/favoritos.js?v=4a9ab8a7"></script>
+<script src="assets/js/paginas.js?v=08afdc52"></script>
+<script src="assets/js/carrinho.js?v=e0c04a3e"></script>
+<script src="assets/js/app.js?v=27e381fb"></script>
+<script src="assets/js/moedas.js?v=ddbb4a9b"></script>
+<script src="assets/js/tela-produto.js?v=f96b5ea1"></script>
 <script src="assets/js/pedido.js?v=c0315875"></script>
 </body>
 </html>

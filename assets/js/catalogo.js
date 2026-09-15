@@ -11,6 +11,41 @@
                 desconta a cada venda confirmada (0 = "sem estoque",
                 o site troca o botão por "Avise-me quando chegar")
      parcelas-> quantas vezes sem juros (padrão 3)
+
+   ---------------------------------------------------------
+   PREÇO POR QUANTIDADE (atacado) — opcional
+   ---------------------------------------------------------
+
+   Brian: para um produto ter preço de atacado, acrescente `atacado`
+   nele, assim:
+
+     {
+       nome: 'Tirzec Pen 15 mg',
+       custo: 520, venda: 1099, antes: 0,
+       atacado: [
+         { nome: 'Varejo',    de: 1,  ate: 4, preco: 1099 },
+         { nome: 'Atacado',   de: 5,  ate: 9, preco: 1050 },
+         { nome: 'Atacado +', de: 10,         preco: 999  }
+       ],
+       ...
+     }
+
+     de     -> a partir de quantas unidades esta faixa vale
+     ate    -> até quantas (a última não precisa: vale "ou mais")
+     preco  -> quanto custa CADA unidade nesta faixa
+     nome   -> o rótulo que aparece na tela
+
+   O que a loja faz sozinha, com isso:
+
+     · mostra as faixas lado a lado na página do produto e marca a
+       que vale para a quantidade escolhida;
+     · diz "levando 4 unidades a mais, cada uma sai por R$ 1.050,00";
+     · usa o preço da faixa no carrinho e no total.
+
+   NENHUM PRODUTO TEM `atacado` HOJE, de propósito: esses preços são
+   números do negócio, e eu não invento preço. Sem `atacado`, o
+   produto mostra o preço normal e nenhuma faixa aparece — a tela não
+   fica com espaço vazio nem com faixa de mentira.
    ========================================================= */
 
 window.PHARMAFIT_CATALOGO = [

@@ -94,8 +94,12 @@
             '</svg>' +
             '<span>Adicionar</span>' +
           '</button>' +
-          '<a class="btn btn--outline" href="#contato" data-pedido="' + esc(p.nome) + '">' +
-            'Saiba mais' + setaHtml + '</a>' +
+          /* "Saiba mais" agora leva à PÁGINA do produto, e não ao
+             formulário de contato: quem clica quer ver o produto, não
+             escrever para alguém. Do lado de lá tem o WhatsApp. */
+          '<a class="btn btn--outline" href="produto.html?p=' +
+            encodeURIComponent(p.nome) + '">' +
+            'Ver detalhes' + setaHtml + '</a>' +
         '</div>';
 
     return '' +
@@ -112,7 +116,9 @@
           '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
         '</div>' +
         '<div class="product__body">' +
-          '<h2 class="product__name">' + esc(p.nome) + '</h2>' +
+          '<h2 class="product__name">' +
+            '<a href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
+              esc(p.nome) + '</a></h2>' +
           '<p class="product__desc">' + esc(p.descricao) + '</p>' +
           blocoPreco(p) +
           acao +
