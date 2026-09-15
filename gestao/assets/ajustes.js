@@ -70,7 +70,10 @@
 
   /** Testa se a URL+chave respondem, sem precisar da biblioteca. */
   async function testarConexao(url, chave) {
-    var alvo = String(url).replace(/\/+$/, '') + '/rest/v1/produtos?select=id&limit=1';
+    /* Testa a conexão pela tabela COM prefixo: sem ele o teste passaria
+       usando a tabela de outro sistema e diria que está tudo bem. */
+    var tab = (window.PHARMAFIT_CONFIG || {}).PREFIXO_TABELAS || '';
+    var alvo = String(url).replace(/\/+$/, '') + '/rest/v1/' + tab + 'produtos?select=id&limit=1';
 
     try {
       var r = await fetch(alvo, { headers: { apikey: chave, Authorization: 'Bearer ' + chave } });

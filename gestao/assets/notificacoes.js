@@ -87,7 +87,9 @@
       var json = assinatura.toJSON();
       var user = await Auth.usuario();
 
-      var r = await sb.from('push_subscriptions').upsert({
+      /* Mesmo prefixo do resto da gestão: veja o porquê em config.js. */
+      var tabela = (cfg.PREFIXO_TABELAS || '') + 'push_subscriptions';
+      var r = await sb.from(tabela).upsert({
         endpoint: json.endpoint,
         p256dh: json.keys && json.keys.p256dh,
         auth: json.keys && json.keys.auth,

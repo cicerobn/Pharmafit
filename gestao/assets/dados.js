@@ -29,6 +29,17 @@
   var cfg = window.PHARMAFIT_CONFIG || {};
 
   var PREFIXO = 'pharmafit_demo_';
+
+  /* O nome da tabela no banco, com o prefixo desta gestão.
+   *
+   * Um lugar só, de propósito. Este banco é compartilhado por vários
+   * sistemas, e `produtos` e `notas` já existiam lá, de outro negócio, com 40
+   * linhas dentro de `produtos`. Sem o prefixo a gestão leria e gravaria na
+   * tabela do vizinho sem dar um único erro na tela — o tipo de estrago que
+   * não se desfaz depois. */
+  function T(colecao) {
+    return (cfg.PREFIXO_TABELAS || '') + colecao;
+  }
   var CHAVE_PEDIDOS = PREFIXO + 'pedidos';
   var CHAVE_PRODUTOS = PREFIXO + 'produtos';
   var CHAVE_SEED = PREFIXO + 'seed';
@@ -148,7 +159,7 @@
       if (!sb) return localDe(colecao);
 
       try {
-        var q = sb.from(colecao).select('*');
+        var q = sb.from(T(colecao)).select('*');
         if (ordem) q = q.order(ordem.campo, { ascending: ordem.crescente !== false });
         var r = await q;
         if (r.error) {
@@ -181,7 +192,7 @@
       if (!sb) return noAparelho();
 
       try {
-        var r = await sb.from(colecao).insert(registro).select().single();
+        var r = await sb.from(T(colecao)).insert(registro).select().single();
         if (r.error) {
           if (ACESSORIAS.indexOf(colecao) !== -1 && tabelaFaltando(r.error)) return noAparelho(true);
           return { ok: false, erro: r.error.message };
@@ -209,7 +220,7 @@
       if (!sb) return noAparelho();
 
       try {
-        var r = await sb.from(colecao).update(campos).eq('id', id);
+        var r = await sb.from(T(colecao)).update(campos).eq('id', id);
         if (r.error) {
           if (ACESSORIAS.indexOf(colecao) !== -1 && tabelaFaltando(r.error)) return noAparelho(true);
           return { ok: false, erro: r.error.message };
@@ -234,7 +245,7 @@
       }
 
       try {
-        var r = await sb.from(colecao).delete().eq('id', id);
+        var r = await sb.from(T(colecao)).delete().eq('id', id);
         if (r.error) return { ok: false, erro: r.error.message };
         return { ok: true };
       } catch (e) {
@@ -254,8 +265,8 @@
       }
 
       try {
-        var rp = await sb.from('pedidos').select('*').order('criado_em', { ascending: false }).limit(500);
-        var rd = await sb.from('produtos').select('*').order('nome');
+        var rp = await sb.from(T('pedidos')).select('*').order('criado_em', { ascending: false }).limit(500);
+        var rd = await sb.from(T('produtos')).select('*').order('nome');
 
         if (rp.error || rd.error) {
           console.warn('[Pharma Fit] Tabelas indisponíveis:', (rp.error || rd.error).message);
