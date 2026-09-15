@@ -34,6 +34,13 @@ jobs:
     steps:
       - name: Pegar o código
         uses: actions/checkout@v5
+        with:
+          # Dois commits, não um. O passo "Conferir o site" pergunta ao git o
+          # que ESTE commit mudou, para não pedir 101 arquivos quando 28
+          # respondem. Com a profundidade 1 do padrão, `HEAD~1` não existe, a
+          # conferência cairia no caminho de reserva e a economia não
+          # aconteceria — sem nenhum erro para avisar.
+          fetch-depth: 2
 
       - name: Preparar o Node
         uses: actions/setup-node@v5
@@ -55,10 +62,17 @@ jobs:
       # mudança funciona para quem publicou e o cliente continua vendo o site de
       # ontem, sem erro nenhum na tela.
       #
-      # A marca resolve porque muda o ENDEREÇO — não existe cópia velha de um
-      # endereço que ninguém pediu ainda. Mas marca velha faz o CONTRÁRIO do que
-      # promete: garante que o cliente continue no arquivo antigo. Então ela é
-      # conferida aqui, e a publicação para se alguma ficou atrás do arquivo.
+      # A marca resolve porque muda o ENDEREÇO. Mas marca velha faz o CONTRÁRIO
+      # do que promete: garante que o cliente continue no arquivo antigo. Então
+      # ela é conferida aqui, e a publicação para se alguma ficou atrás.
+      #
+      # CORREÇÃO, medida em 15/09/2026 mais tarde: eu escrevia aqui que "não
+      # existe cópia velha de um endereço que ninguém pediu ainda". Existe. A
+      # publicação não é atômica — o HTML pode chegar antes do CSS, e quem
+      # pedir o endereço com a marca nova nessa janela recebe o arquivo VELHO,
+      # que o CDN então guarda sob o endereço novo por 24 horas. Quem mais
+      # pedia nessa janela era a própria conferência, mil vezes. Está
+      # explicado no passo "Conferir o site", onde foi consertado.
       - name: Conferir as marcas de versão dos scripts
         run: node marcar-versao.mjs --conferir
 
@@ -353,88 +367,153 @@ jobs:
             -not -name 'robots.txt' \
             | sed 's|^\./||' | sort | tr '\n' ' ')
 
-          echo "Vão ser conferidos $(echo $ARQUIVOS | wc -w) arquivos."
+          echo "O site tem $(echo $ARQUIVOS | wc -w) arquivos publicáveis."
 
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
 
-          # A HOSTINGER TEM UM CDN NA FRENTE, E ISSO FOI MEDIDO.
+          # =================================================================
+          # ESTA CONFERÊNCIA ESTAVA CAUSANDO O PROBLEMA QUE ELA RELATAVA.
+          # =================================================================
           #
-          # As respostas vem com `server: hcdn` e `cache-control: max-age=86400`.
-          # Pedindo `gestao/assets/gestao.css` depois de mudar o arquivo:
+          # Ela reprovou três publicações seguidas dizendo que gestao.css não
+          # havia chegado, com uma lista que se contradizia: um arquivo
+          # aparecia ausente na tentativa 1, presente na 3, ausente na 4.
+          # Arquivo publicado não despublica.
           #
-          #   sem marca         35228 bytes  HIT   (age 2220)  = a versao VELHA
-          #   com marca ?v=...  38624 bytes  MISS              = a versao nova
-          #   com ?nocache=...  38624 bytes  MISS              = a versao nova
+          # O diagnóstico (40 pedidos seguidos, códigos HTTP impressos)
+          # respondeu, e a minha suspeita de limite de pedidos estava ERRADA:
+          # 40 de 40 deram HTTP 200. O que apareceu foi outra coisa:
           #
-          # Quer dizer: o arquivo novo ESTA no servidor. O que esta velho e a
-          # copia guardada pelo CDN no endereco SEM marca — e esse endereco
-          # nenhuma pagina pede mais, porque agora todas pedem com a marca.
+          #   gestao/assets/gestao.css, no repositório: 39091 bytes, 977ffa5c
+          #     sem marca          35228 bytes  DIFERENTE  (HIT, age 23094)
+          #     com marca ?v=…     38624 bytes  DIFERENTE  (HIT, age 19196)
+          #     furando o cache    39091 bytes  IGUAL
           #
-          # Foi assim que esta conferencia reprovou um site que estava certo:
-          # ela pedia um endereco que ninguem usa. Conferencia que reprova o
-          # site certo e a pior especie, porque ensina a ignorar o vermelho.
+          # O arquivo está certo no servidor. O que está velho é a cópia que o
+          # CDN guardou DO ENDEREÇO COM MARCA — o endereço que o visitante pede.
           #
-          # ENTAO A PERGUNTA CERTA E "O QUE O VISITANTE RECEBE?", e o endereco
-          # que ele pede e o com marca. Como a marca E o md5 do arquivo, este
-          # passo consegue montar esse endereco sozinho, sem procurar no HTML.
+          # ISSO DERRUBA A MINHA PREMISSA. Eu escrevi, aqui mesmo, que "não
+          # existe cópia velha de um endereço que ninguém pediu ainda". Existe:
+          # a publicação não é atômica. O HTML pode chegar antes do CSS, e
+          # quem pedir `gestao.css?v=<marca nova>` nessa janela recebe o CSS
+          # VELHO — e o CDN guarda essa resposta velha, sob o endereço novo,
+          # por 24 horas (max-age=86400). Depois disso nem o arquivo certo
+          # chegando resolve: o endereço já está envenenado.
           #
-          # A diferenca entre os dois casos importa e nao pode ser apagada:
+          # E QUEM PEDIA NESSA JANELA ERA ESTA CONFERÊNCIA. Ela disparava
+          # ~2000 pedidos (101 arquivos × 2 endereços × 10 tentativas) contra
+          # os endereços com marca, começando segundos depois do push — dentro
+          # da janela. Ela envenenava o endereço do visitante e depois
+          # relatava isso como "não chegou". Um visitante teria de cair nos
+          # mesmos segundos; eu caía mil vezes.
           #
-          #   · arquivo ESTAMPADO (o HTML pede com ?v=): se a versao certa
-          #     responde no endereco com marca, o visitante esta recebendo o
-          #     certo. Velho no endereco sem marca e inofensivo — some em 24h.
+          # ENTÃO SÃO DUAS PERGUNTAS DIFERENTES, e elas se separam aqui:
           #
-          #   · pagina HTML e arquivo sem marca (sitemap, webmanifest, a loja):
-          #     o visitante pede o endereco pelado mesmo. Velho ali E problema
-          #     de verdade, e continua reprovando.
+          #   1. O ARQUIVO CHEGOU AO SERVIDOR?  Pergunta-se furando o cache,
+          #      com um `?nocache=` diferente a cada pedido. É a única
+          #      pergunta que uma conferência de publicação responde de
+          #      verdade, e furar o cache não guarda nada sob endereço nenhum
+          #      que o visitante use. Falhar aqui é falha de publicação.
+          #
+          #   2. O ENDEREÇO DO VISITANTE DEVOLVE O CERTO?  Pergunta-se UMA
+          #      VEZ POR ARQUIVO, e só depois da 1 ter passado. Uma vez, não
+          #      em laço: pedir em laço é justamente o que guarda a resposta
+          #      errada. Falhar aqui é aviso, não erro — expira sozinho.
+          #
+          # E a lista encurtou: só os arquivos que ESTE commit mudou, mais as
+          # páginas HTML (que o visitante pede sem marca). Pedir 101 arquivos
+          # dez vezes nunca respondeu nada que 28 não respondam.
+
+          # Só o que mudou, pelo git, mais todas as páginas. `git diff` contra
+          # o commit anterior; num primeiro commit sem pai, cai para a lista
+          # inteira em vez de conferir nada.
+          # Só faz sentido perguntar "o que mudou" quando houve um push. Na
+          # rodada diária e na manual não há commit novo: ali a pergunta é "o
+          # site continua inteiro?", e a resposta pede a lista toda — o que
+          # não custa, porque nessas rodadas o site já está assentado e a
+          # primeira tentativa resolve.
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && git rev-parse --verify -q HEAD~1 >/dev/null; then
+            MUDARAM=$(git diff --name-only HEAD~1 HEAD \
+                      | grep -vE '^(\.github/|loja-fonte/)' \
+                      | grep -vE '\.(md|sql|ts|yml|yaml|mjs)$' \
+                      | grep -v '^\.' || true)
+            PAGINAS=$(printf '%s\n' $ARQUIVOS | grep '\.html$' || true)
+            ALVOS=$(printf '%s\n' $MUDARAM $PAGINAS | sort -u | tr '\n' ' ')
+            echo "  vão ser conferidos $(echo $ALVOS | wc -w) arquivos:"
+            echo "  $(echo $MUDARAM | wc -w) que este commit mudou + $(echo $PAGINAS | wc -w) páginas"
+          else
+            ALVOS="$ARQUIVOS"
+            echo "  rodada $GITHUB_EVENT_NAME: conferindo os $(echo $ALVOS | wc -w) arquivos"
+          fi
+          echo
+
           esperado8() { md5sum "$1" | cut -c1-8; }
 
-          # O `--` tem de vir DEPOIS do --include, senao o grep trata o
-          # "--include=*.html" como nome de arquivo, reclama que nao existe, e
-          # sai procurando em TODO arquivo do repositorio. Ele ainda achava a
+          # O `--` tem de vir DEPOIS do --include, senão o grep trata o
+          # "--include=*.html" como nome de arquivo, reclama que não existe, e
+          # sai procurando em TODO arquivo do repositório. Ele ainda achava a
           # marca e devolvia a resposta certa, por sorte — com um erro impresso
-          # no meio do relatorio. Resposta certa por sorte nao serve.
+          # no meio do relatório. Resposta certa por sorte não serve.
           estampado() {
             grep -qr --include='*.html' --exclude-dir=node_modules \
               -e "?v=$(esperado8 "$1")" . 2>/dev/null
           }
 
-          baixar() { curl -fsS --max-time 20 "$1" 2>/dev/null | md5sum | cut -d' ' -f1; }
+          # Baixa e devolve o md5. Devolve "SEM-RESPOSTA" quando o servidor não
+          # entregou, em vez do md5 do vazio — senão pedido recusado e conteúdo
+          # errado viram a mesma coisa no relatório, que foi meio caminho para
+          # eu passar uma hora atrás da causa errada.
+          baixar() {
+            if curl -fsS --max-time 20 "$1" -o /tmp/veio 2>/dev/null; then
+              md5sum /tmp/veio | cut -d' ' -f1
+            else
+              echo "SEM-RESPOSTA"
+            fi
+          }
 
+          # ---- pergunta 1: chegou ao servidor? ----
           ausentes=""
-          cdn_velho=""
           for tentativa in 1 2 3 4 5 6 7 8 9 10; do
             ausentes=""
-            for arq in $ARQUIVOS; do
+            for arq in $ALVOS; do
               aqui=$(md5sum "$arq" | cut -d' ' -f1)
-
-              # 1. o endereco pelado bateu? entao nao ha nada a discutir
-              [ "$aqui" = "$(baixar "$achou/$arq")" ] && continue
-
-              # 2. e no endereco com a marca — o que o visitante realmente pede?
-              if [ "$aqui" = "$(baixar "$achou/$arq?v=$(esperado8 "$arq")")" ]; then
-                if estampado "$arq"; then
-                  # O visitante recebe o certo. O velho ficou num endereco orfao.
-                  case " $cdn_velho " in *" $arq "*) ;; *) cdn_velho="$cdn_velho $arq" ;; esac
-                  continue
-                fi
-                # Nao e estampado: o arquivo esta no servidor, mas o visitante
-                # pede o endereco pelado e recebe o velho. Isso e problema.
-                ausentes="$ausentes $arq(cache)"
-              else
-                ausentes="$ausentes $arq"
-              fi
+              # `?nocache=` diferente a cada pedido: sem isto, a própria
+              # pergunta viraria cache e as dez tentativas leriam a mesma
+              # resposta velha, o que faz o laço não servir para nada.
+              la=$(baixar "$achou/$arq?nocache=$RANDOM$RANDOM$tentativa")
+              [ "$aqui" = "$la" ] || ausentes="$ausentes $arq"
             done
-
             if [ -z "$ausentes" ]; then
-              echo "Chegou: os $(echo $ARQUIVOS | wc -w) arquivos que o visitante pede são os deste commit."
+              echo "Chegou ao servidor: os $(echo $ALVOS | wc -w) arquivos são os deste commit."
               break
             fi
-
             echo "Tentativa ${tentativa}: ainda não chegou →${ausentes}"
             [ "$tentativa" = "10" ] || sleep 30
           done
+
+          # ---- pergunta 2: o endereço do visitante devolve o certo? ----
+          #
+          # UMA vez por arquivo, e só agora que a 1 passou. Em laço, este
+          # trecho seria o próprio envenenador.
+          cdn_velho=""
+          if [ -z "$ausentes" ]; then
+            echo
+            echo "Conferindo o endereço que o visitante pede (um pedido por arquivo):"
+            for arq in $ALVOS; do
+              aqui=$(md5sum "$arq" | cut -d' ' -f1)
+              if estampado "$arq"; then
+                url="$achou/$arq?v=$(esperado8 "$arq")"
+              else
+                url="$achou/$arq"
+              fi
+              [ "$aqui" = "$(baixar "$url")" ] && continue
+              cdn_velho="$cdn_velho $arq"
+            done
+            if [ -z "$cdn_velho" ]; then
+              echo "  todos: o visitante recebe a versão deste commit"
+            fi
+          fi
 
           if [ -n "$cdn_velho" ]; then
             echo "::notice::O CDN da Hostinger ainda guarda a versão anterior destes, no endereço SEM a marca de versão:${cdn_velho}. Não afeta ninguém — as páginas pedem o endereço com marca, e ali já vem a versão nova. Some sozinho em até 24h."
