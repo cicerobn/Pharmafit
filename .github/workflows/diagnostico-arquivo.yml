@@ -47,14 +47,28 @@ jobs:
             echo "  marca nas paginas: ${marca:-<nenhuma>}"
             echo
 
+            # O CORPO VAI PARA ARQUIVO, e nao para uma variavel.
+            #
+            # A primeira versao disto fazia `corpo=$(curl ...)`, e o $( ) do
+            # shell COME o \n do fim. Resultado: todo arquivo de texto aparecia
+            # com um byte a menos e md5 diferente, inclusive o styles.css, que a
+            # conferencia de verdade aprova dez vezes por dia. Meu proprio
+            # diagnostico estava mentindo, do mesmo jeito que as coisas que eu
+            # passei o dia consertando. Arquivo nao tem essa mania.
             for forma in "sem marca:$alvo/$arq" "com marca:$alvo/$arq?v=$marca" "furando o cache:$alvo/$arq?nocache=$RANDOM$RANDOM"; do
               rotulo="${forma%%:*}"; url="${forma#*:}"
-              corpo=$(curl -fsS --max-time 20 "$url" 2>/dev/null || echo '<<falhou>>')
-              la=$(printf '%s' "$corpo" | md5sum | cut -d' ' -f1)
-              tam=$(printf '%s' "$corpo" | wc -c)
-              igual="DIFERENTE"
-              [ "$la" = "$aqui" ] && igual="IGUAL ao repositorio"
-              printf '  %-16s %6d bytes  %s  %s\n' "$rotulo" "$tam" "${la:0:12}" "$igual"
+              if curl -fsS --max-time 20 "$url" -o /tmp/veio 2>/dev/null; then
+                la=$(md5sum /tmp/veio | cut -d' ' -f1)
+                tam=$(wc -c < /tmp/veio)
+                igual="DIFERENTE"
+                [ "$la" = "$aqui" ] && igual="IGUAL ao repositorio"
+                printf '  %-16s %6d bytes  %s  %s\n' "$rotulo" "$tam" "${la:0:12}" "$igual"
+                if [ "$igual" = "DIFERENTE" ]; then
+                  echo "      primeira diferenca: $(cmp "$arq" /tmp/veio 2>&1 | head -1)"
+                fi
+              else
+                printf '  %-16s  nao respondeu\n' "$rotulo"
+              fi
             done
 
             echo
