@@ -166,6 +166,39 @@ jobs:
             esac
           done
 
+          # ---- 3b. a loja nova, que mora em /loja/ ----
+          #
+          # O endereço que uma pessoa digita é a PASTA (`/loja/`), não o
+          # arquivo. Arquivo respondendo 200 não prova que a pasta abre: quem
+          # decide isso é o DirectoryIndex, e sem ele a pasta devolve 403 —
+          # que foi exatamente o que apareceu na primeira tentativa.
+          c=$(curl -s -o /tmp/loja.html -w '%{http_code}' --max-time 20 "$achou/loja/" || echo 000)
+          if [ "$c" = "200" ] && grep -q 'id="raiz"' /tmp/loja.html; then
+            echo "/loja/ → HTTP 200, e o que vem é a loja"
+          else
+            echo "::error::/loja/ respondeu HTTP $c e não parece ser a loja."
+            echo "A pasta é o endereço que uma pessoa digita; o arquivo dentro dela não substitui isso."
+            falhou=1
+          fi
+
+          # O tipo de cada script da loja.
+          #
+          # A loja é montada, e os nomes saem com impressão digital
+          # (`index-Ctj6MFPc.js`), que muda a cada mudança na fonte. Lista fixa
+          # aqui viraria mentira na primeira montagem — então a lista vem da
+          # própria pasta.
+          #
+          # Tipo errado num .js é a falha mais cruel deste site: o navegador
+          # recusa o módulo em silêncio e a loja abre BRANCA, sem uma palavra.
+          for arq in $(find loja -type f -name '*.js' | sort); do
+            t=$(curl -sI --max-time 20 "$achou/$arq" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+            echo "$arq → $t"
+            case "$t" in
+              *javascript*|*ecmascript*) ;;
+              *) echo "::error::$arq vem como \"$t\". O navegador só executa módulo que chega como javascript — com outro tipo, a loja abre branca."; falhou=1 ;;
+            esac
+          done
+
           # ---- 4. o que NÃO pode ser servido ----
           #
           # O .htaccess recusa .sql, .ts e .md, e bloqueia gestao/supabase/.
@@ -175,6 +208,7 @@ jobs:
                           gestao/supabase/functions/notificar-pedido/index.ts \
                           loja-fonte/src/App.jsx \
                           loja-fonte/package.json \
+                          loja/.htaccess \
                           README.md; do
             c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
             if [ "$c" = "200" ]; then
@@ -208,8 +242,18 @@ jobs:
           ARQUIVOS="index.html produtos.html conta.html atendimento.html
                     assets/css/styles.css assets/js/app.js assets/js/loja.js
                     assets/js/cliente.js gestao/login.html gestao/assets/config.js
-                    gestao/assets/dados.js
-                    loja/index.html loja/diagnostico.html loja/versao.txt"
+                    gestao/assets/dados.js"
+
+          # A loja entra inteira, e a lista vem da pasta em vez de escrita à
+          # mão: os nomes montados mudam a cada mudança na fonte, e uma lista
+          # à mão ficaria conferindo o arquivo velho — que continua igual — e
+          # deixando o novo passar sem ninguém olhar.
+          #
+          # O `.htaccess` da loja fica fora pelo mesmo motivo que o da raiz: o
+          # Apache se recusa a servi-lo, de propósito. Comparar um arquivo que
+          # o servidor não entrega dá diferença para sempre. Que ele continue
+          # recusando é conferido na lista de proibidos, ali acima.
+          ARQUIVOS="$ARQUIVOS $(find loja -type f ! -name '.htaccess' | sort | tr '\n' ' ')"
 
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
