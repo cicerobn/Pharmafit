@@ -20,7 +20,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/css/styles.css?v=1c7899ca">
+<link rel="stylesheet" href="/assets/css/styles.css?v=a53e341a">
 </head>
 <body>
 
@@ -40,6 +40,12 @@
           <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 1 1 19.4 13z"/>
         </svg>
         <span class="fav-contador" data-fav-contador hidden>0</span>
+      </a>
+      <a class="btn-conta" href="/conta.html" data-conta-botao aria-label="Entrar na minha conta">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 20v-1.5a4 4 0 0 0-8 0V20"/><circle cx="12" cy="8" r="3.4"/>
+        </svg>
+        <span class="btn-conta__nome" data-conta-nome>Entrar</span>
       </a>
       <button class="icon-btn icon-btn--bare" type="button" data-drawer-open aria-label="Abrir menu">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -153,6 +159,13 @@
         </svg>
       </button>
     </div>
+    <a class="drawer__quem" href="/conta.html" data-drawer-quem>
+      <span class="drawer__inicial" data-drawer-inicial>?</span>
+      <span class="drawer__quem-texto">
+        <span class="drawer__quem-nome" data-drawer-nome>Entrar na conta</span>
+        <span class="drawer__quem-pe" data-drawer-pe>Para acompanhar seus pedidos</span>
+      </span>
+    </a>
     <nav class="drawer__nav">
       <a href="/index.html">Início</a>
       <a href="/produtos.html">Produtos</a>
@@ -177,7 +190,7 @@
 <script src="/assets/js/minha-area.js?v=d3d63621"></script>
 <script src="/assets/js/favoritos.js?v=4a9ab8a7"></script>
 <script src="/assets/js/paginas.js?v=08afdc52"></script>
-<script src="/assets/js/app.js?v=990c219e"></script>
+<script src="/assets/js/app.js?v=f3a40fe6"></script>
 <script src="/assets/js/pedido.js?v=c0315875"></script>
 </body>
 </html>

@@ -130,6 +130,51 @@ ul{margin:0;padding:0;list-style:none}
 
 .topbar__actions{display:flex;align-items:center;gap:8px}
 
+/* ---- botão de conta, no canto superior direito ----------------
+   Mostra "Entrar" para quem o site ainda não conhece, e o primeiro
+   nome de quem já se identificou. O nome é o que diz à pessoa que o
+   aparelho lembra dela — mais útil que um ícone de bonequinho. */
+.btn-conta{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  height:38px;
+  padding:0 14px;
+  border:1px solid var(--gold);
+  border-radius:999px;
+  color:var(--gold);
+  background:transparent;
+  font-size:13.5px;
+  font-weight:500;
+  white-space:nowrap;
+  transition:background .2s ease,color .2s ease,box-shadow .2s ease;
+}
+.btn-conta svg{flex:none}
+.btn-conta:hover{background:rgba(176,140,74,.1)}
+.btn-conta:active{transform:scale(.97)}
+
+/* Identificada, ela ganha o fundo cheio: é um estado diferente, e
+   estado diferente tem de parecer diferente. */
+.btn-conta.is-dentro{
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 6px 16px rgba(176,140,74,.26);
+}
+
+.btn-conta__nome{
+  max-width:11ch;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Em tela estreita o texto sai e fica só o desenho: na barra de cima
+   cabem poucas coisas, e o nome do site vem antes do meu botão. */
+@media (max-width:560px){
+  .btn-conta{padding:0;width:38px;justify-content:center;gap:0}
+  .btn-conta__nome{display:none}
+}
+
 .icon-btn{
   width:44px;height:44px;
   display:grid;place-items:center;
@@ -721,8 +766,18 @@ ul{margin:0;padding:0;list-style:none}
   z-index:80;
   visibility:hidden;
   pointer-events:none;
+  /* A VISIBILIDADE ESPERA A ANIMAÇÃO TERMINAR.
+     Sem este atraso, fechar o menu era instantâneo: a classe saía, a
+     visibilidade virava "hidden" no mesmo quadro e o painel desaparecia
+     sem deslizar. Ele abria bonito e fechava de um golpe — e ninguém
+     percebe que o defeito é esse, só sente que o menu é seco. */
+  transition:visibility 0s linear .3s;
 }
-.drawer.is-open{visibility:visible;pointer-events:auto}
+.drawer.is-open{
+  visibility:visible;
+  pointer-events:auto;
+  transition-delay:0s;
+}
 
 .drawer__scrim{
   position:absolute;
@@ -736,27 +791,138 @@ ul{margin:0;padding:0;list-style:none}
 .drawer__panel{
   position:absolute;
   top:0;right:0;bottom:0;
-  width:min(320px,84%);
+  width:min(330px,86%);
   background:var(--cream-2);
-  padding:22px 22px 30px;
+  padding:calc(20px + env(safe-area-inset-top,0px)) 0
+          calc(24px + env(safe-area-inset-bottom,0px));
   transform:translateX(100%);
-  transition:transform .28s cubic-bezier(.22,.61,.36,1);
+  /* Sai um pouco mais devagar do que entra. Abrir é a pessoa pedindo
+     para ver; fechar é ela já ter decidido — e movimento de saída
+     apressado parece que o site engoliu o menu. */
+  transition:transform .3s cubic-bezier(.22,.61,.36,1);
   display:flex;
   flex-direction:column;
-  gap:22px;
+  overflow-y:auto;
   box-shadow:-20px 0 50px rgba(0,0,0,.18);
 }
 .drawer.is-open .drawer__panel{transform:none}
 
-.drawer__top{display:flex;align-items:center;justify-content:space-between}
-.drawer__nav{display:flex;flex-direction:column;gap:2px}
-.drawer__nav a{
-  padding:13px 2px;
-  font-size:16px;
+.drawer__top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:0 20px 18px;
   border-bottom:1px solid var(--line);
 }
-.drawer__nav a:hover{color:var(--gold)}
-.drawer__foot{margin-top:auto;font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ---- quem está usando, no alto do menu ---- */
+.drawer__quem{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:16px 20px;
+  border-bottom:1px solid var(--line);
+  text-align:left;
+  width:100%;
+}
+.drawer__inicial{
+  flex:none;
+  width:42px;height:42px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  color:#fff;
+  font-size:15px;
+  font-weight:700;
+}
+.drawer__quem-texto{min-width:0;display:block}
+
+/* `display:block` nas duas: são <span>, porque parágrafo dentro de <a>
+   é HTML inválido, e span é inline. Sem isto o nome e o "Ver meus
+   pedidos" saem GRUDADOS na mesma linha.
+   
+   Eu já tinha cometido e escrito este mesmo erro na lista do painel
+   algumas horas antes, e cometi de novo aqui. Escrever a lição num
+   arquivo não impede de repetir noutro: o que pegou foi abrir a tela e
+   olhar. */
+.drawer__quem-nome,
+.drawer__quem-pe{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.drawer__quem-nome{
+  font-size:15.5px;
+  font-weight:600;
+  margin:0;
+}
+.drawer__quem-pe{
+  font-size:12.5px;
+  color:var(--muted);
+  margin:2px 0 0;
+}
+
+.drawer__secao{
+  padding:16px 20px 6px;
+  font-size:10.5px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+
+.drawer__nav{display:flex;flex-direction:column}
+.drawer__nav a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 20px;
+  font-size:15.5px;
+  color:var(--ink-2);
+  transition:background .16s ease,color .16s ease;
+  /* Entram em cascata quando o menu abre. O atraso vem do JS, que
+     numera os itens. */
+  opacity:0;
+  transform:translateX(14px);
+}
+.drawer__nav a svg{flex:none;color:var(--muted);transition:color .16s ease}
+.drawer__nav a:hover{color:var(--gold);background:rgba(176,140,74,.06)}
+.drawer__nav a:hover svg{color:var(--gold)}
+
+/* A página em que a pessoa já está. Sem isto, o menu de dez itens não
+   diz onde ela está, e é fácil clicar no que já está aberto. */
+.drawer__nav a[aria-current="page"]{
+  color:var(--gold);
+  font-weight:600;
+  background:rgba(176,140,74,.08);
+  box-shadow:inset 3px 0 0 var(--gold);
+}
+.drawer__nav a[aria-current="page"] svg{color:var(--gold)}
+
+.drawer.is-open .drawer__nav a{
+  animation:entraItem .34s cubic-bezier(.22,.7,.3,1) forwards;
+  animation-delay:calc(var(--i,0) * 32ms + 60ms);
+}
+@keyframes entraItem{to{opacity:1;transform:none}}
+
+.drawer__foot{
+  margin-top:auto;
+  padding:18px 20px 0;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.6;
+}
+
+/* Quem pediu menos movimento no sistema abre e fecha sem deslizar —
+   mas continua abrindo e fechando. */
+@media (prefers-reduced-motion:reduce){
+  .drawer,.drawer__panel,.drawer__scrim{transition:none}
+  .drawer__panel{transform:none}
+  .drawer__nav a{opacity:1;transform:none}
+  .drawer.is-open .drawer__nav a{animation:none}
+  .btn-conta:active{transform:none}
+}
 
 /* ---------- busca ---------- */
 

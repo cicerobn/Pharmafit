@@ -6,11 +6,29 @@
 
   /* ---------- menu lateral ---------- */
   var drawer = document.querySelector('[data-drawer]');
+  var quemAbriu = null;
 
   function toggleDrawer(open) {
     if (!drawer) return;
     drawer.classList.toggle('is-open', open);
     document.body.style.overflow = open ? 'hidden' : '';
+    drawer.setAttribute('aria-hidden', String(!open));
+
+    document.querySelectorAll('[data-drawer-open]').forEach(function (b) {
+      b.setAttribute('aria-expanded', String(open));
+    });
+
+    if (open) {
+      /* Guarda quem abriu para devolver o foco na hora de fechar. Sem
+         isso, quem usa teclado fecha o menu e o foco volta para o começo
+         da página, perdendo o lugar onde estava. */
+      quemAbriu = document.activeElement;
+      var primeiro = drawer.querySelector('.drawer__nav a, .drawer__quem');
+      if (primeiro) primeiro.focus({ preventScroll: true });
+    } else if (quemAbriu && quemAbriu.focus) {
+      quemAbriu.focus({ preventScroll: true });
+      quemAbriu = null;
+    }
   }
 
   document.querySelectorAll('[data-drawer-open]').forEach(function (el) {
@@ -21,6 +39,100 @@
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') toggleDrawer(false);
+  });
+
+  if (drawer) {
+    /* Numera os itens para eles entrarem em cascata, e marca a página
+       em que a pessoa já está. */
+    var aqui = location.pathname.split('/').pop() || 'index.html';
+    var itens = drawer.querySelectorAll('.drawer__nav a');
+
+    Array.prototype.forEach.call(itens, function (a, i) {
+      a.style.setProperty('--i', String(i));
+      var destino = (a.getAttribute('href') || '').split(/[?#]/)[0];
+      if (destino && destino === aqui) a.setAttribute('aria-current', 'page');
+      /* Tocar num item fecha o menu: sem isto, quem clica em "Produtos"
+         vê o menu continuar aberto por cima da página nova por um
+         instante, e parece que o toque não pegou. */
+      a.addEventListener('click', function () { toggleDrawer(false); });
+    });
+
+    /* Arrastar para a direita fecha — o menu entra por esse lado, então
+       é o gesto que a mão espera. */
+    var x0 = null;
+    var painel = drawer.querySelector('.drawer__panel');
+    if (painel) {
+      painel.addEventListener('touchstart', function (e) {
+        x0 = e.touches[0].clientX;
+      }, { passive: true });
+      painel.addEventListener('touchmove', function (e) {
+        if (x0 === null) return;
+        if (e.touches[0].clientX - x0 > 60) { toggleDrawer(false); x0 = null; }
+      }, { passive: true });
+    }
+  }
+
+  /* ---------- quem está usando: botão do topo e alto do menu ----------
+   *
+   * Hoje o site não tem senha: a "conta" é o nome e o WhatsApp guardados
+   * no próprio aparelho (assets/js/minha-area.js). Então o botão mostra
+   * "Entrar" para quem o site ainda não conhece, e o primeiro nome de
+   * quem já se identificou — e leva para a conta, que existe e funciona.
+   *
+   * Quando a conta com e-mail e senha entrar no ar, é este mesmo botão
+   * que passa a abrir o login de verdade. */
+  /* ESTA PARTE ESPERA O RESTO CARREGAR.
+   *
+   * O app.js e incluido ANTES do minha-area.js nas paginas (linha 284
+   * contra 290 no index). Lendo `window.PharmaFitArea` na hora, ele nao
+   * existe ainda — e o botao ficava dizendo "Entrar" para quem o site
+   * ja conhecia, sem erro nenhum na tela.
+   *
+   * Reordenar as tags seria mexer na ordem de dez arquivos por causa de
+   * um; esperar o documento ficar pronto resolve num lugar so. E se o
+   * PharmaFitArea nao aparecer nem assim, o botao continua dizendo
+   * "Entrar", que e a verdade: o site nao sabe quem e. */
+  function quandoPronto(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn, { once: true });
+    } else {
+      fn();
+    }
+  }
+
+  quandoPronto(function () {
+    var Area = window.PharmaFitArea;
+    var nome = '';
+    try { nome = String((Area && Area.dados().nome) || '').trim(); } catch (e) { nome = ''; }
+
+    var primeiro = nome ? nome.split(/\s+/)[0] : '';
+    if (primeiro) primeiro = primeiro.charAt(0).toUpperCase() + primeiro.slice(1);
+
+    var paginaAtual = location.pathname.split('/').pop() || 'index.html';
+
+    document.querySelectorAll('[data-conta-botao]').forEach(function (b) {
+      var alvo = b.querySelector('[data-conta-nome]');
+      if (alvo) alvo.textContent = primeiro || 'Entrar';
+      b.classList.toggle('is-dentro', !!primeiro);
+      b.setAttribute('aria-label', primeiro ? 'Minha conta, ' + primeiro : 'Entrar na minha conta');
+
+      /* Na propria pagina da conta ele nao se aponta a si mesmo: fica
+         marcado como "voce esta aqui". Botao que recarrega a mesma
+         pagina parece que nao funcionou. */
+      if ((b.getAttribute('href') || '').split('/').pop() === paginaAtual) {
+        b.setAttribute('aria-current', 'page');
+      }
+    });
+
+    var caixa = drawer && drawer.querySelector('[data-drawer-quem]');
+    if (caixa) {
+      caixa.querySelector('[data-drawer-inicial]').textContent =
+        primeiro ? primeiro.charAt(0).toUpperCase() : '?';
+      caixa.querySelector('[data-drawer-nome]').textContent = primeiro || 'Entrar na conta';
+      caixa.querySelector('[data-drawer-pe]').textContent = primeiro
+        ? 'Ver meus pedidos'
+        : 'Para acompanhar seus pedidos';
+    }
   });
 
   /* ---------- busca ---------- */
