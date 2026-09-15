@@ -2,7 +2,7 @@
    PHARMA FIT — monta a loja a partir do catálogo
 
    Desenha a grade de produtos, os filtros por categoria e o
-   carrossel de protocolos da página inicial usando os dados
+   carrossel de produtos da página inicial usando os dados
    de assets/js/catalogo.js.
    ========================================================= */
 (function () {
@@ -120,10 +120,20 @@
       if (categorias.indexOf(p.categoria) === -1) categorias.push(p.categoria);
     });
 
-    barra.innerHTML = categorias.map(function (c, i) {
-      return '<button class="chip' + (i === 0 ? ' is-active' : '') + '" type="button" ' +
-        'data-chip="' + chave(c) + '" aria-pressed="' + (i === 0) + '">' + esc(c) + '</button>';
-    }).join('');
+    /* "Todos" vem primeiro e nasce marcado. Antes o primeiro chip de
+       categoria vinha marcado, e a página abria já filtrada em Tirzepatida —
+       quem chegava não via o resto do catálogo e não tinha como voltar a ver
+       tudo, porque não existia botão para isso. O filtro em app.js já sabia
+       tratar 'todos'; faltava só o botão existir. */
+    var botoes = ['<button class="chip is-active" type="button" ' +
+      'data-chip="todos" aria-pressed="true">Todos</button>'];
+
+    categorias.forEach(function (c) {
+      botoes.push('<button class="chip" type="button" ' +
+        'data-chip="' + chave(c) + '" aria-pressed="false">' + esc(c) + '</button>');
+    });
+
+    barra.innerHTML = botoes.join('');
   }
 
   /* ---------- ordenação da vitrine ---------- */

@@ -321,7 +321,7 @@
     var hora = new Date().getHours();
     var parte = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
 
-    el.textContent = nome ? parte + ', ' + nome : 'Minha área';
+    el.textContent = nome ? parte + ', ' + nome : 'Conta';
   }
 
   /* ---------- eventos ---------- */

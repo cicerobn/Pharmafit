@@ -38,7 +38,7 @@
     });
   }
 
-  /* ---------- carrossel de protocolos ---------- */
+  /* ---------- carrossel de produtos ---------- */
   var carousel = document.querySelector('[data-carousel]');
   var dotsBox = document.querySelector('[data-dots]');
 
@@ -49,7 +49,7 @@
       var dot = document.createElement('button');
       dot.className = 'dot' + (i === 0 ? ' is-active' : '');
       dot.type = 'button';
-      dot.setAttribute('aria-label', 'Ir para o protocolo ' + (i + 1));
+      dot.setAttribute('aria-label', 'Ir para o produto ' + (i + 1));
       dotsBox.appendChild(dot);
     });
 
