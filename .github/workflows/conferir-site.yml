@@ -136,9 +136,53 @@ jobs:
             echo "::warning::Endereço inexistente respondeu HTTP $c e não parece ser o 404.html da casa."
           fi
 
+          # ---- 6. a publicação CHEGOU? ----
+          #
+          # Os testes acima provam que o site está no ar. Não provam que está na
+          # versão que acabou de ser enviada — e "no ar" com a versão velha é
+          # exatamente o jeito de alguém achar que publicou e não ter publicado.
+          #
+          # Como este site não tem passo de montagem, o repositório é a verdade:
+          # o arquivo publicado tem que ser BYTE POR BYTE o arquivo do commit.
+          # Se diferir, a Hostinger ainda não pegou (ou pegou pela metade).
+          #
+          # O .htaccess e o README ficam fora: o próprio servidor recusa servi-los,
+          # de propósito.
+          ARQUIVOS="index.html produtos.html conta.html atendimento.html
+                    assets/css/styles.css assets/js/app.js assets/js/loja.js
+                    assets/js/cliente.js gestao/login.html gestao/assets/config.js
+                    gestao/assets/dados.js"
+
+          echo
+          echo "Conferindo se a publicação chegou (comparando com este commit):"
+
+          for tentativa in 1 2 3 4 5 6 7 8 9 10; do
+            diferentes=""
+            for arq in $ARQUIVOS; do
+              aqui=$(md5sum "$arq" | cut -d' ' -f1)
+              la=$(curl -fsS --max-time 20 "$achou/$arq" 2>/dev/null | md5sum | cut -d' ' -f1)
+              [ "$aqui" != "$la" ] && diferentes="$diferentes $arq"
+            done
+
+            if [ -z "$diferentes" ]; then
+              echo "Chegou: os $(echo $ARQUIVOS | wc -w) arquivos no ar são iguais aos deste commit."
+              diferentes=""
+              break
+            fi
+
+            echo "Tentativa ${tentativa}: ainda diferente →${diferentes}"
+            [ "$tentativa" = "10" ] || sleep 30
+          done
+
+          if [ -n "$diferentes" ]; then
+            echo "::error::A publicação não chegou depois de 5 minutos. Diferentes:${diferentes}"
+            echo "Confira se a Hostinger está ligada no Git desta branch (main) e com deploy automático."
+            falhou=1
+          fi
+
           echo
           if [ "$falhou" = "1" ]; then
             echo "::error::O site está no ar, mas com problema — está apontado acima."
             exit 1
           fi
-          echo "A Pharma Fit está no ar e inteira: $achou"
+          echo "A Pharma Fit está no ar, inteira e na versão deste commit: $achou"
