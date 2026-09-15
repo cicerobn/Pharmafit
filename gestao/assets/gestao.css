@@ -232,7 +232,12 @@
 
 .kpis{
   display:grid;
-  grid-template-columns:repeat(2,1fr);
+  /* minmax(0,1fr) e nao 1fr: no grid, `1fr` NAO deixa a coluna ficar menor que
+     o conteudo dela. Com valores grandes ("R$ 1.998,00" em 26px), duas colunas
+     pediam ~420px numa tela de 375 — e como o .card-block corta o que passa,
+     a segunda coluna de cartoes simplesmente DESAPARECIA no celular. Nem dava
+     para rolar para o lado e achar. O minmax(0,...) autoriza encolher. */
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:12px;
   margin-bottom:24px;
 }
@@ -255,7 +260,20 @@
 .kpi__label svg{color:var(--gold)}
 .kpi__value{
   font-family:var(--serif);
-  font-size:26px;
+  /* Acompanha a largura da tela em vez de um tamanho fixo: 26px num celular
+     estreito nao cabe em meia tela, e dinheiro cortado no meio e pior que
+     dinheiro pequeno.
+     
+     E o valor NAO PODE quebrar em duas linhas para caber: o "R$ 3.896,00" que
+     o pt-BR gera usa espaco inquebravel entre o "R$" e o numero, de proposito.
+     Ou seja, ele e uma palavra so — nao ha onde quebrar, e o que nao cabe
+     simplesmente desaparece atras da borda. Foi assim que os valores do painel
+     ficaram cortados a 375px enquanto os do relatorio couberam.
+     
+     Por isso a conta e pelo pior caso plausivel: 13 caracteres
+     ("R$ 999.999,00") dentro de meia tela de celular. 4.8vw da ~18px a 375px,
+     que cabe, e continua confortavel de ler. */
+  font-size:clamp(16px,4.8vw,26px);
   line-height:1.1;
   margin:0;
 }
@@ -445,11 +463,27 @@ td.margem{font-weight:600;color:#2c6338}
 .btn-acao--no{border-color:var(--line);color:var(--muted);background:#fff}
 .btn-acao--no:hover{border-color:#e0b4b4;color:#8f2b2b}
 
-@media (min-width:760px){
-  .kpis{grid-template-columns:repeat(4,1fr)}
+/* Quantas colunas de numero cabem, medido e nao chutado.
+ *
+ * Isto era "4 colunas a partir de 760px", e a 760px nao caberia: quatro
+ * cartoes ali dao 139px de espaco para um numero de 30px que precisa de ~148.
+ * Os valores do painel ficavam cortados entre 760 e 800px — em tablet, e no
+ * navegador de quem nao usa a janela inteira.
+ *
+ * As contas, com o recheio de 16px do cartao e 12px de vao:
+ *   4 colunas precisam de ~800px de janela
+ *   3 colunas precisam de ~620px
+ * Entao e nessas larguras que elas entram, com folga. */
+@media (min-width:620px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (min-width:860px){
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 
 @media (max-width:520px){
+  .kpis--dentro{padding:14px 12px 16px;gap:10px}
+  .kpi{padding:13px}
   .admin__ola{display:none}
   .fila__acoes{width:100%}
   .btn-acao{flex:1;justify-content:center}
@@ -563,7 +597,7 @@ td.margem{font-weight:600;color:#2c6338}
   margin:0;
   padding:14px 18px 18px;
   gap:14px;
-  grid-template-columns:repeat(2,1fr);
+  grid-template-columns:repeat(2,minmax(0,1fr));
 }
 .kpis--dentro .kpi{background:#fbf9f5;box-shadow:none;border:1px solid var(--line)}
 .kpi--destaque{background:linear-gradient(135deg,#fdfaf4,#f6efe3)!important;border-color:var(--gold-soft)!important}
@@ -679,7 +713,7 @@ td .sub{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin
 
 @media (min-width:900px){
   .grid-2{grid-template-columns:1fr 1fr}
-  .kpis--dentro{grid-template-columns:repeat(3,1fr)}
+  .kpis--dentro{grid-template-columns:repeat(3,minmax(0,1fr))}
   .admin__nav{padding-inline:20px}
 }
 
@@ -964,7 +998,14 @@ td.col-titulo b{font-size:14.5px}
 .aviso--ok{border-left-color:#2c6338;align-items:flex-start;gap:10px}
 .aviso--ok svg{color:#2c6338;margin-top:2px;flex:none}
 
-.kpis--grandes .kpi__value{font-size:30px}
+/* Os numeros grandes do painel tambem acompanham a tela.
+   
+   Este foi o segundo lugar onde o cascade me enganou hoje: eu tinha posto o
+   tamanho fluido no `.kpi__value` e medido o painel ainda cortando. A resposta
+   nao era o tamanho, era ESTA linha — `.kpis--grandes .kpi__value` e mais
+   especifico e vencia, entao a fonte continuava 30px fixos. So apareceu quando
+   eu fui MEDIR a fonte aplicada em vez de supor qual regra estava valendo. */
+.kpis--grandes .kpi__value{font-size:clamp(18px,6.2vw,30px)}
 .variacao--sobe{color:#2c6338}
 .variacao--desce{color:#c0392b}
 
@@ -1444,4 +1485,26 @@ td.col-titulo b{font-size:14.5px}
   font-size:13.5px;
   color:var(--muted);
   border-top:1px solid var(--line);
+}
+
+/* =========================================================
+   Telas muito estreitas — fica no FIM do arquivo de proposito
+   ========================================================= */
+
+/* Abaixo de 360px, os numeros ficam em UMA coluna.
+ *
+ * Em duas colunas caberia o cartao, mas nao o dinheiro: a 320px o
+ * "R$ 1.998,00" era cortado dentro do proprio cartao. Numero de dinheiro
+ * cortado no meio nao e informacao, e chute — melhor uma coluna e rolar um
+ * pouco mais do que sete valores pela metade.
+ *
+ * E ESTA REGRA MORA AQUI NO FIM POR UM MOTIVO. Eu a escrevi primeiro logo
+ * depois da regra de 760px, no meio do arquivo, e ela nao funcionou: media
+ * query NAO aumenta especificidade, e o `.kpis--dentro` declarado mais abaixo
+ * vencia por vir depois. Passou no meu teste como "ainda cortado" e eu quase
+ * li como se o conserto nao servisse. Regra de tela estreita precisa vir depois
+ * das regras que ela corrige. */
+@media (max-width:359px){
+  .kpis,
+  .kpis--dentro{grid-template-columns:1fr}
 }
