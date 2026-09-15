@@ -1,0 +1,987 @@
+/* =========================================================
+   PHARMA FIT — painel de gestão, formato aplicativo
+
+   Feito para a mão: uma coluna, barra de abas embaixo, menu
+   que desliza pela esquerda. No computador a coluna fica
+   centralizada, com a mesma largura — é o mesmo painel, e não
+   dois desenhos para manter.
+
+   Vive em gestao/app/ de propósito. O painel antigo continua
+   inteiro em gestao/, funcionando, até este estar completo e
+   aprovado. Nada foi apagado.
+   ========================================================= */
+
+:root{
+  --gold:#b08c4a;
+  --gold-2:#c9a863;
+  --gold-soft:#e6d7ba;
+
+  --ink:#101010;
+  --ink-2:#2b2b2b;
+  --muted:#6e6a64;
+  --muted-2:#98928a;
+
+  --tela:#f7f5f1;
+  --card:#ffffff;
+  --line:#ebe5da;
+  --line-2:#f2ece2;
+
+  --serif:"Playfair Display","Times New Roman",Georgia,serif;
+  --sans:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
+
+  /* As cores de situação. Cada estado do pedido tem a sua, e é
+     sempre a mesma em toda tela — é assim que se aprende a ler a
+     lista sem ler as palavras. */
+  --st-pago:#1f7a4d;       --st-pago-bg:#e8f5ee;
+  --st-separacao:#2b5fa8;  --st-separacao-bg:#e9f0fb;
+  --st-enviado:#6a4270;    --st-enviado-bg:#f3ecf5;
+  --st-pendente:#8a6320;   --st-pendente-bg:#fbf1dd;
+  --st-cancelado:#a8322a;  --st-cancelado-bg:#fbeae8;
+
+  --barra-h:64px;
+  --topo-h:58px;
+  --coluna:480px;
+
+  --sombra-1:0 2px 10px rgba(40,30,10,.05);
+  --sombra-2:0 10px 30px rgba(40,30,10,.10);
+  --sombra-3:0 20px 50px rgba(40,30,10,.18);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+
+html{-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.5;
+  color:var(--ink);
+  background:var(--tela);
+  -webkit-font-smoothing:antialiased;
+}
+
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+a{color:inherit;text-decoration:none}
+
+.visually-hidden{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* ---------------------------------------------------------
+   A coluna
+   --------------------------------------------------------- */
+
+.app{
+  max-width:var(--coluna);
+  margin:0 auto;
+  min-height:100vh;
+  min-height:100dvh;
+  background:var(--tela);
+  position:relative;
+  /* espaço para a barra de abas não cobrir o fim do conteúdo,
+     somado ao vão do aparelho (iPhone sem botão) */
+  padding-bottom:calc(var(--barra-h) + 18px + env(safe-area-inset-bottom,0px));
+}
+
+@media (min-width:560px){
+  body{background:#efece6}
+  .app{
+    box-shadow:0 0 0 1px var(--line), var(--sombra-2);
+  }
+}
+
+/* ---------------------------------------------------------
+   Topo: menu, marca, sino
+   --------------------------------------------------------- */
+
+.topo{
+  position:sticky;
+  top:0;
+  z-index:40;
+  height:calc(var(--topo-h) + env(safe-area-inset-top,0px));
+  padding-top:env(safe-area-inset-top,0px);
+  display:grid;
+  grid-template-columns:44px 1fr 44px;
+  align-items:center;
+  background:rgba(247,245,241,.88);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-2);
+}
+
+.topo__botao{
+  width:44px;height:44px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  color:var(--ink-2);
+  transition:background .18s ease;
+}
+.topo__botao:active{background:rgba(0,0,0,.06)}
+
+.topo__marca{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.topo__marca img{width:26px;height:26px}
+.topo__marca span{
+  font-family:var(--serif);
+  font-size:16px;
+  letter-spacing:.16em;
+  font-weight:500;
+}
+
+/* O sino leva a contagem de pedidos parados. Quando não há nenhum,
+   a bolinha não aparece — bolinha vermelha com zero dentro é o jeito
+   mais rápido de ensinar alguém a ignorar avisos. */
+.sino{position:relative}
+.sino__conta{
+  position:absolute;
+  top:6px;right:5px;
+  min-width:17px;height:17px;
+  padding:0 4px;
+  border-radius:999px;
+  background:#c0392b;
+  color:#fff;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:17px;
+  text-align:center;
+  box-shadow:0 0 0 2px var(--tela);
+}
+
+/* ---------------------------------------------------------
+   Cabeçalho da página
+   --------------------------------------------------------- */
+
+.pagina{padding:18px 18px 0}
+
+.pagina__titulo{
+  font-family:var(--serif);
+  font-size:27px;
+  font-weight:500;
+  margin:0;
+  letter-spacing:-.01em;
+}
+.pagina__sub{
+  font-size:13.5px;
+  color:var(--muted);
+  margin:4px 0 0;
+}
+
+.pagina__linha{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+/* ---------------------------------------------------------
+   Busca e filtro
+   --------------------------------------------------------- */
+
+.procura{
+  display:flex;
+  gap:10px;
+  padding:14px 18px 0;
+}
+
+.procura__campo{
+  flex:1;
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:0 13px;
+  height:44px;
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+.procura__campo:focus-within{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(176,140,74,.14);
+}
+.procura__campo svg{color:var(--muted-2);flex:none}
+.procura__campo input{
+  flex:1;
+  min-width:0;
+  border:0;
+  outline:0;
+  background:none;
+  font:inherit;
+  font-size:14.5px;
+  color:var(--ink);
+}
+.procura__campo input::placeholder{color:var(--muted-2)}
+
+.procura__filtro{
+  flex:none;
+  width:44px;height:44px;
+  display:grid;place-items:center;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  color:var(--ink-2);
+  transition:border-color .18s ease,background .18s ease;
+}
+.procura__filtro:active{background:var(--line-2)}
+.procura__filtro.is-ativo{
+  border-color:var(--gold);
+  color:var(--gold);
+  background:rgba(176,140,74,.08);
+}
+
+/* ---------------------------------------------------------
+   Abas de situação (Todos · Pendentes · …)
+   --------------------------------------------------------- */
+
+.abas{
+  display:flex;
+  gap:20px;
+  padding:16px 18px 0;
+  margin-bottom:2px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  border-bottom:1px solid var(--line-2);
+}
+.abas::-webkit-scrollbar{display:none}
+
+.aba{
+  flex:none;
+  position:relative;
+  padding:0 0 11px;
+  font-size:14px;
+  color:var(--muted);
+  white-space:nowrap;
+  transition:color .18s ease;
+}
+.aba::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-1px;
+  height:2px;
+  border-radius:2px;
+  background:var(--gold);
+  transform:scaleX(0);
+  transform-origin:center;
+  transition:transform .22s cubic-bezier(.22,.7,.3,1);
+}
+.aba.is-ativa{color:var(--gold);font-weight:600}
+.aba.is-ativa::after{transform:scaleX(1)}
+
+/* ---------------------------------------------------------
+   Cartão de destaque: as vendas de hoje
+   --------------------------------------------------------- */
+
+.destaque{
+  position:relative;
+  overflow:hidden;
+  margin:18px 18px 0;
+  border-radius:18px;
+  padding:18px;
+  color:#fff;
+  background:linear-gradient(135deg,#1d1b18 0%,#3a3128 55%,var(--gold) 140%);
+  box-shadow:var(--sombra-2);
+}
+.destaque__rotulo{
+  font-size:12.5px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.72);
+  margin:0;
+}
+.destaque__valor{
+  font-family:var(--serif);
+  /* acompanha a largura: "R$ 154.320,00" em tamanho fixo não cabe em
+     tela estreita, e dinheiro cortado no meio não é informação */
+  font-size:clamp(26px,8.4vw,34px);
+  line-height:1.05;
+  margin:7px 0 0;
+}
+.destaque__delta{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin:10px 0 0;
+  font-size:13px;
+  color:rgba(255,255,255,.88);
+}
+.destaque__delta b{font-weight:600}
+.destaque__delta--sobe{color:#8fe0b0}
+.destaque__delta--desce{color:#f2a9a2}
+
+.destaque__acao{
+  position:absolute;
+  top:16px;right:16px;
+  width:36px;height:36px;
+  display:grid;place-items:center;
+  border-radius:11px;
+  background:rgba(255,255,255,.16);
+  color:#fff;
+  transition:background .18s ease;
+}
+.destaque__acao:active{background:rgba(255,255,255,.28)}
+
+/* As barrinhas do fundo são o faturamento de cada dia da semana.
+   São desenhadas com dado de verdade: sem venda, nenhuma barra —
+   gráfico decorativo com altura inventada é mentira bonita. */
+.destaque__barras{
+  position:absolute;
+  right:14px;bottom:0;
+  display:flex;
+  align-items:flex-end;
+  gap:3px;
+  height:52px;
+  opacity:.5;
+  pointer-events:none;
+}
+.destaque__barra{
+  width:7px;
+  border-radius:2px 2px 0 0;
+  background:rgba(255,255,255,.85);
+  min-height:3px;
+}
+
+/* ---------------------------------------------------------
+   Números em grade (2 × 2)
+   --------------------------------------------------------- */
+
+.numeros{
+  display:grid;
+  /* minmax(0,1fr) e não 1fr: com `1fr` a coluna não encolhe abaixo do
+     conteúdo, e valores grandes empurram a grade para fora da tela. */
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  padding:14px 18px 0;
+}
+
+.numero{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:14px;
+}
+.numero__rotulo{
+  font-size:12.5px;
+  color:var(--muted);
+  margin:0;
+}
+.numero__valor{
+  font-family:var(--serif);
+  font-size:clamp(19px,5.6vw,23px);
+  line-height:1.15;
+  margin:6px 0 0;
+}
+.numero__pe{
+  font-size:12px;
+  color:var(--muted-2);
+  margin:3px 0 0;
+}
+
+/* ---------------------------------------------------------
+   Bloco branco com título
+   --------------------------------------------------------- */
+
+.bloco{
+  margin:16px 18px 0;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  overflow:hidden;
+}
+.bloco__topo{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px 15px;
+}
+.bloco__titulo{
+  font-size:15.5px;
+  font-weight:600;
+  margin:0;
+}
+.bloco__link{
+  font-size:13.5px;
+  color:var(--gold);
+  font-weight:500;
+}
+.bloco__corpo{padding:0 15px 14px}
+
+.periodo{
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--card);
+  padding:6px 9px;
+  font-size:13px;
+  color:var(--ink-2);
+}
+
+/* ---------------------------------------------------------
+   Vendas por produto: nome, barra, valor, fatia
+   --------------------------------------------------------- */
+
+.fatia{padding:11px 0;border-top:1px solid var(--line-2)}
+.fatia:first-child{border-top:0}
+
+.fatia__topo{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+.fatia__nome{
+  font-size:14.5px;
+  font-weight:500;
+  margin:0;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.fatia__valor{
+  font-size:14px;
+  font-weight:600;
+  white-space:nowrap;
+  flex:none;
+}
+.fatia__pe{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  color:var(--muted);
+  margin:2px 0 7px;
+}
+
+.fatia__trilho{
+  height:6px;
+  border-radius:99px;
+  background:var(--line-2);
+  overflow:hidden;
+}
+.fatia__barra{
+  height:100%;
+  border-radius:99px;
+  background:var(--cor,var(--gold));
+  /* cresce da esquerda quando a lista aparece */
+  transform-origin:left center;
+  animation:cresceBarra .5s cubic-bezier(.22,.7,.3,1) backwards;
+  animation-delay:calc(var(--i,0) * 70ms);
+}
+@keyframes cresceBarra{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+.fatia:nth-child(1) .fatia__barra{--cor:#2f6f62}
+.fatia:nth-child(2) .fatia__barra{--cor:#a4552f}
+.fatia:nth-child(3) .fatia__barra{--cor:#6a4270}
+.fatia:nth-child(4) .fatia__barra{--cor:#3a5a7a}
+.fatia:nth-child(n+5) .fatia__barra{--cor:var(--gold)}
+
+/* ---------------------------------------------------------
+   Lista de itens (pedidos, clientes, produtos)
+   --------------------------------------------------------- */
+
+.lista{list-style:none;margin:0;padding:0}
+
+.item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:13px 15px;
+  border-top:1px solid var(--line-2);
+  text-align:left;
+  background:var(--card);
+  transition:background .15s ease;
+}
+.lista .item:first-child{border-top:0}
+.item:active{background:var(--line-2)}
+
+.item__icone{
+  flex:none;
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  border-radius:11px;
+  background:var(--line-2);
+  color:var(--muted);
+}
+
+/* As iniciais do cliente, em vez de foto. Foto de cliente é dado que
+   ninguém precisa guardar para vender. */
+.item__inicial{
+  flex:none;
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+
+.item__corpo{flex:1;min-width:0}
+
+/* `display:block` nao e detalhe: estes sao <span>, porque paragrafo
+   dentro de <a> e HTML invalido. Span e inline, e sem isto o nome e a
+   hora sairam GRUDADOS na mesma linha — "#1027 · Joao SilvaHoje, 10:50".
+   Apareceu na primeira foto da tela. */
+.item__nome,
+.item__linha{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.item__nome{
+  font-size:14.5px;
+  font-weight:600;
+  margin:0;
+}
+.item__linha{
+  font-size:12.5px;
+  color:var(--muted);
+  margin:2px 0 0;
+}
+.item__numero{
+  display:block;
+  font-size:12px;
+  font-weight:700;
+  color:var(--muted-2);
+  letter-spacing:.02em;
+}
+.item__lado{
+  flex:none;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:5px;
+  text-align:right;
+}
+.item__valor{
+  display:block;
+  font-size:14px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.item__hora{
+  display:block;
+  font-size:11.5px;
+  color:var(--muted-2);
+  white-space:nowrap;
+}
+.item__seta{flex:none;color:var(--muted-2)}
+
+/* ---------------------------------------------------------
+   Ordenação e contagem
+   --------------------------------------------------------- */
+
+.chips-ordem{display:flex;flex-wrap:wrap;gap:8px}
+
+.chip-ordem{
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:7px 13px;
+  font-size:13px;
+  color:var(--ink-2);
+  background:var(--card);
+  transition:border-color .18s ease,color .18s ease,background .18s ease;
+}
+.chip-ordem.is-ativo{
+  border-color:var(--gold);
+  color:#fff;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+}
+
+/* Quantos pedidos e quanto somam. Fica acima da lista porque é a
+   resposta que a pessoa quer antes de ler linha por linha. */
+.conta-linha{
+  margin:14px 18px 0;
+  font-size:12.5px;
+  color:var(--muted);
+}
+.conta-linha:empty{display:none}
+
+/* A lista de uma tela inteira ganha moldura própria, para não
+   encostar nas beiradas. */
+.lista--solta{
+  margin:10px 18px 0;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+  overflow:hidden;
+}
+
+/* ---------------------------------------------------------
+   Etiqueta de situação
+   --------------------------------------------------------- */
+
+.marca{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:3px 9px;
+  border-radius:999px;
+  font-size:11.5px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.marca--pago{color:var(--st-pago);background:var(--st-pago-bg)}
+.marca--separacao{color:var(--st-separacao);background:var(--st-separacao-bg)}
+.marca--enviado{color:var(--st-enviado);background:var(--st-enviado-bg)}
+.marca--pendente{color:var(--st-pendente);background:var(--st-pendente-bg)}
+.marca--cancelado{color:var(--st-cancelado);background:var(--st-cancelado-bg)}
+.marca--ativo{color:var(--st-pago);background:var(--st-pago-bg)}
+.marca--off{color:var(--muted);background:var(--line-2)}
+
+/* ---------------------------------------------------------
+   Botão no canto do título
+   --------------------------------------------------------- */
+
+.botao-topo{
+  flex:none;
+  width:40px;height:40px;
+  display:grid;place-items:center;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  color:#fff;
+  box-shadow:0 6px 16px rgba(176,140,74,.34);
+  transition:transform .16s ease;
+}
+.botao-topo:active{transform:scale(.94)}
+
+/* ---------------------------------------------------------
+   Chips de categoria
+   --------------------------------------------------------- */
+
+.chips-cat{
+  display:flex;
+  gap:8px;
+  padding:14px 18px 0;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.chips-cat::-webkit-scrollbar{display:none}
+
+.chip-cat{
+  /* Mesma ideia dos chips da loja: a cor entra por índice, para
+     renomear a categoria não trocar a cor de lugar. */
+  --c:var(--gold);
+  --c2:var(--gold-2);
+  flex:none;
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:13px;
+  color:var(--ink-2);
+  background:var(--card);
+  white-space:nowrap;
+  transition:border-color .2s ease,color .2s ease,background .2s ease;
+}
+.chip-cat[data-cor="1"]{--c:#2f6f62;--c2:#3f8b7a}
+.chip-cat[data-cor="2"]{--c:#a4552f;--c2:#c06a3d}
+.chip-cat[data-cor="3"]{--c:#6a4270;--c2:#85558b}
+.chip-cat[data-cor="4"]{--c:#3a5a7a;--c2:#4d739a}
+.chip-cat.is-ativo{
+  border-color:transparent;
+  color:#fff;
+  background:linear-gradient(135deg,var(--c2),var(--c));
+}
+
+/* ---------------------------------------------------------
+   Cartão de produto
+   --------------------------------------------------------- */
+
+.prod{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  gap:13px;
+  margin:12px 18px 0;
+  padding:13px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:16px;
+}
+
+.prod__foto{
+  flex:none;
+  width:66px;height:66px;
+  object-fit:contain;
+  border-radius:11px;
+  background:var(--line-2);
+  padding:6px;
+}
+
+.prod__corpo{flex:1;min-width:0;padding-right:26px}
+.prod__nome{
+  font-size:15px;
+  font-weight:600;
+  margin:0;
+  line-height:1.3;
+}
+.prod__estoque{
+  font-size:12.5px;
+  color:var(--muted);
+  margin:4px 0 0;
+}
+.prod__preco{
+  font-family:var(--serif);
+  font-size:19px;
+  margin:7px 0 0;
+}
+.prod__marca{margin:8px 0 0}
+
+.prod__editar{
+  position:absolute;
+  top:10px;right:8px;
+  width:32px;height:32px;
+  display:grid;place-items:center;
+  border-radius:9px;
+  color:var(--muted-2);
+  transition:background .16s ease,color .16s ease;
+}
+.prod__editar:active{background:var(--line-2);color:var(--ink-2)}
+
+/* ---------------------------------------------------------
+   Nada aqui
+   --------------------------------------------------------- */
+
+.vazio{
+  text-align:center;
+  padding:34px 22px;
+  color:var(--muted);
+}
+.vazio svg{color:var(--gold-soft);margin-bottom:10px}
+.vazio__titulo{
+  font-family:var(--serif);
+  font-size:18px;
+  color:var(--ink);
+  margin:0 0 5px;
+}
+.vazio__texto{font-size:13.5px;margin:0;line-height:1.55}
+
+/* ---------------------------------------------------------
+   Esqueleto de carregamento
+   --------------------------------------------------------- */
+
+.osso{
+  background:linear-gradient(90deg,var(--line-2) 25%,#f8f4ee 50%,var(--line-2) 75%);
+  background-size:220% 100%;
+  animation:brilho 1.3s ease-in-out infinite;
+  border-radius:8px;
+}
+@keyframes brilho{from{background-position:120% 0}to{background-position:-20% 0}}
+.osso--linha{height:13px;margin-bottom:9px}
+.osso--titulo{height:22px;width:54%;margin-bottom:12px}
+.osso--cartao{height:78px;border-radius:14px}
+.osso--destaque{height:112px;border-radius:18px;margin:18px 18px 0}
+
+/* ---------------------------------------------------------
+   Barra de abas de baixo
+   --------------------------------------------------------- */
+
+.barra{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:45;
+  height:calc(var(--barra-h) + env(safe-area-inset-bottom,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:rgba(255,255,255,.94);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+}
+.barra__dentro{
+  max-width:var(--coluna);
+  height:var(--barra-h);
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  align-items:center;
+}
+
+.tab{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  height:100%;
+  font-size:10.5px;
+  color:var(--muted);
+  transition:color .18s ease;
+}
+.tab svg{transition:transform .18s ease}
+.tab.is-ativa{color:var(--gold);font-weight:600}
+.tab.is-ativa svg{transform:translateY(-1px)}
+.tab:active svg{transform:scale(.9)}
+
+/* O "+" fica no meio, subindo acima da barra, como no desenho. */
+.tab--mais{position:relative}
+.mais-botao{
+  position:absolute;
+  top:-17px;
+  left:50%;
+  transform:translateX(-50%);
+  width:50px;height:50px;
+  display:grid;place-items:center;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  color:#fff;
+  box-shadow:0 8px 20px rgba(176,140,74,.42);
+  transition:transform .16s ease,box-shadow .16s ease;
+}
+.mais-botao:active{
+  transform:translateX(-50%) scale(.93);
+  box-shadow:0 4px 12px rgba(176,140,74,.38);
+}
+
+/* ---------------------------------------------------------
+   Menu que desliza pela esquerda
+   --------------------------------------------------------- */
+
+.veu{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  background:rgba(18,14,8,.44);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .26s ease;
+}
+.veu.is-aberto{opacity:1;pointer-events:auto}
+
+.gaveta{
+  position:fixed;
+  top:0;left:0;bottom:0;
+  z-index:61;
+  width:min(310px,84vw);
+  background:var(--card);
+  box-shadow:var(--sombra-3);
+  display:flex;
+  flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);
+  /* fechada, ela fica fora da tela pela esquerda. A transição é no
+     transform, e não em "left", porque transform o navegador anima na
+     placa de vídeo — em aparelho fraco a diferença aparece. */
+  transform:translateX(-102%);
+  transition:transform .3s cubic-bezier(.3,.8,.3,1);
+  visibility:hidden;
+}
+.gaveta.is-aberta{transform:none;visibility:visible}
+
+.gaveta__topo{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:18px 18px 16px;
+  border-bottom:1px solid var(--line-2);
+}
+.gaveta__topo img{width:34px;height:34px}
+.gaveta__marca{
+  font-family:var(--serif);
+  font-size:15px;
+  letter-spacing:.16em;
+  font-weight:500;
+}
+.gaveta__quem{
+  padding:15px 18px;
+  border-bottom:1px solid var(--line-2);
+}
+.gaveta__ola{font-size:12.5px;color:var(--muted);margin:0}
+.gaveta__nome{
+  font-size:16px;
+  font-weight:600;
+  margin:2px 0 0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.gaveta__lista{
+  flex:1;
+  overflow-y:auto;
+  padding:9px 0;
+  list-style:none;
+  margin:0;
+}
+.gaveta__item{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:12px 18px;
+  font-size:14.5px;
+  color:var(--ink-2);
+  transition:background .15s ease;
+}
+.gaveta__item svg{flex:none;color:var(--muted)}
+.gaveta__item:active{background:var(--line-2)}
+.gaveta__item.is-ativo{
+  color:var(--gold);
+  font-weight:600;
+  background:rgba(176,140,74,.07);
+  box-shadow:inset 3px 0 0 var(--gold);
+}
+.gaveta__item.is-ativo svg{color:var(--gold)}
+
+.gaveta__secao{
+  padding:15px 18px 6px;
+  font-size:11px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted-2);
+}
+
+.gaveta__pe{
+  padding:14px 18px calc(16px + env(safe-area-inset-bottom,0px));
+  border-top:1px solid var(--line-2);
+}
+.gaveta__sair{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:11px 13px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  font-size:14px;
+  color:var(--ink-2);
+  transition:border-color .18s ease,color .18s ease;
+}
+.gaveta__sair:active{border-color:#e0b4b4;color:#8f2b2b}
+
+/* Com a gaveta aberta, o fundo não rola. */
+body.travado{overflow:hidden}
+
+/* ---------------------------------------------------------
+   Entrada dos blocos e das linhas
+   --------------------------------------------------------- */
+
+@keyframes sobe{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+.entra{
+  animation:sobe .34s cubic-bezier(.22,.7,.3,1) backwards;
+  animation-delay:calc(var(--i,0) * 45ms);
+}
+
+/* ---------------------------------------------------------
+   Quem pediu menos movimento não recebe nenhum.
+   Não é enfeite opcional: movimento em quem tem enjoo de
+   movimento passa mal de verdade. A gaveta continua abrindo,
+   só sem deslizar.
+   --------------------------------------------------------- */
+@media (prefers-reduced-motion:reduce){
+  .gaveta,.veu,.entra,.fatia__barra,.aba::after,.osso,
+  .tab svg,.mais-botao,.topo__botao{transition:none;animation:none}
+  .gaveta{transform:none;visibility:hidden;display:none}
+  .gaveta.is-aberta{display:flex;visibility:visible}
+}

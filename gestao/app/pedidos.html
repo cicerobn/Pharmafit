@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pedidos — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1d1b18">
+<link rel="icon" href="../../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="app.css?v=4a73c9ea">
+</head>
+<body>
+
+<div class="app">
+  <main>
+
+    <div class="pagina">
+      <h1 class="pagina__titulo">Pedidos</h1>
+    </div>
+
+    <div class="procura">
+      <label class="procura__campo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input type="search" data-busca placeholder="Buscar pedido, cliente…"
+               aria-label="Buscar pedido ou cliente" autocomplete="off">
+      </label>
+      <button class="procura__filtro" type="button" data-filtro
+              aria-label="Ordenar" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M3 6h18M6 12h12M10 18h4"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Aparece ao tocar no filtro. Cada opção ordena de verdade. -->
+    <div class="bloco" data-ordenacao hidden>
+      <div class="bloco__corpo" style="padding-top:12px">
+        <p class="numero__rotulo" style="margin-bottom:8px">Ordenar por</p>
+        <div class="chips-ordem">
+          <button class="chip-ordem is-ativo" type="button" data-ordem="recentes">Mais recentes</button>
+          <button class="chip-ordem" type="button" data-ordem="antigos">Mais antigos</button>
+          <button class="chip-ordem" type="button" data-ordem="maior">Maior valor</button>
+          <button class="chip-ordem" type="button" data-ordem="menor">Menor valor</button>
+        </div>
+      </div>
+    </div>
+
+    <nav class="abas" data-abas aria-label="Situação do pedido">
+      <button class="aba is-ativa" type="button" data-ver="todos">Todos</button>
+      <button class="aba" type="button" data-ver="pendentes">Pendentes</button>
+      <button class="aba" type="button" data-ver="andamento">Em andamento</button>
+      <button class="aba" type="button" data-ver="enviados">Enviados</button>
+    </nav>
+
+    <div id="carregando" aria-live="polite" aria-busy="true" style="padding:18px">
+      <div class="osso osso--linha"></div>
+      <div class="osso osso--linha"></div>
+      <div class="osso osso--linha"></div>
+      <div class="osso osso--linha"></div>
+      <span class="visually-hidden">Carregando os pedidos…</span>
+    </div>
+
+    <div class="bloco" id="erro" hidden>
+      <div class="vazio">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+        </svg>
+        <p class="vazio__titulo">Não conseguimos carregar</p>
+        <p class="vazio__texto" id="erro-texto">Confira a conexão e tente de novo.</p>
+        <p style="margin-top:14px">
+          <button class="periodo" type="button" id="de-novo">Tentar de novo</button>
+        </p>
+      </div>
+    </div>
+
+    <div id="conteudo" hidden>
+      <p class="conta-linha" data-conta></p>
+      <ul class="lista lista--solta" data-pedidos></ul>
+    </div>
+
+  </main>
+</div>
+
+<script src="../assets/config.js?v=86cd5f3d"></script>
+<script src="../assets/util.js?v=a2c25918"></script>
+<script src="../../assets/js/catalogo.js?v=dc692d11"></script>
+<script src="../assets/auth.js?v=239e389b"></script>
+<script src="../assets/dados.js?v=fe7d8742"></script>
+<script src="../assets/analise.js?v=e2445f21"></script>
+<script src="app.js?v=1948590a"></script>
+<script src="pedidos.js?v=615f57a1"></script>
+</body>
+</html>

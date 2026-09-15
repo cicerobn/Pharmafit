@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Início — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1d1b18">
+<link rel="icon" href="../../assets/img/logo-pf.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="app.css?v=4a73c9ea">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- o topo, a gaveta e a barra de abas são desenhados por app.js -->
+
+  <main>
+
+    <div class="pagina">
+      <h1 class="pagina__titulo">Olá, <span data-primeiro-nome>…</span></h1>
+      <p class="pagina__sub">Bem-vindo ao painel de gestão</p>
+    </div>
+
+    <!-- enquanto carrega -->
+    <div id="carregando" aria-live="polite" aria-busy="true">
+      <div class="osso osso--destaque"></div>
+      <div class="numeros">
+        <div class="osso osso--cartao"></div><div class="osso osso--cartao"></div>
+        <div class="osso osso--cartao"></div><div class="osso osso--cartao"></div>
+      </div>
+      <span class="visually-hidden">Carregando os números…</span>
+    </div>
+
+    <!-- se o banco não responder -->
+    <div class="bloco" id="erro" hidden>
+      <div class="vazio">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.4" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7.6v5M12 16.2h.01"/>
+        </svg>
+        <p class="vazio__titulo">Não conseguimos carregar</p>
+        <p class="vazio__texto" id="erro-texto">Confira a conexão e tente de novo.</p>
+        <p style="margin-top:14px">
+          <button class="periodo" type="button" id="de-novo">Tentar de novo</button>
+        </p>
+      </div>
+    </div>
+
+    <div id="conteudo" hidden>
+
+      <!-- vendas de hoje -->
+      <section class="destaque" aria-labelledby="hoje-rotulo">
+        <p class="destaque__rotulo" id="hoje-rotulo">Vendas de hoje</p>
+        <p class="destaque__valor" data-hoje>—</p>
+        <p class="destaque__delta" data-delta></p>
+        <div class="destaque__barras" data-barras aria-hidden="true"></div>
+        <a class="destaque__acao" href="../relatorios.html" aria-label="Ver os relatórios">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+          </svg>
+        </a>
+      </section>
+
+      <!-- os quatro números -->
+      <div class="numeros">
+        <article class="numero">
+          <p class="numero__rotulo">Pedidos</p>
+          <p class="numero__valor" data-n-pedidos>—</p>
+          <p class="numero__pe">Em andamento</p>
+        </article>
+        <article class="numero">
+          <p class="numero__rotulo">Faturamento</p>
+          <p class="numero__valor" data-n-faturamento>—</p>
+          <p class="numero__pe">Este mês</p>
+        </article>
+        <article class="numero">
+          <p class="numero__rotulo">Clientes</p>
+          <p class="numero__valor" data-n-clientes>—</p>
+          <p class="numero__pe">Que já compraram</p>
+        </article>
+        <article class="numero">
+          <p class="numero__rotulo">Produtos</p>
+          <p class="numero__valor" data-n-produtos>—</p>
+          <p class="numero__pe">À venda</p>
+        </article>
+      </div>
+
+      <!-- vendas por produto -->
+      <section class="bloco">
+        <div class="bloco__topo">
+          <h2 class="bloco__titulo">Vendas por produto</h2>
+          <select class="periodo" data-periodo aria-label="Período">
+            <option value="hoje">Hoje</option>
+            <option value="7">7 dias</option>
+            <option value="mes" selected>Este mês</option>
+          </select>
+        </div>
+        <div class="bloco__corpo" data-fatias></div>
+      </section>
+
+      <!-- pedidos recentes -->
+      <section class="bloco">
+        <div class="bloco__topo">
+          <h2 class="bloco__titulo">Pedidos recentes</h2>
+          <a class="bloco__link" href="pedidos.html">Ver todos</a>
+        </div>
+        <ul class="lista" data-recentes></ul>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script src="../assets/config.js?v=86cd5f3d"></script>
+<script src="../assets/util.js?v=a2c25918"></script>
+<script src="../../assets/js/catalogo.js?v=dc692d11"></script>
+<script src="../assets/auth.js?v=239e389b"></script>
+<script src="../assets/dados.js?v=fe7d8742"></script>
+<script src="../assets/analise.js?v=e2445f21"></script>
+<script src="app.js?v=1948590a"></script>
+<script src="inicio.js?v=ec3651a2"></script>
+</body>
+</html>

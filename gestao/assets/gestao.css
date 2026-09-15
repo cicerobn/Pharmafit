@@ -1508,3 +1508,14 @@ td.col-titulo b{font-size:14.5px}
   .kpis,
   .kpis--dentro{grid-template-columns:1fr}
 }
+
+/* A linha que a pessoa veio ver, quando ela chega por um link direto
+   (index.html?pedido=ID, que e o que a lista do painel novo manda).
+   Esta regra mora AQUI, e nao no app.css do painel novo: `.fila__item`
+   e desta folha. Eu a escrevi no arquivo errado primeiro, e o destaque
+   simplesmente nao aparecia — sem erro nenhum, porque CSS que nao casa
+   com nada nao reclama. */
+.fila__item.is-alvo{
+  box-shadow:0 0 0 2px var(--gold);
+  border-radius:14px;
+}

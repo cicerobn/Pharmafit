@@ -337,6 +337,37 @@
 
   function ligarModal() {
     document.getElementById('novo-pedido').addEventListener('click', function () { abrirModal(true); });
+
+    /* Chegando por `index.html#novo`, o formulário abre sozinho.
+       É por aqui que o botão "+" do painel novo entra: sem isto ele
+       levaria para a fila e não abriria nada, e botão que não faz o que
+       promete é pior que botão que não existe. */
+    /* Chegando por `index.html?pedido=ID`, a fila rola até aquele pedido
+       e o destaca. A lista do painel novo manda esse endereço; sem isto,
+       tocar em qualquer linha cairia no topo da fila e a pessoa teria de
+       procurar na mão o pedido que ela acabou de tocar. */
+    var quero = new URLSearchParams(location.search).get('pedido');
+    if (quero) {
+      /* A fila é desenhada depois; espera o elemento existir. */
+      var tentativas = 0;
+      var procurar = setInterval(function () {
+        var alvo = document.querySelector('.fila__item[data-id="' + quero.replace(/"/g, '') + '"]');
+        if (alvo) {
+          clearInterval(procurar);
+          alvo.classList.add('is-alvo');
+          alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (++tentativas > 40) {
+          clearInterval(procurar);
+        }
+      }, 120);
+    }
+
+    if (location.hash === '#novo') {
+      abrirModal(true);
+      /* Tira o #novo do endereço para um F5 não reabrir o formulário
+         sem a pessoa ter pedido. */
+      history.replaceState(null, '', location.pathname + location.search);
+    }
     document.querySelectorAll('[data-fechar-modal]').forEach(function (el) {
       el.addEventListener('click', function () { abrirModal(false); });
     });
@@ -775,9 +806,40 @@
       if (produto) abrirProduto(produto);
     });
 
-    document.getElementById('novo-produto').addEventListener('click', function () {
+    function produtoEmBranco() {
       abrirProduto({ nome: '', categoria: 'Tirzepatida', custo: 0, preco: 0, antes: 0, estoque: null, ativo: true });
-    });
+    }
+
+    document.getElementById('novo-produto').addEventListener('click', produtoEmBranco);
+
+    /* Os dois atalhos que a tela de Produtos do painel novo usa.
+       Sem eles, o "+" e o botão de editar de lá levariam para esta
+       página e não abririam nada — e botão que não faz o que promete é
+       pior que botão que não existe. */
+    if (location.hash === '#novo-produto') {
+      produtoEmBranco();
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+
+    var queroProduto = new URLSearchParams(location.search).get('produto');
+    if (queroProduto) {
+      /* Espera os produtos chegarem do banco. Este trecho roda na
+         montagem da página, ANTES da lista existir — na primeira versão
+         eu lia `estado.produtos` aqui e ela estava vazia, então o link
+         de editar não abria nada e não dava erro nenhum. */
+      var voltas = 0;
+      var esperar = setInterval(function () {
+        var achado = (estado.produtos || []).filter(function (p) {
+          return String(p.id) === String(queroProduto);
+        })[0];
+        if (achado) {
+          clearInterval(esperar);
+          abrirProduto(achado);
+        } else if (++voltas > 40) {
+          clearInterval(esperar);
+        }
+      }, 120);
+    }
 
     document.getElementById('ep-excluir').addEventListener('click', async function () {
       if (!produtoEmEdicao || !produtoEmEdicao.id) return;
