@@ -57,6 +57,9 @@
       antes: p.antes,
       estoque: (p.estoque === undefined ? null : p.estoque),
       indisponivel: !!p.indisponivel,
+      /* A imagem ia junto a partir daqui: sem ela, o painel novo mostrava
+         os onze produtos com a mesma foto. */
+      imagem: p.imagem || null,
       ativo: true
     };
   });

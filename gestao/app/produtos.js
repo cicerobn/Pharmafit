@@ -21,6 +21,46 @@
     return U.normalizar(s).replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 
+  /* A FOTO VEM DO CATALOGO, casada pelo nome.
+   *
+   * A tabela `pf_produtos` nao tem coluna de imagem, e a camada de dados
+   * nao carrega a do catalogo — na primeira versao desta tela TODOS os
+   * onze produtos apareciam com a mesma foto genérica, o que faz a lista
+   * inteira parecer um produto repetido. Só vi abrindo a tela.
+   *
+   * Casar pelo nome, e nao criar coluna nova: a foto ja existe em
+   * assets/js/catalogo.js, que e a fonte unica de produto e preco. Uma
+   * coluna nova no banco seria mudanca de estrutura em producao para
+   * resolver algo que ja esta resolvido em outro lugar. */
+  var FOTOS = {};
+  (window.PHARMAFIT_CATALOGO || []).forEach(function (p) {
+    if (p.imagem) FOTOS[U.normalizar(p.nome)] = p.imagem;
+  });
+
+  /* O catalogo guarda o caminho a partir da RAIZ do site
+   * ("assets/img/prod-caneta.svg"), e esta pagina mora duas pastas
+   * abaixo, em gestao/app/. Sem ajustar, o navegador procura em
+   * gestao/app/assets/img/ e nao acha.
+   *
+   * E o pior: a foto quebrada NAO da erro na tela, so aparece um
+   * retangulo vazio. Na primeira versao as onze fotos estavam no HTML e
+   * nenhuma carregava — o teste so pegou porque ele olha o codigo da
+   * resposta de cada arquivo, e nao se a tag existe. Contar foto nao e
+   * olhar se a foto chegou. */
+  function daRaiz(caminho) {
+    if (/^(https?:)?\/\//.test(caminho) || caminho.startsWith('data:')) return caminho;
+    if (caminho.startsWith('/') || caminho.startsWith('../')) return caminho;
+    return '../../' + caminho;
+  }
+
+  function fotoDe(p) {
+    if (p.imagem) return daRaiz(p.imagem);
+    var achada = FOTOS[U.normalizar(p.nome || '')];
+    /* Sem foto conhecida, o frasco generico — melhor um desenho neutro
+       que um espaco vazio do tamanho de uma foto. */
+    return achada ? daRaiz(achada) : '../../assets/img/prod-frasco.svg';
+  }
+
   /** O que a tela mostra no lugar do estoque. */
   function estoqueTexto(p) {
     var tem = !(p.estoque === null || p.estoque === undefined || p.estoque === '');
@@ -117,7 +157,7 @@
 
     alvo.innerHTML = lista.map(function (p) {
       var preco = Number(p.preco || p.venda || 0);
-      var foto = p.imagem || '../../assets/img/prod-frasco.svg';
+      var foto = fotoDe(p);
       return '<article class="prod">' +
         '<img class="prod__foto" src="' + esc(foto) + '" alt="" loading="lazy">' +
         '<div class="prod__corpo">' +
