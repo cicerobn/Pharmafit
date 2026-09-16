@@ -207,17 +207,39 @@ jobs:
 
           echo "Procurando a Pharma Fit:"
           barrado=0
-          for bruto in $candidatos; do
-            alvo="${bruto%/}"
-            codigo=$(curl -s -A "$NAVEGADOR" -o /tmp/home.html -w '%{http_code}' --max-time 20 "$alvo/" || echo 000)
-            titulo=$(grep -oiE '<title>[^<]*' /tmp/home.html | head -1 | sed 's/<title>//I')
-            echo "  $alvo → HTTP $codigo  ${titulo}"
-            if grep -qiE 'checking your browser|just a moment|cf-browser-verification|__cf_chl' /tmp/home.html 2>/dev/null; then
-              barrado=1
-            fi
-            if [ "$codigo" = "200" ] && printf '%s' "$titulo" | grep -qi "pharma"; then
-              achou="$alvo"
-            fi
+          # "respondeu" = o servidor devolveu ALGUMA resposta HTTP, mesmo
+          # que ruim. Fica separado de "nem abriu a conexão", que é outro
+          # assunto e está explicado mais abaixo.
+          respondeu=0
+
+          # TRÊS VOLTAS, E NÃO UMA.
+          #
+          # Uma única tentativa de 20s transforma qualquer soluço de rede
+          # em "o site caiu". Três voltas espaçadas custam dois minutos no
+          # pior caso e só sobram quando o problema é constante.
+          for volta in 1 2 3; do
+            achou=""
+            for bruto in $candidatos; do
+              alvo="${bruto%/}"
+              : > /tmp/home.html
+              # Sem `|| echo 000` aqui: o próprio -w já escreve 000 quando a
+              # conexão não acontece, e os dois juntos imprimiam "HTTP 000000",
+              # um código que não existe. Detalhe pequeno que faz duvidar do
+              # resto do recado.
+              codigo=$(curl -s -A "$NAVEGADOR" -o /tmp/home.html -w '%{http_code}' --max-time 20 "$alvo/") || true
+              [ -n "$codigo" ] || codigo=000
+              titulo=$(grep -oiE '<title>[^<]*' /tmp/home.html 2>/dev/null | head -1 | sed 's/<title>//I')
+              echo "  volta $volta · $alvo → HTTP $codigo  ${titulo}"
+              [ "$codigo" = "000" ] || respondeu=1
+              if grep -qiE 'checking your browser|just a moment|cf-browser-verification|__cf_chl' /tmp/home.html 2>/dev/null; then
+                barrado=1
+              fi
+              if [ "$codigo" = "200" ] && printf '%s' "$titulo" | grep -qi "pharma"; then
+                achou="$alvo"
+              fi
+            done
+            [ -z "$achou" ] || break
+            [ "$volta" = "3" ] || { echo "  … esperando 45s para tentar de novo"; sleep 45; }
           done
 
           # PAREI DE CHAMAR "SITE FORA DO AR" O QUE É "NÃO CONSEGUI OLHAR".
@@ -236,8 +258,29 @@ jobs:
             exit 0
           fi
 
+          # "NÃO VEIO RESPOSTA" NÃO É "VEIO RESPOSTA RUIM".
+          #
+          # Em 16/09/2026, às 15:22, esta conferência escreveu: "não
+          # respondeu em nenhum dos endereços (e não foi proteção
+          # antirrobô: nenhuma resposta tinha a tela de verificação)".
+          # Mas o que ela recebeu foi HTTP 000 nas duas — ou seja,
+          # NENHUMA resposta. E sem resposta não existe tela de
+          # verificação para achar: ela absolvia a proteção antirrobô
+          # usando como prova exatamente o que um bloqueio produz.
+          #
+          # Do runner não dá para distinguir "a Hostinger caiu" de "a
+          # Hostinger fechou a porta para o GitHub". Então o recado diz
+          # as duas possibilidades e diz o que resolve em dez segundos:
+          # abrir o site no celular. Continua reprovando, porque uma das
+          # duas possibilidades é o site fora do ar — mas sem mandar
+          # procurar defeito no código, que não é nenhuma das duas.
+          if [ -z "$achou" ] && [ "$respondeu" = "0" ]; then
+            echo "::error::Não consegui nem abrir a conexão com o site (HTTP 000 nas três voltas, em todos os endereços). Daqui não dá para saber qual dos dois é: (a) a Hostinger está fora do ar, ou (b) ela está bloqueando o GitHub por IP — que é o vizinho da proteção antirrobô e não devolve tela nenhuma. O que decide em dez segundos: abra https://darkblue-deer-373108.hostingersite.com no celular. Se abrir, é (b) e o site está bem: hPanel → Segurança → liberar o IP do GitHub. Se não abrir, é (a) e é caso de suporte da Hostinger. Em nenhum dos dois o problema está no código — as conferências que rodam sem internet passaram todas."
+            exit 1
+          fi
+
           if [ -z "$achou" ]; then
-            echo "::error::A Pharma Fit não respondeu em nenhum dos endereços acima (e não foi proteção antirrobô: nenhuma resposta tinha a tela de verificação)."
+            echo "::error::Os endereços acima responderam, mas nenhum devolveu a página da Pharma Fit (código diferente de 200, ou título sem \"Pharma\"). Aí é resposta de verdade com conteúdo errado — vale olhar o que a Hostinger está servindo."
             exit 1
           fi
 
