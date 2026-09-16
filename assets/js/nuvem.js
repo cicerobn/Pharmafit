@@ -102,6 +102,37 @@
     return PREFIXO + colecao;
   }
 
+  /* O NOME DA TABELA NO BANCO, COM O PREFIXO DA PHARMA FIT.
+   *
+   * Isto estava faltando, e era um buraco grande: o site pedia
+   * `pedidos`, `espera`, `orcamentos`, `representantes` e `produtos`
+   * pelo nome cru.
+   *
+   * O banco é compartilhado por oito negócios. Quando as tabelas da
+   * Pharma Fit ganharam o prefixo `pf_` (migração 02), o PAINEL foi
+   * ajustado — ele tem o ajudante `T()` desde então. O SITE não. Ficou
+   * pedindo nomes que não existem mais, e o resultado, medido no banco
+   * de produção hoje:
+   *
+   *   pedidos, espera, orcamentos, representantes  ->  NÃO EXISTEM
+   *   produtos                                     ->  existe, e é de
+   *                                                    OUTRO negócio
+   *
+   * Ou seja: todo formulário do site tentava gravar num lugar que não
+   * existe, e a vitrine tentava ler o catálogo do vizinho (que, por
+   * sorte, tem a leitura fechada e devolvia vazio — senão o site
+   * mostraria produto de outra empresa).
+   *
+   * Erro assim não aparece em teste de tela nenhum: o formulário abre,
+   * valida, o botão responde. Só a gravação é que não chega.
+   *
+   * O prefixo vem do MESMO lugar que o do painel (config.js), para as
+   * duas metades nunca mais discordarem. Se ele estiver vazio, o nome
+   * sai cru — que é o certo para quem não usa prefixo. */
+  function tabela(colecao) {
+    return (cfg.PREFIXO_TABELAS || '') + colecao;
+  }
+
   var Nuvem = {
 
     pronto: pronto,
@@ -147,7 +178,7 @@
       }
 
       try {
-        var q = sb.from(colecao).select('*');
+        var q = sb.from(tabela(colecao)).select('*');
         if (ordem) q = q.order(ordem);
         var r = await q;
         if (r.error) { console.warn('[Pharma Fit] ' + colecao + ':', r.error.message); return null; }
@@ -177,7 +208,7 @@
       }
 
       try {
-        var r = await sb.from(colecao).insert(registro);
+        var r = await sb.from(tabela(colecao)).insert(registro);
         if (r.error) return { ok: false, erro: r.error.message };
         return { ok: true };
       } catch (e) {

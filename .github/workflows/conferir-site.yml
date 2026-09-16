@@ -54,6 +54,23 @@ jobs:
       - name: Conferir que a gestão só fala com as tabelas dela
         run: node conferir-tabelas.mjs gestao pf_
 
+      # E O SITE TAMBÉM. Esta linha faltava, e o preço foi alto.
+      #
+      # Esta conferência olhava só `gestao/`. A pasta `assets/` do site
+      # público nunca passou por ela — e era exatamente ali que estava o
+      # defeito: quando as tabelas ganharam o prefixo `pf_` (migração 02),
+      # o painel foi ajustado e o site não. Os quatro formulários (pedido,
+      # fila de espera, orçamento de atacado e representante) ficaram
+      # mandando para `pedidos`, `espera`, `orcamentos` e
+      # `representantes` — medido no banco em 16/09/2026: NENHUMA das
+      # quatro existe. Nada do que o cliente preenchia chegava ao painel,
+      # e a tela não tinha como avisar.
+      #
+      # Conferir metade de um repositório é quase não conferir: o furo
+      # mora justamente na metade que ninguém olha.
+      - name: Conferir que o site só fala com as tabelas dele
+        run: node conferir-tabelas.mjs assets pf_
+
       # A marca de versão nos endereços de script e estilo.
       #
       # Medido em 15/09/2026: a hospedagem responde com cópia ANTIGA de

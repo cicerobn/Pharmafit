@@ -27,7 +27,7 @@ window.PHARMAFIT_CONFIG = {
 
   /* WhatsApp que recebe as vendas, só números com DDI.
      Ex.: '5592991234567' (Manaus). */
-  WHATSAPP: '5545988140817',
+  WHATSAPP: '559285904669',
 
   /* Chave pública VAPID, para as notificações no celular.
      Gere o par com:  npx web-push generate-vapid-keys

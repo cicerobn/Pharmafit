@@ -176,7 +176,7 @@
   /* ---------- WhatsApp ---------- */
 
   function montarZap(cada, total) {
-    var numero = String(cfg.WHATSAPP || '5545988140817').replace(/\D+/g, '');
+    var numero = String(cfg.WHATSAPP || '559285904669').replace(/\D+/g, '');
     var texto = 'Olá! Tenho interesse em ' + quantidade + '× ' + produto.nome +
       ' (' + moeda(total) + ').';
     achar('zap').href = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(texto);

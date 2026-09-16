@@ -128,7 +128,7 @@ do Brian — não foi feito.
 2. **Logo oficial** — `assets/img/logo-pf.svg` é uma reconstrução do monograma PF.
 3. **Estoque** — todos os produtos estão com 0 unidades; ajuste em `catalogo.js`
    (ou direto na tabela `produtos` do Supabase).
-4. **WhatsApp** — já configurado como `5545988140817` (45 98814-0817) em
+4. **WhatsApp** — já configurado como `559285904669` (+55 92 8590-4669) em
    `gestao/assets/config.js`. Para trocar, é só editar essa linha.
 5. **Fotos e textos institucionais** — as perguntas frequentes de `atendimento.html` estão
    com respostas genéricas; ajuste para a realidade do seu atendimento (prazos, formas de
@@ -354,6 +354,32 @@ preço antigo (promoção) e **estoque**.
   e o painel avisa quanto restou.
 - **Chegou a zero** = o site troca o botão por **"Avise-me quando chegar"** e quem se
   cadastrar entra na fila de interesse, que aparece na tela de Clientes.
+
+## O prefixo `pf_` nas tabelas (leia antes de mexer no banco)
+
+Este Supabase é **compartilhado por oito negócios**, e ainda tem 81 tabelas com nomes
+genéricos (`produtos`, `leads`, `notas`) que são de outro sistema. As tabelas da Pharma
+Fit todas começam com `pf_`.
+
+Ninguém escreve o nome da tabela na mão. Tanto o site quanto o painel passam por um
+ajudante que põe o prefixo, e o prefixo vem de um lugar só
+(`PREFIXO_TABELAS` em `gestao/assets/config.js`):
+
+| onde | ajudante |
+|---|---|
+| painel | `T('pedidos')` em `gestao/assets/dados.js` |
+| site | `tabela('pedidos')` em `assets/js/nuvem.js` |
+
+**Por que isso está escrito aqui em letra grande.** Em 16/09/2026 eu descobri que o site
+não tinha esse ajudante. Quando as tabelas ganharam o prefixo (migração 02), o painel foi
+ajustado e o site ficou pedindo `pedidos`, `espera`, `orcamentos` e `representantes` —
+quatro nomes que não existem mais no banco. Resultado: **nenhum formulário do site
+chegava ao painel**, e a tela não tinha como perceber (o formulário abre, valida e o botão
+responde; só a gravação não acontece). A vitrine, pior, pedia `produtos`, que existe e é
+**de outro negócio**.
+
+Hoje a publicação trava se isso voltar: o CI roda `conferir-tabelas.mjs` nas duas metades,
+`gestao` **e** `assets`.
 
 ## Como funciona uma venda
 

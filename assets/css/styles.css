@@ -12,6 +12,8 @@
   --ink:#101010;
   --ink-2:#2b2b2b;
   --muted:#6e6a64;
+  /* o cinza mais claro, para nota de pé e ícone dentro de campo */
+  --muted-2:#98928a;
 
   --cream:#f6f2ec;
   --cream-2:#fbf9f5;
@@ -99,11 +101,23 @@ ul{margin:0;padding:0;list-style:none}
   -webkit-backdrop-filter:blur(12px);
 }
 
-.brand{display:flex;align-items:center;gap:12px}
+/* `min-width:0` NAO e enfeite aqui.
+   Sem ele, a marca e um item de flex que nao encolhe abaixo do proprio
+   conteudo, e o texto dela invadia os icones do topo — medido: 85px de
+   invasao em 375px, em TODAS as paginas. Era o coracao e o carrinho
+   sentados em cima de "BEM-ESTAR", e foi a foto da tela que me mostrou.
+   E a mesma familia do `1fr` que escondeu metade dos numeros do painel:
+   o padrao do flex e do grid e "nao encolho", e a correcao e dizer que
+   pode. */
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
 .brand__mark{width:46px;height:46px;flex:none}
 
-.brand__type{display:flex;flex-direction:column;gap:4px}
+.brand__type{display:flex;flex-direction:column;gap:4px;min-width:0}
 .brand__name{
+  /* o nome encurta com reticencias em vez de passar por cima do resto */
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
   font-size:20px;
   font-weight:600;
   letter-spacing:.26em;
@@ -111,6 +125,7 @@ ul{margin:0;padding:0;list-style:none}
   color:var(--ink);
 }
 .brand__tag{
+  white-space:nowrap;
   display:flex;
   align-items:center;
   gap:6px;
@@ -128,7 +143,8 @@ ul{margin:0;padding:0;list-style:none}
   opacity:.7;
 }
 
-.topbar__actions{display:flex;align-items:center;gap:8px}
+.topbar__actions{
+  flex:none;display:flex;align-items:center;gap:8px}
 
 /* ---- botão de conta, no canto superior direito ----------------
    Mostra "Entrar" para quem o site ainda não conhece, e o primeiro
@@ -1637,6 +1653,345 @@ ul{margin:0;padding:0;list-style:none}
 
 .link-more{padding:8px 0 6px}
 
+/* ---------- a tela de atendimento ----------
+
+   Montada a partir da foto do Brian: chamada com a arte à direita,
+   formulário em duas colunas, os interesses, o cartão do Paraguai, os
+   três passos, o botão e o aviso de privacidade. */
+
+.atend-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:8px;
+  padding-top:22px;
+  position:relative;
+}
+/* 72% e nao 60%: com 60% o "Seu atendimento" quebrava em duas linhas e
+   o titulo saia com tres, e a foto tem duas. A arte fica atras, entao
+   dividir a largura ao meio nao e necessario. */
+.atend-hero__texto{position:relative;z-index:1;max-width:72%}
+
+.atend-hero__titulo{
+  font-family:var(--serif);
+  /* clamp em vez de tamanho fixo: o título tem duas linhas longas e a
+     medida certa muda muito entre 320 e 430px. */
+  /* 7.6vw: em 375px da 28.5px, e "Seu atendimento" cabe numa linha.
+     Com 8.4vw dava 31.5px e quebrava. Medido, nao estimado. */
+  font-size:clamp(25px,7.6vw,40px);
+  line-height:1.12;
+  font-weight:500;
+  letter-spacing:-.015em;
+  margin:0;
+}
+.atend-hero__titulo em{
+  display:block;
+  font-style:normal;
+  color:var(--gold);
+}
+.atend-hero__lead{
+  font-size:14px;
+  line-height:1.6;
+  color:var(--muted);
+  margin:14px 0 0;
+  max-width:34ch;
+}
+
+/* A arte fica ATRÁS do texto, e não ao lado: no celular não há largura
+   para as duas coisas, e a foto do Brian mostra exatamente isso — o
+   frasco aparecendo por trás e à direita da chamada. */
+.atend-hero__arte{
+  position:absolute;
+  top:-6px;
+  right:-26px;
+  width:52%;
+  max-width:230px;
+  z-index:0;
+  pointer-events:none;
+}
+.atend-hero__arte img{width:100%;height:auto;display:block;position:relative;z-index:1}
+
+/* o arco dourado, desenhado aqui */
+.atend-hero__arco{
+  position:absolute;
+  top:-14%;
+  right:-18%;
+  width:118%;
+  aspect-ratio:1;
+  border-radius:50%;
+  border:1.5px solid var(--gold-soft);
+  /* só a parte de cima do círculo, como na foto */
+  clip-path:inset(0 0 42% 0);
+}
+
+@media (min-width:760px){
+  .atend-hero{grid-template-columns:1fr 1fr;align-items:center;gap:30px;padding-top:34px}
+  .atend-hero__texto{max-width:none}
+  .atend-hero__arte{position:static;width:100%;max-width:360px;margin-left:auto}
+  .atend-hero__arco{top:2%;right:2%;width:92%;clip-path:none}
+}
+
+/* ---- o formulário ---- */
+
+/* O <form> nao e mais o cartao: na foto do Brian o cartao do Paraguai e
+   o dos passos sao cartoes SEPARADOS, do tamanho da pagina, e nao caixas
+   dentro de outra caixa. O form so agrupa, para o envio funcionar. */
+.atend-form{margin-top:20px}
+
+.atend-form__cartao{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:18px;
+  box-shadow:var(--shadow-sm);
+  /* O cartao se declara mensuravel: assim as grades de dentro perguntam
+     a largura DELE, e nao a da tela. Foi confundir as duas que cortou
+     os nomes dos interesses entre 660 e 1023px — ali a tela cresce e o
+     cartao fica parado em 478px. */
+  container-type:inline-size;
+}
+/* UM CAMPO POR LINHA no celular, dois a partir de 430px.
+   A foto mostra duas colunas. Medido num telefone de 375px: metade da
+   largura da o campo com 141px, e o texto de dica "Seu nome completo"
+   precisa de 163px — sairia "Seu nome comp". Dica cortada num campo e
+   pior que campo de largura cheia, porque a pessoa nao sabe o que
+   escrever ali.
+
+   A conta por coluna vem de medicao corrigida: pela dica mais larga eu
+   tinha 180px e pus o limiar em 470 — e em 470 exatos o SELETOR ainda
+   cortava por 5px, porque ele gasta mais 42px com o icone e a seta.
+   151 + 42 = 193px por coluna, logo duas colunas pedem
+   2x193 + 12 de vao = 398px DE CARTAO.
+
+   398 de cartao, e nao 500 de tela. Era @media (min-width:500px) aqui,
+   e funcionava por sorte: a mesma confusao entre a largura da tela e a
+   largura do cartao cortou os nomes dos interesses logo abaixo. A tela
+   cresce; o cartao, nao. Quem manda no campo e o cartao.
+
+   Duas colunas no maximo, como na foto — nunca quatro campos numa
+   linha, mesmo num cartao largo.
+
+   Navegador que nao entende @container fica com uma coluna: mais
+   comprido, e nada cortado.
+
+   `minmax(0,1fr)` e nao `1fr`: com `1fr` a coluna nao encolhe abaixo do
+   conteudo e o campo empurra a grade fora da tela. */
+.atend-form__linhas{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:12px;
+}
+@container (min-width:398px){
+  .atend-form__linhas{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* campo com ícone dentro */
+.field__box--icone{position:relative}
+.field__box--icone input,
+.field__box--icone select{padding-left:33px}
+
+/* Em duas colunas o campo fica com ~140px. Com a fonte de sempre o
+   "Seu nome completo" e o "(xx) xxxxx-xxxx" saiam cortados — medido na
+   foto da tela, nao estimado. */
+.atend-form__linhas .field__label{font-size:11px;letter-spacing:.06em}
+.field__icone{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--muted-2);
+  pointer-events:none;
+  display:block;
+}
+
+/* ---- os interesses ---- */
+
+.atend-inter{border:0;margin:16px 0 0;padding:0}
+/* QUANTOS CABEM POR LINHA, POR CONTA E NAO POR CHUTE.
+
+   A foto mostra os quatro em uma linha. Eu pus quatro a partir de 430px
+   e fui medir: a caixa saiu com 82px e o texto "Emagrecimento" precisa
+   de 91px — vazava em tres dos quatro. Em 560px ainda vazava. E dois
+   por dois em 320px tambem vazava.
+
+   A conta, com a etiqueta mais larga ("Emagrecimento", 91px), o icone
+   (16), o vao do icone (7) e o recuo da caixa (26) = 140px por
+   interesse.
+
+   POR QUE NAO TEM MAIS @media AQUI
+
+   Eu tinha escrito 1 / 2 / 4 colunas em 363 / 364 / 660px de TELA, e
+   entre 660 e 1023px os quatro nomes sairam cortados. O motivo: o
+   @media pergunta a largura da TELA, e os interesses nao moram na tela
+   — moram dentro do cartao do formulario, que fica parado em 478px
+   nessa faixa toda. Quatro colunas de um cartao de 478px dao 105px por
+   chip, 54px para o texto, e "Emagrecimento" precisa de 91px. Medido:
+   em 660px e em 820px, todos os quatro cortados.
+
+   Agora quem conta e a propria grade: `auto-fit` com minimo de 140px
+   poe quantas colunas couberem NO CARTAO, seja ele qual for. Medido
+   depois da troca — cartao 242px: 1 por linha · 297px: 2 · 442px: 3 ·
+   890px: 4, e nenhum texto cortado em nenhuma largura. Nao ha mais
+   numero de tela para eu errar. */
+.atend-inter__lista{
+  display:grid;
+  /* O que vale em qualquer navegador: cabe quem couber, nada cortado.
+     Num cartao de 442px isso da 3 numa linha e 1 na outra — legivel,
+     mas torto. */
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:8px;
+  margin-top:8px;
+}
+/* E aqui o acerto do desenho: 1, 2 ou 4 por linha — nunca 3+1. As
+   contas sao da largura do CARTAO (2x140+8=288 · 4x140+24=584), nao da
+   tela. Navegador antigo que nao entende @container simplesmente fica
+   com o auto-fit de cima, que ja e seguro: nenhum texto cortado. */
+@container (min-width:288px){
+  .atend-inter__lista{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@container (min-width:584px){
+  .atend-inter__lista{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+.atend-chip{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  /* 42px: alvo de dedo. Os botões do site chegaram a 16px de altura
+     antes da varredura de celular, e esta tela nasce certa. */
+  min-height:42px;
+  padding:0 13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  font-size:13px;
+  font-weight:500;
+  color:var(--muted);
+  cursor:pointer;
+  transition:border-color .18s ease,color .18s ease,background .18s ease;
+}
+.atend-chip svg{flex:none}
+/* Rede de seguranca: se um dia a etiqueta crescer, ela encurta com
+   reticencias DENTRO da caixa em vez de passar por cima do vizinho.
+   `min-width:0` e o que permite encolher — sem ele o flex nao cede. */
+.atend-chip span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atend-chip:hover{border-color:var(--gold-soft)}
+.atend-chip.is-vale{
+  border-color:var(--gold);
+  color:var(--gold);
+  background:#fdfaf4;
+}
+
+/* ---- o cartão do Paraguai ---- */
+
+.atend-pais{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  margin-top:14px;
+  background:var(--card);
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+.atend-pais__ico{
+  flex:none;
+  width:36px;height:36px;
+  border-radius:11px;
+  background:var(--card);
+  color:var(--gold);
+  display:grid;place-items:center;
+  border:1px solid var(--gold-soft);
+}
+.atend-pais__corpo{flex:1;min-width:0}
+.atend-pais__titulo{font-size:14px;font-weight:600;margin:0}
+.atend-pais__texto{font-size:12.5px;line-height:1.55;color:var(--muted);margin:4px 0 0}
+.atend-pais__bandeira{
+  flex:none;
+  width:30px;height:21px;
+  border-radius:3px;
+  overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08);
+}
+.atend-pais__bandeira svg{display:block;width:100%;height:100%}
+
+/* ---- os três passos ---- */
+
+.atend-passos{
+  list-style:none;
+  margin:14px 0 0;
+  background:var(--card);
+  padding:16px 4px 4px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  position:relative;
+}
+/* a linha que liga os três números, como na foto. Ela para nas bordas
+   dos números laterais em vez de atravessar a caixa inteira. */
+.atend-passos::before{
+  content:"";
+  position:absolute;
+  top:29px;
+  left:calc(16.6% + 14px);
+  right:calc(16.6% + 14px);
+  height:1px;
+  background:var(--gold-soft);
+}
+.atend-passo{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  gap:5px;
+  padding:0 4px;
+  position:relative;
+  z-index:1;
+}
+.atend-passo__n{
+  width:26px;height:26px;
+  border-radius:50%;
+  background:var(--gold);
+  color:#fff;
+  font-size:12.5px;
+  font-weight:600;
+  display:grid;place-items:center;
+}
+.atend-passo__ico{color:var(--gold);display:block}
+.atend-passo__nome{font-size:12.5px;font-weight:600;line-height:1.25}
+.atend-passo__pe{font-size:11px;line-height:1.4;color:var(--muted)}
+
+/* ---- o botão e o aviso ---- */
+
+.atend-enviar{
+  margin-top:18px;
+  position:relative;
+  justify-content:center;
+  gap:10px;
+}
+.atend-enviar__seta{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  width:30px;height:30px;
+  border-radius:50%;
+  background:rgba(255,255,255,.22);
+  display:grid;place-items:center;
+}
+.atend-enviar.is-feito{background:#1f7a4d;border-color:#1f7a4d}
+
+.atend-seguro{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:12px 0 0;
+  font-size:11.5px;
+  color:var(--muted-2);
+  text-align:center;
+}
+
 /* ---------- as duas línguas, na barra lateral ----------
 
    Dois botões em pílula, e um retângulo que DESLIZA de um para o
@@ -1656,7 +2011,7 @@ ul{margin:0;padding:0;list-style:none}
   margin:18px 18px 4px;
   padding:4px;
   border-radius:14px;
-  background:var(--cream, #f4efe7);
+  background:var(--cream);
   border:1px solid var(--line);
 }
 
@@ -1892,8 +2247,17 @@ textarea:focus-visible{
   .page-title{font-size:38px}
 }
 
-@media (max-width:360px){
+/* O SUBTITULO SO APARECE DE 520px PARA CIMA.
+   Ele estava escondido abaixo de 360 e, de 375 a 470, saia CORTADO no
+   meio da palavra ("SAUDE · PERFORMANCE · BEM-ESTA") — porque eu havia
+   posto reticencias nele para parar de invadir os icones. Medido: ele
+   precisa de 166px e so tem 93 em 375px; cabe inteiro a partir de 520.
+   Frase cortada no meio parece site quebrado; ausente nao parece nada. */
+@media (max-width:519px){
   .brand__tag{display:none}
+}
+
+@media (max-width:360px){
   .brand__name{font-size:15px}
 }
 

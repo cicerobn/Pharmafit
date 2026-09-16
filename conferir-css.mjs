@@ -40,7 +40,7 @@
    =========================================================================== */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, dirname, resolve } from 'node:path';
 
 const RAIZ = process.cwd();
 const FORA = new Set(['node_modules', '.git', '.github', 'dist', 'loja-fonte', 'loja']);
@@ -166,40 +166,76 @@ function conferir(caminho, texto) {
  * some. Na tela parece só "um pouco sem graça", e ninguém procura
  * defeito nisso.
  *
- * A conferência olha o repositório inteiro de uma vez, e não folha por
- * folha, porque as páginas do painel carregam DUAS folhas: o
- * `gestao.css` usa quinze variáveis definidas no `styles.css`, e isso
- * está certo. Olhar folha por folha acusaria as quinze.
+ * A conta é feita por PÁGINA, na união das folhas que ela carrega — o
+ * porquê está no corpo da função. Nem folha por folha (acusaria as
+ * quinze variáveis que o `gestao.css` pega do `styles.css`, e isso está
+ * certo), nem o repositório inteiro num bolo (deixaria passar variável
+ * que só existe na folha do painel sendo usada na do site).
  *
  * Variável definida na marra no HTML (`style="--i:3"`, que é o atraso
  * da animação em cascata) também vale como definida.
  */
 function conferirVariaveis(arquivosCss) {
-  const definidas = new Set();
-  const usadas = new Map();   /* nome -> onde apareceu primeiro */
-
-  for (const caminho of arquivosCss) {
-    const txt = readFileSync(caminho, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
-    for (const m of txt.matchAll(/(--[\w-]+)\s*:/g)) definidas.add(m[1]);
-    for (const m of txt.matchAll(/var\(\s*(--[\w-]+)/g)) {
-      if (!usadas.has(m[1])) usadas.set(m[1], relative(RAIZ, caminho));
-    }
-  }
-
-  /* as que o HTML e o JavaScript definem na marra */
+  /* AGRUPADO POR PÁGINA, e não pelo repositório inteiro.
+   *
+   * A primeira versão juntava todas as folhas num bolo só. Isso acertava
+   * o painel (as páginas dele carregam gestao.css E styles.css, e a
+   * primeira usa quinze variáveis da segunda) e ERRAVA o site: uma
+   * variável definida só em gestao/app/app.css passava como se
+   * existisse, mesmo o site público nunca carregando aquele arquivo.
+   *
+   * Era o mesmo furo que deixou os links do site parecendo texto morto:
+   * a regra existia, mas na folha errada. O conferidor que nasceu para
+   * pegar esse furo estava cego para ele.
+   *
+   * Agora cada página diz quais folhas ela carrega, e a conta é feita
+   * nessa união. Uma variável com valor de reserva (`var(--x, #fff)`)
+   * não entra na conta: ela tem resposta mesmo sem definição. */
+  const definidasNaMarra = new Set();
   for (const caminho of acharPorExtensao(RAIZ, ['.html', '.js'])) {
     const txt = readFileSync(caminho, 'utf8');
-    for (const m of txt.matchAll(/(--[\w-]+)\s*:/g)) definidas.add(m[1]);
+    for (const m of txt.matchAll(/(--[\w-]+)\s*:/g)) definidasNaMarra.add(m[1]);
   }
 
-  const orfas = [];
-  for (const [nome, onde] of usadas) {
-    if (!definidas.has(nome)) {
-      orfas.push(`${onde}: usa ${nome}, que não é definida em lugar nenhum ` +
-                 `— a propriedade fica sem valor e o CSS não reclama`);
+  const lidas = new Map();   /* caminho -> {definidas, usadas} */
+  for (const caminho of arquivosCss) {
+    const txt = readFileSync(caminho, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
+    const definidas = new Set([...txt.matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
+    /* só as SEM valor de reserva: `var(--x)` e não `var(--x, algo)` */
+    const usadas = new Set([...txt.matchAll(/var\(\s*(--[\w-]+)\s*\)/g)].map((m) => m[1]));
+    lidas.set(caminho, { definidas, usadas });
+  }
+
+  const orfas = new Map();   /* recado -> true, para não repetir */
+
+  for (const pagina of acharPorExtensao(RAIZ, ['.html'])) {
+    const html = readFileSync(pagina, 'utf8');
+    const pasta = dirname(pagina);
+
+    /* as folhas que ESTA página carrega */
+    const folhas = [];
+    for (const m of html.matchAll(/<link[^>]+rel=["']stylesheet["'][^>]*>/g)) {
+      const h = /href=["']([^"']+)["']/.exec(m[0]);
+      if (!h || /^https?:/.test(h[1])) continue;
+      const alvo = resolve(h[1].startsWith('/') ? RAIZ : pasta,
+                           h[1].replace(/^\//, '').split('?')[0]);
+      if (lidas.has(alvo)) folhas.push(alvo);
+    }
+    if (!folhas.length) continue;
+
+    const temAqui = new Set(definidasNaMarra);
+    folhas.forEach((f) => lidas.get(f).definidas.forEach((v) => temAqui.add(v)));
+
+    for (const f of folhas) {
+      for (const v of lidas.get(f).usadas) {
+        if (temAqui.has(v)) continue;
+        orfas.set(`${relative(RAIZ, f)}: usa ${v}, que ${relative(RAIZ, pagina)} ` +
+                  `não tem em nenhuma folha que ela carrega — a propriedade fica ` +
+                  `sem valor e o CSS não reclama`, true);
+      }
     }
   }
-  return orfas;
+  return [...orfas.keys()];
 }
 
 function acharPorExtensao(dir, exts, achados = []) {

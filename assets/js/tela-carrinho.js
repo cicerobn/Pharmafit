@@ -156,7 +156,7 @@
   /* ---------- o WhatsApp ---------- */
 
   function montarLinkZap(conta) {
-    var numero = String(cfg.WHATSAPP || '5545988140817').replace(/\D+/g, '');
+    var numero = String(cfg.WHATSAPP || '559285904669').replace(/\D+/g, '');
     var dados = {};
     try { dados = (Area && Area.dados()) || {}; } catch (e) { dados = {}; }
 

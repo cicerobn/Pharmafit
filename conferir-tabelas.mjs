@@ -53,7 +53,12 @@ if (!ALVO || !PREFIXOS.length) {
 }
 
 const EXTENSOES = ['.js', '.jsx', '.ts', '.tsx', '.html', '.mjs'];
-const IGNORAR = ['node_modules', 'dist', '.git', '.github'];
+/* `vendor` entra aqui porque é código de terceiro, não meu: a biblioteca
+ * do Supabase vem minificada e tem `from(new Set(t))` dentro, que o
+ * conferidor leu como nome de tabela impossível de provar. Acusar o que
+ * não é meu ensina a ignorar o vermelho — e foi passando o olho por um
+ * alarme falso que o furo do prefixo no site ficou escondido. */
+const IGNORAR = ['node_modules', 'dist', '.git', '.github', 'vendor'];
 const MARCA_LIBERADA = /tabela-ok:/;
 
 /* As tabelas dos outros negócios. Serve só para o recado ficar específico

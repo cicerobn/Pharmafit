@@ -582,7 +582,7 @@
    * produto não vai na etiqueta: o que a pessoa comprou não
    * precisa ficar escrito do lado de fora da caixa.
    */
-  /** 5545988140817 -> "+55 (45) 98814-0817" */
+  /** 559285904669 -> "+55 (92) 8590-4669" */
   function telefoneLegivel(numero) {
     var n = U.digitos(numero);
     var m = n.match(/^(\d{2})(\d{2})(\d{4,5})(\d{4})$/);
