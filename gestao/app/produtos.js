@@ -567,6 +567,9 @@
   }
 
   function abrir(p) {
+    /* Guardo quem estava com o foco (as três bolinhas do produto) para
+       devolver o foco ali quando a folha fechar. */
+    Moldura.foco.guardar();
     montarFolha();
     editando = p;
     fotoNova = null;
@@ -615,7 +618,11 @@
     veu.classList.add('is-aberto');
     folha.classList.add('is-aberta');
     document.body.style.overflow = 'hidden';
-    setTimeout(function () { folha.querySelector('#ed-nome').focus(); }, 320);
+    /* O foco vai para o nome do produto na hora. Antes ele esperava os
+       320ms da animação, e nessa fresta o Tab ainda andava na página de
+       trás. `preventScroll` é o que tira a necessidade da espera: o
+       navegador não pula a tela para mostrar o campo. */
+    Moldura.foco.entrar(folha, folha.querySelector('#ed-nome'));
   }
 
   function fechar() {
@@ -623,6 +630,7 @@
     folha.classList.remove('is-aberta');
     veu.classList.remove('is-aberto');
     document.body.style.overflow = '';
+    Moldura.foco.devolver();
     if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
     fotoNova = null;
     fotoTirar = false;

@@ -257,6 +257,9 @@
   }
 
   function abrir(c) {
+    /* Antes de qualquer coisa, guardo quem estava com o foco: é para
+       ele que o foco volta quando a ficha fechar. */
+    Moldura.foco.guardar();
     montarFolha();
 
     var lista = (c.lista || []).slice().sort(function (a, b) {
@@ -318,6 +321,11 @@
     veu.classList.add('is-aberto');
     folha.classList.add('is-aberta');
     document.body.style.overflow = 'hidden';
+    /* O foco vai para a própria ficha, e não para o primeiro botão:
+       assim o leitor de tela diz "Ficha do cliente" antes de dizer
+       "Fechar". Esta ficha é de ler, não de preencher — quando há campo
+       para digitar (o editar produto), lá o foco vai para o campo. */
+    Moldura.foco.entrar(folha);
   }
 
   function fechar() {
@@ -325,6 +333,7 @@
     folha.classList.remove('is-aberta');
     veu.classList.remove('is-aberto');
     document.body.style.overflow = '';
+    Moldura.foco.devolver();
   }
 
   async function carregar() {

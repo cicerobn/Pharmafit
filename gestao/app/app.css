@@ -880,12 +880,24 @@ a{color:inherit;text-decoration:none}
   padding-top:env(safe-area-inset-top,0px);
   /* fechada, ela fica fora da tela pela esquerda. A transição é no
      transform, e não em "left", porque transform o navegador anima na
-     placa de vídeo — em aparelho fraco a diferença aparece. */
+     placa de vídeo — em aparelho fraco a diferença aparece.
+
+     E A VISIBILIDADE ESPERA O DESLIZE TERMINAR. Sem a espera, a classe
+     saía e a visibilidade virava "hidden" no mesmo quadro: eu medi
+     130ms depois do Esc e a gaveta já estava escondida — ela abria
+     deslizando e fechava de um golpe. O menu do site já tinha esse
+     conserto, com este mesmo comentário; a gaveta do painel ficou de
+     fora. `visibility` não anima em meio-tom, ela troca de uma vez, e
+     por isso o jeito é duração zero com atraso igual ao do deslize. */
   transform:translateX(-102%);
-  transition:transform .3s cubic-bezier(.3,.8,.3,1);
+  transition:transform .3s cubic-bezier(.3,.8,.3,1), visibility 0s linear .3s;
   visibility:hidden;
 }
-.gaveta.is-aberta{transform:none;visibility:visible}
+.gaveta.is-aberta{
+  transform:none;
+  visibility:visible;
+  transition:transform .3s cubic-bezier(.3,.8,.3,1), visibility 0s linear 0s;
+}
 
 .gaveta__topo{
   display:flex;
@@ -994,7 +1006,12 @@ body.travado{overflow:hidden}
   .gaveta,.veu,.entra,.fatia__barra,.aba::after,.osso,
   .tab svg,.mais-botao,.topo__botao{transition:none;animation:none}
   .gaveta{transform:none;visibility:hidden;display:none}
-  .gaveta.is-aberta{display:flex;visibility:visible}
+  /* `.gaveta.is-aberta` precisa estar escrito aqui, e não só na linha
+     de cima. Ele tem duas classes, então vence `.gaveta` sozinho: quando
+     eu pus a transição na gaveta aberta, ela voltou a animar justamente
+     para quem pediu para não animar. Regra mais específica lá em cima
+     exige regra igualmente específica aqui. */
+  .gaveta.is-aberta{display:flex;visibility:visible;transition:none}
 }
 
 /* ---------------------------------------------------------
@@ -1181,14 +1198,33 @@ body.travado{overflow:hidden}
   border-radius:20px 20px 0 0;
   box-shadow:var(--sombra-3);
   /* fechada, fora da tela por baixo. Anima no transform, que o
-     navegador faz na placa de vídeo. */
+     navegador faz na placa de vídeo.
+
+     E FECHADA ELA SAI TAMBÉM DO CAMINHO DO TECLADO.
+     Sair da tela pelo transform não tira nada do caminho do Tab: o
+     botão continua lá, focável, só invisível. Eu medi com a folha
+     fechada e o Tab caía DENTRO dela 11 e 12 vezes — quem navega por
+     teclado parava num "Fechar" que não aparece em lugar nenhum. A
+     gaveta desta mesma pasta já estava certa, com `visibility:hidden`;
+     a folha ficou de fora, e é isso que estas duas linhas consertam.
+
+     A `visibility` entra na transição com duração zero e espera .3s,
+     que é o tempo do deslize: assim ela continua visível durante a
+     descida e só desaparece no fim. Sem essa espera ela sumiria no
+     meio do caminho, e a folha piscaria em vez de descer. */
   transform:translateY(102%);
-  transition:transform .3s cubic-bezier(.32,.72,0,1);
+  visibility:hidden;
+  transition:transform .3s cubic-bezier(.32,.72,0,1), visibility 0s .3s;
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-.folha.is-aberta{transform:translateY(0)}
+.folha.is-aberta{
+  transform:translateY(0);
+  visibility:visible;
+  transition:transform .3s cubic-bezier(.32,.72,0,1), visibility 0s 0s;
+}
 @media (prefers-reduced-motion:reduce){
-  .folha{transition:none}
+  /* sem animação a `visibility` troca na hora, que é o certo aqui */
+  .folha,.folha.is-aberta{transition:none}
 }
 
 .folha__topo{
@@ -1454,3 +1490,41 @@ button.item{-webkit-appearance:none;appearance:none}
   font-size:13.5px;
   text-align:center;
 }
+
+/* ---------------------------------------------------------
+   ONDE O FOCO ESTÁ
+
+   O site tem um anel dourado para quem navega por teclado.
+   As telas deste painel carregam só este arquivo, então o
+   anel não chegava aqui: cada parada do Tab ficava com a
+   linha fina que o navegador desenha sozinho, de 1px e quase
+   preta. Aparecia, mas some no meio de uma tela cheia — e
+   prender o Tab dentro da folha só vale se der para ver onde
+   ele parou.
+
+   `:focus-visible`, e não `:focus`: quem clica com o dedo não
+   ganha anel nenhum, que é o certo — anel no toque parece
+   defeito.
+   --------------------------------------------------------- */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible{
+  outline:2px solid var(--gold);
+  outline-offset:3px;
+}
+/* Sem forçar `border-radius` aqui. A regra igual do site arredonda o
+   anel em 10px, e o navegador desenha o contorno seguindo o canto do
+   elemento: nos botões redondos do topo (o menu e o sino, 50%) isso
+   transformava o anel num quadradinho em volta de um círculo. Deixando
+   de fora, cada botão ganha o anel com a própria forma. */
+
+/* A folha e a gaveta recebem o foco como caixa inteira, para o
+   leitor de tela anunciar o título. Aí o anel em volta de uma
+   janela do tamanho da tela não ajuda ninguém: ele desenharia
+   uma moldura na tela toda. */
+.folha:focus-visible,
+.gaveta:focus-visible{outline:none}

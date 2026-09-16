@@ -218,8 +218,89 @@
       var r = await Dados.listarPainel();
       Moldura.marcarSino(r.pedidos);
       return r;
+    },
+
+    /* -------------------------------------------------------
+       O FOCO DAS JANELAS (a folha e a gaveta)
+
+       Isto fica aqui, e não dentro de cada tela, porque cada
+       tela que abre uma janela precisa exatamente das mesmas
+       três coisas — e quando estava espalhado, duas telas
+       fizeram de dois jeitos diferentes: o "editar produto"
+       levava o foco para dentro, a "ficha do cliente" não
+       levava para lugar nenhum. Uma janela abria certo e a
+       outra errado pelo mesmo motivo de sempre: código igual
+       escrito duas vezes envelhece diferente.
+       ------------------------------------------------------- */
+    foco: {
+      /** Antes de abrir: lembra quem estava com o foco. */
+      guardar: function () {
+        var a = document.activeElement;
+        quemAbriu = a && a !== document.body ? a : null;
+      },
+
+      /** Ao abrir: leva o foco para dentro da janela.
+       *  Sem `alvo`, o foco vai para a própria janela — assim o
+       *  leitor de tela anuncia o título dela antes de tudo. */
+      entrar: function (janela, alvo) {
+        if (!janela) return;
+        if (alvo && alvo.focus) { alvo.focus({ preventScroll: true }); return; }
+        if (!janela.hasAttribute('tabindex')) janela.setAttribute('tabindex', '-1');
+        janela.focus({ preventScroll: true });
+      },
+
+      /** Ao fechar: devolve o foco para quem abriu. Sem isto o
+       *  teclado recomeça do topo da página, e quem fechou a
+       *  ficha do décimo cliente tem de descer tudo de novo. */
+      devolver: function () {
+        if (quemAbriu && document.contains(quemAbriu)) {
+          quemAbriu.focus({ preventScroll: true });
+        }
+        quemAbriu = null;
+      }
     }
   };
+
+  /* ---------------------------------------------------------
+     O Tab preso dentro da janela aberta
+
+     Medido antes de escrever: com a ficha do cliente aberta,
+     11 das 14 paradas do Tab caíam na página ATRÁS do véu —
+     o dedo não alcança o que está atrás, mas o Tab alcançava.
+     Vale para a folha e para a gaveta, e vale para qualquer
+     janela futura que use a mesma classe.
+     --------------------------------------------------------- */
+
+  var FOCAVEIS = 'a[href], button:not([disabled]), input:not([disabled]), ' +
+                 'select:not([disabled]), textarea:not([disabled]), ' +
+                 '[tabindex]:not([tabindex="-1"])';
+  var quemAbriu = null;
+
+  function janelaDeCima() {
+    var lista = document.querySelectorAll('.folha.is-aberta, .gaveta.is-aberta');
+    return lista.length ? lista[lista.length - 1] : null;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab') return;
+    var janela = janelaDeCima();
+    if (!janela) return;
+
+    var itens = [].slice.call(janela.querySelectorAll(FOCAVEIS)).filter(function (el) {
+      return el.offsetParent !== null && !el.hidden;
+    });
+    if (!itens.length) return;
+
+    var primeiro = itens[0];
+    var ultimo = itens[itens.length - 1];
+    var fora = !janela.contains(document.activeElement);
+
+    if (e.shiftKey && (fora || document.activeElement === primeiro)) {
+      e.preventDefault(); ultimo.focus();
+    } else if (!e.shiftKey && (fora || document.activeElement === ultimo)) {
+      e.preventDefault(); primeiro.focus();
+    }
+  });
 
   /* ---------------------------------------------------------
      A gaveta
