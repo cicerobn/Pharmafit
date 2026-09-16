@@ -195,11 +195,12 @@
     select.addEventListener('change', function () {
       ordenarGrade(select.value);
     });
+  }
 
-    /* depois de uma sincronização com o banco, mantém a ordem escolhida */
-    document.addEventListener('pharmafit-catalogo', function () {
-      ordenarGrade(select.value);
-    });
+  /** A ordem escolhida, para reaplicar depois de redesenhar. */
+  function ordemEscolhida() {
+    var select = document.querySelector('[data-ordenar]');
+    return select ? select.value : '';
   }
 
   /* ---------- carrossel da página inicial ---------- */
@@ -263,43 +264,23 @@
   montarTudo();
   ligarOrdenacao();
 
-  /* Preço e estoque mandam no banco: se houver conexão, atualiza a tela. */
-  (async function sincronizar() {
-    if (!window.PharmaFitNuvem) return;
+  /* A conversa com o banco mora em `catalogo-banco.js`, e não mais aqui.
+     Ela era deste arquivo, que só é carregado em quatro páginas — a
+     página de um produto ficava de fora e mostrava para sempre o preço
+     escrito no código. O porquê está escrito lá.
 
-    var doBanco = await window.PharmaFitNuvem.buscar('produtos', 'nome');
-    if (!doBanco || !doBanco.length) return;
+     Aqui só sobra o que é desta tela: redesenhar quando o catálogo
+     mudar.
 
-    var porNome = {};
-    doBanco.forEach(function (p) { porNome[p.nome] = p; });
-
-    var mudou = false;
-    catalogo.forEach(function (p) {
-      var b = porNome[p.nome];
-      if (!b) return;
-      p.venda = Number(b.preco != null ? b.preco : p.venda);
-      p.antes = Number(b.antes != null ? b.antes : p.antes);
-      p.estoque = b.estoque;
-      p.foraDoSite = b.ativo === false;
-      mudou = true;
-    });
-
-    /* produtos cadastrados só no banco também aparecem */
-    doBanco.forEach(function (b) {
-      if (catalogo.some(function (p) { return p.nome === b.nome; })) return;
-      if (b.ativo === false) return;
-      catalogo.push({
-        nome: b.nome, categoria: b.categoria || 'Outros',
-        descricao: b.descricao || '', custo: b.custo, venda: b.preco,
-        antes: b.antes || 0, estoque: b.estoque,
-        imagem: 'assets/img/prod-frasco.svg'
-      });
-      mudou = true;
-    });
-
-    if (mudou) {
-      montarTudo();
-      document.dispatchEvent(new CustomEvent('pharmafit-catalogo'));
-    }
-  })();
+     UM OUVINTE SÓ, E NESTA ORDEM. Antes havia dois: um redesenhava a
+     grade e outro reaplicava a ordenação. Dois ouvintes do mesmo evento
+     rodam na ordem em que foram escritos, e o da ordenação era o
+     primeiro — ele ordenava e o outro redesenhava em cima, desfazendo o
+     "menor preço" que a pessoa acabou de escolher. Junto num só, a
+     ordem é a que eu escrevo aqui e não a que o arquivo calhou de ter. */
+  document.addEventListener('pharmafit-catalogo', function () {
+    var ordem = ordemEscolhida();
+    montarTudo();
+    if (ordem) ordenarGrade(ordem);
+  });
 })();

@@ -166,12 +166,467 @@
           '<p class="prod__preco">' + moeda(preco) + '</p>' +
           '<p class="prod__marca">' + situacao(p) + '</p>' +
         '</div>' +
-        '<a class="prod__editar" href="../index.html?produto=' + encodeURIComponent(p.id) + '" ' +
+        /* AS TRÊS BOLINHAS ABREM A EDIÇÃO AQUI MESMO.
+           Antes eram um link para `../index.html?produto=…`: saía do
+           painel novo, caía no antigo (outro desenho) e, ao voltar, a
+           lista de produtos recarregava do zero e perdia o filtro e a
+           busca. */
+        '<button class="prod__editar" type="button" data-editar="' + esc(p.id) + '" ' +
           'aria-label="Editar ' + esc(p.nome) + '">' +
           Moldura.svg('pontos', 19, 1.9) +
-        '</a>' +
+        '</button>' +
       '</article>';
     }).join('');
+  }
+
+  /* =========================================================
+     EDITAR O PRODUTO
+
+     O que se muda aqui: nome, preço, descrição, foto — e também
+     custo, preço antigo, estoque, categoria e "aparecer no site",
+     que é o que o formulário do painel antigo já fazia. Se eu
+     tivesse trazido só os quatro que o Brian pediu, as três
+     bolinhas passariam a fazer MENOS do que faziam antes.
+
+     A FOTO É CONDICIONAL, E ISSO TEM MOTIVO
+
+     Guardar foto precisa de duas coisas no Supabase que hoje não
+     existem: a coluna `imagem` em `pf_produtos` e o balde
+     `pf-produtos` no armazenamento. As duas estão escritas em
+     gestao/supabase/migracao-07-foto-do-produto.sql (no
+     repositório medgroup) e NÃO foram aplicadas — mexer na
+     estrutura do banco de produção é decisão do Brian.
+
+     Então o bloco da foto só aparece quando dá para funcionar:
+     quando existe banco de verdade (não é o modo demonstração) e
+     quando a linha do produto vem com a chave `imagem`. O
+     PostgREST devolve todas as colunas da tabela, então a chave
+     existir é a prova de que a coluna existe — sem pedido extra
+     nenhum.
+
+     Botão que não funciona não fica na tela. É a regra 1.
+     ========================================================= */
+
+  var folha = null;
+  var veu = null;
+  var editando = null;
+  var fotoNova = null;      /* {blob, url} escolhida mas ainda não salva */
+  var fotoTirar = false;    /* pediu para voltar ao desenho padrão */
+
+  function podeTrocarFoto(p) {
+    var sb = window.PharmaFitAuth && window.PharmaFitAuth.cliente
+      ? window.PharmaFitAuth.cliente() : null;
+    return !!sb && p && Object.prototype.hasOwnProperty.call(p, 'imagem');
+  }
+
+  var BALDE = 'pf-produtos';
+
+  function montarFolha() {
+    if (folha) return;
+
+    veu = document.createElement('div');
+    veu.className = 'veu';
+    veu.setAttribute('data-veu-folha', '');
+    document.body.appendChild(veu);
+
+    folha = document.createElement('div');
+    folha.className = 'folha';
+    folha.setAttribute('role', 'dialog');
+    folha.setAttribute('aria-modal', 'true');
+    folha.setAttribute('aria-label', 'Editar produto');
+    folha.innerHTML =
+      '<div class="folha__topo">' +
+        '<h2 class="folha__titulo" data-folha-titulo>Editar produto</h2>' +
+        '<button class="folha__fechar" type="button" data-fechar-folha aria-label="Fechar">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="folha__corpo">' +
+        '<p class="folha__recado" data-recado hidden></p>' +
+
+        '<div class="campo" data-bloco-foto hidden>' +
+          '<span class="campo__rotulo">Foto do produto</span>' +
+          '<div class="foto-troca">' +
+            '<img class="foto-troca__vista" data-foto-vista alt="">' +
+            '<div class="foto-troca__lado">' +
+              '<div class="foto-troca__botoes">' +
+                '<button class="botao" type="button" data-escolher-foto>Escolher foto</button>' +
+                '<button class="botao" type="button" data-tirar-foto hidden>Voltar ao desenho</button>' +
+              '</div>' +
+              '<p class="campo__nota" data-foto-nota>JPG, PNG ou WEBP. Eu reduzo e converto ' +
+                'antes de enviar, para a página do cliente não ficar pesada.</p>' +
+            '</div>' +
+          '</div>' +
+          '<input type="file" accept="image/jpeg,image/png,image/webp" data-arquivo-foto>' +
+        '</div>' +
+
+        '<div class="campo" data-campo="nome">' +
+          '<label class="campo__rotulo" for="ed-nome">Nome do produto</label>' +
+          '<input type="text" id="ed-nome" maxlength="120" placeholder="Ex.: Tirzec Pen 15 mg">' +
+          '<p class="campo__erro" data-erro hidden></p>' +
+        '</div>' +
+
+        '<div class="campo">' +
+          '<label class="campo__rotulo" for="ed-categoria">Categoria</label>' +
+          '<select id="ed-categoria" data-categoria></select>' +
+        '</div>' +
+
+        '<div class="folha__linha">' +
+          '<div class="campo" data-campo="preco">' +
+            '<label class="campo__rotulo" for="ed-preco">Preço de venda (R$)</label>' +
+            '<input type="number" id="ed-preco" min="0" step="0.01" inputmode="decimal">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+          '<div class="campo" data-campo="custo">' +
+            '<label class="campo__rotulo" for="ed-custo">Custo (R$)</label>' +
+            '<input type="number" id="ed-custo" min="0" step="0.01" inputmode="decimal">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="folha__linha">' +
+          '<div class="campo" data-campo="antes">' +
+            '<label class="campo__rotulo" for="ed-antes">Preço antigo (R$)</label>' +
+            '<input type="number" id="ed-antes" min="0" step="0.01" inputmode="decimal" ' +
+              'placeholder="0 = sem promoção">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+          '<div class="campo" data-campo="estoque">' +
+            '<label class="campo__rotulo" for="ed-estoque">Estoque</label>' +
+            '<input type="number" id="ed-estoque" min="0" step="1" inputmode="numeric" ' +
+              'placeholder="vazio = sem controle">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="campo" data-campo="descricao">' +
+          '<label class="campo__rotulo" for="ed-descricao">Descrição</label>' +
+          '<textarea id="ed-descricao" maxlength="400" ' +
+            'placeholder="A frase que o cliente lê embaixo do nome, no site."></textarea>' +
+          '<p class="campo__nota"><span data-conta-descricao>0</span>/400 · é este texto que ' +
+            'aparece no site, embaixo do nome do produto.</p>' +
+          '<p class="campo__erro" data-erro hidden></p>' +
+        '</div>' +
+
+        '<label class="campo campo--liga">' +
+          '<input type="checkbox" data-ativo>' +
+          '<span>Aparecer no site</span>' +
+        '</label>' +
+      '</div>' +
+      '<div class="folha__acoes">' +
+        '<button class="botao" type="button" data-fechar-folha>Cancelar</button>' +
+        '<button class="botao botao--forte" type="button" data-salvar>Salvar</button>' +
+      '</div>';
+    document.body.appendChild(folha);
+
+    folha.querySelectorAll('[data-fechar-folha]').forEach(function (b) {
+      b.addEventListener('click', fechar);
+    });
+    veu.addEventListener('click', fechar);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && folha.classList.contains('is-aberta')) fechar();
+    });
+
+    folha.querySelector('[data-salvar]').addEventListener('click', salvar);
+
+    var desc = folha.querySelector('#ed-descricao');
+    var conta = folha.querySelector('[data-conta-descricao]');
+    desc.addEventListener('input', function () { conta.textContent = desc.value.length; });
+
+    var arquivo = folha.querySelector('[data-arquivo-foto]');
+    folha.querySelector('[data-escolher-foto]').addEventListener('click', function () {
+      arquivo.value = '';
+      arquivo.click();
+    });
+    arquivo.addEventListener('change', function () {
+      if (arquivo.files && arquivo.files[0]) escolheuFoto(arquivo.files[0]);
+    });
+    folha.querySelector('[data-tirar-foto]').addEventListener('click', function () {
+      fotoNova = null;
+      fotoTirar = true;
+      folha.querySelector('[data-foto-vista]').src = '../../assets/img/prod-frasco.svg';
+      folha.querySelector('[data-tirar-foto]').hidden = true;
+      dizer('A foto sai quando você salvar. O produto volta a mostrar o desenho.', 'bom');
+    });
+  }
+
+  function dizer(msg, tipo) {
+    var el = folha.querySelector('[data-recado]');
+    el.hidden = false;
+    el.textContent = msg;
+    el.className = 'folha__recado folha__recado--' + (tipo === 'bom' ? 'bom' : 'ruim');
+    el.scrollIntoView({ block: 'nearest' });
+  }
+  function calar() {
+    var el = folha.querySelector('[data-recado]');
+    el.hidden = true;
+    el.textContent = '';
+  }
+
+  function erroNo(campo, msg) {
+    var caixa = folha.querySelector('[data-campo="' + campo + '"]');
+    if (!caixa) return;
+    caixa.classList.toggle('is-erro', !!msg);
+    var p = caixa.querySelector('[data-erro]');
+    p.hidden = !msg;
+    p.textContent = msg || '';
+  }
+  function limparErros() {
+    folha.querySelectorAll('[data-campo]').forEach(function (c) {
+      c.classList.remove('is-erro');
+      var p = c.querySelector('[data-erro]');
+      if (p) { p.hidden = true; p.textContent = ''; }
+    });
+  }
+
+  /* A FOTO É REDUZIDA AQUI, ANTES DE SUBIR.
+   *
+   * Foto de celular hoje tem 4000px e 5MB. Subir do jeito que vem
+   * estouraria o limite do balde (3MB) e, pior, a página do cliente
+   * baixaria 5MB para mostrar num quadrado de 300px — no 4G isso é a
+   * diferença entre a loja abrir e a pessoa desistir.
+   *
+   * 1200px no maior lado e WEBP com qualidade 0,82: na tela não se vê
+   * diferença e o arquivo cai para uns 80KB. Se ainda passar de 2,8MB
+   * (foto gigante e cheia de detalhe), cai a qualidade até caber. */
+  function reduzir(arq) {
+    return new Promise(function (ok, falhou) {
+      var leitor = new FileReader();
+      leitor.onerror = function () { falhou(new Error('não consegui ler o arquivo')); };
+      leitor.onload = function () {
+        var img = new Image();
+        img.onerror = function () { falhou(new Error('esse arquivo não parece uma imagem')); };
+        img.onload = function () {
+          var LADO = 1200;
+          var escala = Math.min(1, LADO / Math.max(img.width, img.height));
+          var l = Math.round(img.width * escala);
+          var a = Math.round(img.height * escala);
+          var tela = document.createElement('canvas');
+          tela.width = l; tela.height = a;
+          var ctx = tela.getContext('2d');
+          /* fundo branco: PNG com transparência viraria preto no WEBP
+             achatado, e foto de produto com fundo preto não é o que
+             ninguém quis. */
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, l, a);
+          ctx.drawImage(img, 0, 0, l, a);
+
+          var tentar = function (q) {
+            tela.toBlob(function (blob) {
+              if (!blob) return falhou(new Error('não consegui converter a imagem'));
+              if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
+              ok(blob);
+            }, 'image/webp', q);
+          };
+          tentar(0.82);
+        };
+        img.src = leitor.result;
+      };
+      leitor.readAsDataURL(arq);
+    });
+  }
+
+  async function escolheuFoto(arq) {
+    calar();
+    try {
+      var blob = await reduzir(arq);
+      if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
+      fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
+      fotoTirar = false;
+      folha.querySelector('[data-foto-vista]').src = fotoNova.url;
+      folha.querySelector('[data-tirar-foto]').hidden = false;
+      var kb = Math.round(blob.size / 1024);
+      folha.querySelector('[data-foto-nota]').textContent =
+        'Pronta (' + kb + ' KB). Ela sobe quando você salvar.';
+    } catch (e) {
+      dizer(String((e && e.message) || e), 'ruim');
+    }
+  }
+
+  /** Sobe a foto e devolve o endereço público dela. */
+  async function subirFoto(id) {
+    var sb = window.PharmaFitAuth.cliente();
+    /* O nome leva a hora: endereço novo a cada troca. Com nome fixo, o
+       cache do navegador e o do Supabase continuariam entregando a foto
+       antiga por horas, e a troca pareceria não ter funcionado. */
+    var nome = String(id).replace(/[^a-zA-Z0-9-]/g, '') + '-' + Date.now() + '.webp';
+    var r = await sb.storage.from(BALDE).upload(nome, fotoNova.blob, {
+      contentType: 'image/webp',
+      cacheControl: '31536000'
+    });
+    if (r.error) throw new Error('a foto não subiu: ' + r.error.message);
+    var pub = sb.storage.from(BALDE).getPublicUrl(nome);
+    return (pub && pub.data && pub.data.publicUrl) || '';
+  }
+
+  /** Apaga do balde a foto que acabou de ser substituída. */
+  async function apagarFotoVelha(url) {
+    try {
+      if (!url || url.indexOf('/' + BALDE + '/') === -1) return;
+      var nome = url.split('/' + BALDE + '/')[1].split('?')[0];
+      if (!nome) return;
+      await window.PharmaFitAuth.cliente().storage.from(BALDE).remove([nome]);
+    } catch (e) {
+      /* foto órfã no balde não quebra nada; não vale falhar o salvamento
+         por causa da limpeza. */
+    }
+  }
+
+  function numero(el) {
+    var t = String(el.value || '').trim().replace(',', '.');
+    if (t === '') return null;
+    var n = Number(t);
+    return isNaN(n) ? NaN : n;
+  }
+
+  async function salvar() {
+    limparErros();
+    calar();
+
+    var nome = String(folha.querySelector('#ed-nome').value || '').trim();
+    var preco = numero(folha.querySelector('#ed-preco'));
+    var custo = numero(folha.querySelector('#ed-custo'));
+    var antes = numero(folha.querySelector('#ed-antes'));
+    var estoque = numero(folha.querySelector('#ed-estoque'));
+    var descricao = String(folha.querySelector('#ed-descricao').value || '').trim();
+    var categoria = folha.querySelector('[data-categoria]').value;
+    var ativo = folha.querySelector('[data-ativo]').checked;
+
+    var ruim = false;
+    if (nome.length < 2) { erroNo('nome', 'Escreva o nome do produto.'); ruim = true; }
+    if (preco === null || isNaN(preco) || preco < 0) {
+      erroNo('preco', 'Ponha o preço de venda (pode ser 0).'); ruim = true;
+    }
+    if (custo !== null && (isNaN(custo) || custo < 0)) {
+      erroNo('custo', 'Custo inválido.'); ruim = true;
+    }
+    if (antes !== null && (isNaN(antes) || antes < 0)) {
+      erroNo('antes', 'Preço antigo inválido.'); ruim = true;
+    }
+    if (estoque !== null && (isNaN(estoque) || estoque < 0)) {
+      erroNo('estoque', 'Estoque inválido.'); ruim = true;
+    }
+    /* Preço antigo MENOR que o de venda viraria "-12% OFF" negativo na
+       vitrine. Barra aqui e explica, em vez de publicar um desconto que
+       não existe. */
+    if (antes !== null && antes > 0 && preco !== null && !isNaN(preco) && antes <= preco) {
+      erroNo('antes', 'O preço antigo tem de ser MAIOR que o de venda — é ele que forma o ' +
+                      'desconto que o cliente vê. Deixe 0 se não há promoção.');
+      ruim = true;
+    }
+    if (ruim) return;
+
+    var botao = folha.querySelector('[data-salvar]');
+    botao.disabled = true;
+    botao.textContent = 'Salvando…';
+
+    try {
+      var campos = {
+        nome: nome,
+        categoria: categoria,
+        preco: preco,
+        custo: custo === null ? 0 : custo,
+        antes: antes === null ? 0 : antes,
+        estoque: estoque,
+        descricao: descricao,
+        ativo: ativo
+      };
+
+      var urlVelha = editando.imagem || '';
+      if (podeTrocarFoto(editando)) {
+        if (fotoNova) {
+          botao.textContent = 'Enviando a foto…';
+          campos.imagem = await subirFoto(editando.id);
+        } else if (fotoTirar) {
+          campos.imagem = null;
+        }
+      }
+
+      var r = await window.PharmaFitDados.salvarProduto(editando.id, campos);
+      if (r && r.ok === false) throw new Error(r.erro || 'não deu para salvar');
+
+      if (campos.imagem !== undefined && urlVelha && urlVelha !== campos.imagem) {
+        await apagarFotoVelha(urlVelha);
+      }
+
+      /* Atualiza a lista na memória e redesenha, em vez de recarregar a
+         página: recarregar perderia a busca e o filtro que a pessoa
+         acabou de usar. */
+      Object.keys(campos).forEach(function (k) { editando[k] = campos[k]; });
+      pintar();
+
+      dizer('Salvo. O site já mostra assim.', 'bom');
+      setTimeout(fechar, 900);
+    } catch (e) {
+      dizer(String((e && e.message) || e), 'ruim');
+    } finally {
+      botao.disabled = false;
+      botao.textContent = 'Salvar';
+    }
+  }
+
+  function abrir(p) {
+    montarFolha();
+    editando = p;
+    fotoNova = null;
+    fotoTirar = false;
+    limparErros();
+    calar();
+
+    folha.querySelector('[data-folha-titulo]').textContent = p.nome || 'Produto';
+    folha.querySelector('#ed-nome').value = p.nome || '';
+    folha.querySelector('#ed-preco').value = (p.preco != null ? p.preco : (p.venda != null ? p.venda : ''));
+    folha.querySelector('#ed-custo').value = (p.custo != null ? p.custo : '');
+    folha.querySelector('#ed-antes').value = (p.antes != null ? p.antes : '');
+    folha.querySelector('#ed-estoque').value =
+      (p.estoque === null || p.estoque === undefined || p.estoque === '') ? '' : p.estoque;
+    var desc = folha.querySelector('#ed-descricao');
+    desc.value = p.descricao || '';
+    folha.querySelector('[data-conta-descricao]').textContent = desc.value.length;
+    folha.querySelector('[data-ativo]').checked = p.ativo !== false;
+
+    /* As categorias que já existem, mais a do produto, para a lista não
+       inventar categoria nem perder a que ele tem. */
+    var vistas = [];
+    estado.produtos.forEach(function (o) {
+      var c = String(o.categoria || '').trim();
+      if (c && vistas.indexOf(c) === -1) vistas.push(c);
+    });
+    ['Tirzepatida', 'Peptídeos', 'Retatrutida', 'Outros'].forEach(function (c) {
+      if (vistas.indexOf(c) === -1) vistas.push(c);
+    });
+    var sel = folha.querySelector('[data-categoria]');
+    sel.innerHTML = vistas.map(function (c) {
+      return '<option value="' + esc(c) + '">' + esc(c) + '</option>';
+    }).join('');
+    sel.value = String(p.categoria || 'Outros');
+
+    var bloco = folha.querySelector('[data-bloco-foto]');
+    bloco.hidden = !podeTrocarFoto(p);
+    if (!bloco.hidden) {
+      folha.querySelector('[data-foto-vista]').src = fotoDe(p);
+      folha.querySelector('[data-tirar-foto]').hidden = !p.imagem;
+      folha.querySelector('[data-foto-nota]').textContent =
+        'JPG, PNG ou WEBP. Eu reduzo e converto antes de enviar, para a página do ' +
+        'cliente não ficar pesada.';
+    }
+
+    veu.classList.add('is-aberto');
+    folha.classList.add('is-aberta');
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { folha.querySelector('#ed-nome').focus(); }, 320);
+  }
+
+  function fechar() {
+    if (!folha) return;
+    folha.classList.remove('is-aberta');
+    veu.classList.remove('is-aberto');
+    document.body.style.overflow = '';
+    if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
+    fotoNova = null;
+    fotoTirar = false;
+    editando = null;
   }
 
   async function carregar() {
@@ -203,6 +658,17 @@
     function novoProduto() { location.href = '../index.html#novo-produto'; }
     Moldura.aoNovo(novoProduto);
     document.querySelector('[data-novo-produto]').addEventListener('click', novoProduto);
+
+    /* Clique delegado no container: os cartões são redesenhados a cada
+       filtro e busca, e ouvinte posto em cada botão morreria no
+       primeiro redesenho. */
+    document.querySelector('[data-produtos]').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-editar]');
+      if (!b) return;
+      var id = b.getAttribute('data-editar');
+      var p = estado.produtos.filter(function (o) { return String(o.id) === String(id); })[0];
+      if (p) abrir(p);
+    });
 
     var campo = document.querySelector('[data-busca]');
     campo.addEventListener('input', U.debounce(function () {

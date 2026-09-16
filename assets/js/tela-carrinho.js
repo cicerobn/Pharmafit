@@ -235,4 +235,11 @@
   });
 
   pintar();
+
+  /* Quando o banco responde (catalogo-banco.js), refaz a conta: o preço,
+     a foto e o nome dos itens vêm do catálogo, e a equipe muda os três
+     pelo painel. Sem isto, o carrinho continuaria somando o preço que
+     estava no código quando a página abriu — e o total é o número que a
+     pessoa leva para a conversa do WhatsApp. */
+  document.addEventListener('pharmafit-catalogo', function () { pintar(); });
 })();

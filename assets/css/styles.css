@@ -22,6 +22,12 @@
   --black:#0c0c0c;
 
   --shell:520px;
+  /* A ALTURA DA BARRA DE BAIXO, MEDIDA NO NAVEGADOR (71px).
+     Ela aparece em três contas: o espaço que o conteúdo reserva, a
+     altura de onde o recado (toast) nasce, e o rolar até uma âncora. Eu
+     tinha escrito 62 de cabeça nas duas primeiras, e a barra tem 71 —
+     três pixels de folga. Num lugar só, elas não têm como discordar. */
+  --barra-pe:71px;
   --radius:18px;
   --radius-lg:24px;
 
@@ -476,7 +482,17 @@ ul{margin:0;padding:0;list-style:none}
   box-shadow:0 6px 14px rgba(0,0,0,.28);
 }
 
-.protocol__body{padding:18px 16px 16px}
+/* `min-width:0` É O CONSERTO DO TEXTO CORTADO.
+   O cartão é uma grade de 44% + 1fr, e um item de grade não encolhe
+   abaixo do conteúdo dele por padrão. "Tirzec Pen 15 mg" em serifa de
+   24px pede mais largura do que a coluna tem, então a coluna crescia,
+   saía do cartão, e o `overflow:hidden` do cartão cortava o resto — na
+   tela aparecia "Tirzec Pen 15 m" e "Acompanhame". Não era o texto que
+   estava grande: era a coluna que não sabia encolher.
+   É o mesmo defeito do nome na barra do topo e dos interesses da tela de
+   atendimento. Terceira vez que ele aparece; agora eu reconheço de
+   longe. */
+.protocol__body{padding:18px 16px 16px;min-width:0}
 .protocol__name{
   font-family:var(--serif);
   font-weight:500;
@@ -800,16 +816,39 @@ ul{margin:0;padding:0;list-style:none}
 
 /* ---------- navegação inferior ---------- */
 
+/* A BARRA DE BAIXO AGORA FICA MESMO NA TELA.
+ *
+ * Ela era `position:sticky`, e o Brian disse que "falta uma barra
+ * inferior na versão mobile". Ele estava certo, e a medição mostrou o
+ * tamanho do problema: em index, produtos e atendimento, no topo E no
+ * meio da rolagem, a barra estava FORA DA TELA — ela só aparecia depois
+ * de rolar a página inteira até o fim. Existia no código das 16 páginas
+ * e não existia para o visitante.
+ *
+ * A culpada é uma linha do `.shell`, setecentas acima: `overflow-x:
+ * hidden`. Ancestral com overflow diferente de `visible` passa a ser o
+ * dono da rolagem do sticky, e sticky preso a um ancestral que não rola
+ * nunca cola em lugar nenhum. Não dá erro nem aviso: simplesmente não
+ * funciona. E aquele `overflow-x:hidden` está lá por bom motivo (cortar
+ * rolagem lateral), então quem muda é a barra.
+ *
+ * `fixed` não depende de ancestral nenhum. Centrada na largura do
+ * `shell`, para acompanhar o site no computador, e com a área segura do
+ * iPhone somada embaixo — senão ela fica debaixo da barrinha do sistema.
+ */
 .tabbar{
-  position:sticky;
-  bottom:12px;
+  position:fixed;
+  left:50%;
+  transform:translateX(-50%);
+  width:calc(min(var(--shell), 100vw) - 24px);
+  bottom:calc(10px + env(safe-area-inset-bottom));
   z-index:45;
-  margin:14px 12px calc(12px + env(safe-area-inset-bottom));
+  margin:0;
   background:#111;
   border-radius:26px;
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  padding:12px 6px 10px;
+  padding:9px 6px 8px;
   box-shadow:0 18px 40px rgba(0,0,0,.3);
 }
 .tab{
@@ -825,13 +864,13 @@ ul{margin:0;padding:0;list-style:none}
 .tab.is-active{color:var(--gold-2)}
 .tab__ico{display:grid;place-items:center;height:24px}
 
-.tabbar__handle{
-  grid-column:1/-1;
-  width:120px;height:4px;
-  border-radius:999px;
-  background:rgba(255,255,255,.5);
-  margin:12px auto 0;
-}
+/* A BARRINHA DECORATIVA SAIU.
+   Ela imitava o risquinho de baixo do iPhone, e fazia sentido quando a
+   barra vinha no fim da página. Agora que ela fica fixa na tela, esses
+   28px são 28px tirados de TODA página, para sempre, para desenhar um
+   enfeite — e ainda por cima um enfeite repetido, porque o risquinho de
+   verdade do aparelho fica logo embaixo. */
+.tabbar__handle{display:none}
 
 /* ---------- menu lateral ---------- */
 
@@ -1169,7 +1208,9 @@ ul{margin:0;padding:0;list-style:none}
 .toast{
   position:fixed;
   left:50%;
-  bottom:24px;
+  /* acima da barra de baixo, que agora é fixa: no lugar antigo (24px) o
+     recado nascia atrás dela */
+  bottom:calc(var(--barra-pe) + 26px + env(safe-area-inset-bottom));
   transform:translate(-50%,20px);
   z-index:95;
   max-width:min(420px,calc(100% - 32px));
@@ -1691,8 +1732,13 @@ ul{margin:0;padding:0;list-style:none}
   color:var(--ink-2);
 }
 
-/* espaço para a barra inferior não cobrir o conteúdo */
-.shell{padding-bottom:0}
+/* ESPAÇO PARA A BARRA INFERIOR NÃO COBRIR O CONTEÚDO.
+   Estava 0 — e estava certo enquanto a barra vinha no fim da página, em
+   fluxo. Agora ela é fixa e flutua sobre tudo: sem este espaço, o
+   último item de cada página (o rodapé, o botão de enviar de um
+   formulário) fica escondido atrás dela, e ninguém descobre que
+   escondeu porque a barra é opaca. */
+.shell{padding-bottom:calc(var(--barra-pe) + 26px + env(safe-area-inset-bottom))}
 
 /* =========================================================
    Alvos de toque e foco — acabamento de acessibilidade
@@ -3207,3 +3253,67 @@ textarea:focus-visible{
 .ficha__acoes-linha .btn{flex:1 1 150px;justify-content:center;min-width:0}
 .ficha__acoes .linkish{align-self:center;margin-top:4px}
 .ficha__acoes .btn.is-salvo{border-color:#e0b4b4;color:#c0392b}
+
+/* =========================================================
+   O CARTÃO DE PROTOCOLO NO CELULAR
+
+   Brian: "essa parte aqui fica gigante no mobile, nao esta legal".
+   Medido em 390px: 377px de altura de cartão e 541px de seção — mais
+   de dois terços da tela para UM produto de um carrossel de cinco.
+
+   O que sai e por quê:
+
+   · os três benefícios (redução de peso / controle do apetite /
+     acompanhamento médico) — eles têm 50px de largura cada nesta
+     coluna, e "Acompanhamento médico" já saía cortado. Texto cortado é
+     pior que texto ausente, e essa informação está inteira na página do
+     produto, a um toque daqui. De 520px para cima eles voltam.
+   · a descrição fica em duas linhas, com reticências. A frase inteira
+     está na página do produto.
+
+   O que FICA, porque é o que faz a pessoa tocar: a foto, o nome, o
+   preço e o parcelamento.
+
+   E a foto deixa de esticar: era ela que definia a altura do cartão, e
+   com uma proporção fixa o cartão passa a ter a altura do CONTEÚDO.
+   ========================================================= */
+@media (max-width:519px){
+  .protocol{grid-template-columns:40% 1fr}
+  /* A FOTO CONTINUA ESTICANDO, e isso é de propósito.
+     Eu tinha posto uma proporção fixa aqui, para o cartão parar de ser
+     definido pela foto. Funcionou — e deixou uma tira branca embaixo do
+     painel preto: num carrossel todos os cartões têm a altura do mais
+     alto, e a foto parava antes do pé. Esticando, quem define a altura é
+     o CONTEÚDO (que é o que eu queria) e o preto vai até embaixo. A
+     imagem dentro é `object-fit:contain`, então nada distorce. */
+  .protocol__media{padding:10px 6px}
+  /* TEXTO CENTRADO NA ALTURA.
+     Num carrossel todos os cartões ficam com a altura do mais alto — e
+     o mais alto aqui é um cujo nome ocupa duas linhas. No cartão de nome
+     curto sobravam 55px, TODOS embaixo, o que parecia cartão inacabado.
+     Centrado, a mesma folga aparece metade acima e metade abaixo, e aí
+     parece respiro em vez de erro. */
+  .protocol__body{
+    padding:13px 13px 14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .protocol__name{font-size:18px;line-height:1.24;margin:0 0 5px}
+  .protocol__desc{
+    font-size:12.5px;
+    line-height:1.45;
+    margin:0 0 9px;
+    /* duas linhas e reticências: a frase inteira está na página do
+       produto, e três linhas aqui empurravam o preço para fora da
+       primeira olhada. */
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .protocol__preco{margin:0}
+  .protocol__preco .product__price{font-size:18px}
+  .protocol__preco .product__installment{font-size:10.5px;line-height:1.35}
+  .protocol .mini-list{display:none}
+}

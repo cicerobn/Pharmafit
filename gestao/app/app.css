@@ -739,11 +739,22 @@ a{color:inherit;text-decoration:none}
 
 .prod__editar{
   position:absolute;
-  top:10px;right:8px;
-  width:32px;height:32px;
+  /* ALVO DE 44px, DESENHO DO MESMO TAMANHO DE ANTES.
+     Eram 32x32 de área clicável. Passava enquanto ele só levava para
+     outra página; agora ele é a porta de mudar preço, nome, descrição e
+     foto — a coisa mais usada desta tela. 32px é menos que a ponta do
+     dedo (44px é a medida que a Apple e o Google pedem), e errar o
+     toque aqui abre a folha do produto errado.
+     O ícone continua no mesmo lugar: só a área em volta cresceu. */
+  top:2px;right:1px;
+  width:44px;height:44px;
   display:grid;place-items:center;
-  border-radius:9px;
+  border:0;
+  padding:0;
+  background:transparent;
+  border-radius:12px;
   color:var(--muted-2);
+  cursor:pointer;
   transition:background .16s ease,color .16s ease;
 }
 .prod__editar:active{background:var(--line-2);color:var(--ink-2)}
@@ -1144,4 +1155,302 @@ body.travado{overflow:hidden}
    útil das três, e o nome do produto é a mais. */
 @media (max-width:339px){
   .rosca__fatia-pct{display:none}
+}
+
+/* =========================================================
+   A FOLHA DE EDITAR O PRODUTO
+
+   Abre por baixo, como uma folha que sobe. Não é uma caixa no
+   meio da tela de propósito: no celular o dedo está embaixo, e é
+   de lá que ela vem. Em tela larga ela vira uma caixa centrada,
+   porque folha de 1200px de largura não é folha nenhuma.
+
+   Ela substituiu um PULO: as três bolinhas do produto levavam
+   para o painel antigo, numa página de outro desenho, e voltar
+   dava na página de produtos recarregada do zero. Agora edita
+   onde está.
+   ========================================================= */
+.folha{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:62;
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+  background:var(--card);
+  border-radius:20px 20px 0 0;
+  box-shadow:var(--sombra-3);
+  /* fechada, fora da tela por baixo. Anima no transform, que o
+     navegador faz na placa de vídeo. */
+  transform:translateY(102%);
+  transition:transform .3s cubic-bezier(.32,.72,0,1);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.folha.is-aberta{transform:translateY(0)}
+@media (prefers-reduced-motion:reduce){
+  .folha{transition:none}
+}
+
+.folha__topo{
+  flex:none;
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px 10px;
+  border-bottom:1px solid var(--line-2);
+}
+.folha__titulo{
+  flex:1;min-width:0;
+  margin:0;
+  font-family:var(--serif);
+  font-size:17px;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.folha__fechar{
+  flex:none;
+  width:38px;height:38px;
+  display:grid;place-items:center;
+  border:0;border-radius:11px;
+  background:var(--line-2);
+  color:var(--ink-2);
+  cursor:pointer;
+}
+.folha__fechar:active{background:var(--line)}
+
+.folha__corpo{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:14px 16px 4px;
+  display:flex;flex-direction:column;gap:13px;
+}
+
+.folha__acoes{
+  flex:none;
+  display:flex;gap:10px;
+  padding:12px 16px 14px;
+  border-top:1px solid var(--line-2);
+  background:var(--card);
+}
+.folha__acoes .botao{flex:1}
+
+.botao{
+  min-height:46px;
+  padding:12px 16px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--card);
+  color:var(--ink-2);
+  font:inherit;font-size:14.5px;font-weight:600;
+  cursor:pointer;
+}
+.botao:active{background:var(--line-2)}
+.botao--forte{
+  border-color:var(--gold);
+  background:var(--gold);
+  color:#fff;
+}
+.botao--forte:active{background:var(--gold-2);border-color:var(--gold-2)}
+.botao[disabled]{opacity:.55;cursor:default}
+
+/* ---- os campos ---- */
+.campo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.campo__rotulo{
+  font-size:11px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);
+}
+.campo input,
+.campo select,
+.campo textarea{
+  width:100%;
+  /* `min-width:0` porque campo dentro de grade não encolhe sozinho:
+     sem isto a linha de dois campos estoura a folha para fora. */
+  min-width:0;
+  box-sizing:border-box;
+  min-height:46px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fff;
+  color:var(--ink);
+  font:inherit;font-size:15px;
+}
+.campo textarea{min-height:86px;resize:vertical;line-height:1.5}
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus{
+  outline:2px solid var(--gold-soft);
+  outline-offset:1px;
+  border-color:var(--gold);
+}
+.campo input::placeholder,
+.campo textarea::placeholder{color:var(--muted-2)}
+.campo__nota{margin:0;font-size:12px;color:var(--muted);line-height:1.45}
+.campo.is-erro input,
+.campo.is-erro textarea{border-color:#a8322a}
+.campo__erro{margin:0;font-size:12.5px;color:#a8322a}
+
+/* Duas colunas só quando cabem. A conta é do ESPAÇO DA FOLHA, e não
+   da tela: a folha tem 480px no máximo, então perguntar a largura da
+   tela daria duas colunas de 140px num tablet. */
+.folha__corpo{container-type:inline-size}
+.folha__linha{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
+@container (min-width:330px){
+  .folha__linha{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+.campo--liga{
+  flex-direction:row;align-items:center;gap:10px;
+  min-height:46px;
+}
+.campo--liga input{width:20px;height:20px;min-height:0;flex:none}
+.campo--liga span{font-size:14.5px;color:var(--ink-2)}
+
+/* ---- a foto ---- */
+.foto-troca{display:flex;align-items:center;gap:12px}
+.foto-troca__vista{
+  flex:none;
+  width:64px;height:64px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--line-2);
+  object-fit:cover;
+}
+.foto-troca__lado{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.foto-troca__botoes{display:flex;gap:8px;flex-wrap:wrap}
+.foto-troca .botao{min-height:40px;padding:9px 13px;font-size:13.5px}
+/* O SELETOR CRU DO NAVEGADOR NÃO APARECE.
+   Estava escrito `.foto-troca input[type=file]`, e o campo não mora
+   dentro do `.foto-troca` — mora ao lado. A regra não casava com nada, e
+   a tela mostrava o botão de sistema "Choose File / No file chosen", em
+   inglês, num painel em português. Os 53 testes passaram: eles conferem
+   que escolher a foto FUNCIONA, e funcionava. Quem viu foi a foto da
+   tela. Quem abre o seletor é o botão "Escolher foto". */
+[data-bloco-foto] input[type=file]{display:none}
+
+.folha__recado{
+  margin:0;
+  padding:11px 12px;
+  border-radius:12px;
+  font-size:13px;line-height:1.5;
+}
+.folha__recado--ruim{background:var(--st-cancelado-bg);color:var(--st-cancelado)}
+.folha__recado--bom{background:var(--st-pago-bg);color:var(--st-pago)}
+
+@media (min-width:520px){
+  .folha{
+    left:50%;right:auto;bottom:auto;
+    top:50%;
+    width:min(480px,92vw);
+    border-radius:20px;
+    transform:translate(-50%,-50%) scale(.96);
+    opacity:0;
+    transition:transform .24s ease,opacity .24s ease;
+  }
+  .folha.is-aberta{transform:translate(-50%,-50%) scale(1);opacity:1}
+}
+
+/* =========================================================
+   A FICHA DO CLIENTE, dentro da folha
+
+   Três números em cima (quanto pagou, quantos pedidos, quando foi o
+   último) e a lista do que ele pediu embaixo.
+   ========================================================= */
+
+/* `.item` foi desenhado para <a> e virou <button> na lista de clientes.
+   A regra geral de `button` lá em cima já tira borda, fonte e cor; falta
+   só o `appearance`, que no Safari do iPhone ainda desenha o fundo
+   cinza do sistema mesmo com `background` definido. */
+button.item{-webkit-appearance:none;appearance:none}
+
+.ficha-tel{
+  margin:0;
+  font-size:13.5px;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+
+.ficha-numeros{
+  display:grid;
+  /* DOIS por linha, e o dinheiro sozinho na primeira.
+     Eram três lado a lado, e medindo com um cliente de R$ 110.090,00 o
+     valor saía cortado em 375px e em 320px. O número que responde
+     "quanto ele pagou" é o motivo desta tela existir: ele fica inteiro. */
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.ficha-num--dinheiro{
+  grid-column:1/-1;
+  background:linear-gradient(135deg,var(--st-pago-bg),var(--line-2));
+}
+.ficha-num--dinheiro .ficha-num__valor{font-size:22px;color:var(--st-pago)}
+.ficha-num{
+  display:flex;flex-direction:column;gap:2px;
+  min-width:0;
+  padding:10px 11px;
+  background:var(--line-2);
+  border-radius:13px;
+}
+.ficha-num__rotulo{
+  font-size:10px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);
+}
+.ficha-num__valor{
+  font-size:15px;font-weight:600;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+  /* o valor não pode empurrar a caixa: em telefone estreito
+     "R$ 3.097,00" é mais largo que um terço da folha */
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ficha-num__valor--data{font-size:14px}
+.ficha-num__pe{
+  font-size:10.5px;line-height:1.3;
+  color:var(--muted-2);
+}
+
+/* o rótulo de seção dentro da folha não leva a margem lateral que ele
+   tem nas telas (a folha já tem o recuo dela) */
+.folha .rotulo-secao{margin:6px 0 0}
+
+.ficha-pedidos{
+  list-style:none;
+  margin:0 0 6px;padding:0;
+  display:flex;flex-direction:column;gap:8px;
+}
+.ficha-pedido{
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--card);
+}
+.ficha-pedido__topo{
+  display:flex;align-items:baseline;gap:10px;
+}
+.ficha-pedido__produto{
+  flex:1;min-width:0;
+  font-size:14px;font-weight:500;
+  color:var(--ink);
+}
+.ficha-pedido__qtd{
+  font-size:11.5px;font-weight:600;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.ficha-pedido__valor{
+  flex:none;
+  font-size:14.5px;font-weight:600;
+  font-variant-numeric:tabular-nums;
+}
+.ficha-pedido__pe{
+  display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap;
+  margin-top:5px;
+  font-size:11.5px;
+  color:var(--muted);
+}
+.ficha-pedido--vazio{
+  color:var(--muted);
+  font-size:13.5px;
+  text-align:center;
 }

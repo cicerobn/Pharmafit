@@ -118,5 +118,12 @@
   /* a grade é montada por loja.js antes deste script rodar */
   atualizarTela();
 
+  /* O banco respondeu (catalogo-banco.js): a lista de favoritos mostra
+     preço e foto, e a equipe muda os dois pelo painel. */
+  document.addEventListener('pharmafit-catalogo', function () {
+    montarPagina();
+    atualizarTela();
+  });
+
   window.PharmaFitFavoritos = { ler: ler, tem: tem, alternar: alternar };
 })();

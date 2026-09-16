@@ -55,32 +55,50 @@
   document.getElementById('produto').hidden = false;
   document.title = produto.nome + ' — Pharma Fit';
 
-  var semEstoque = produto.estoque !== null && produto.estoque !== undefined &&
-                   produto.estoque !== '' && Number(produto.estoque) <= 0;
-  var temControle = !(produto.estoque === null || produto.estoque === undefined ||
-                      produto.estoque === '');
-  var maximo = temControle ? Math.max(1, Number(produto.estoque)) : 999;
+  var semEstoque = false;
+  var temControle = false;
+  var maximo = 999;
 
   var quantidade = 1;
 
-  /* ---------- o que não muda ---------- */
+  /* ---------- o que vem do produto ----------
 
-  achar('caminho-nome').textContent = produto.nome;
-  achar('nome').textContent = produto.nome;
-  achar('categoria').textContent = produto.categoria || '';
-  achar('desc').textContent = produto.descricao || '';
+     NUMA FUNÇÃO, e não escrito direto, porque isto precisa acontecer
+     DUAS vezes: agora, com o que está no código, e de novo quando o
+     banco responder. A equipe passou a mudar nome, descrição, foto e
+     preço pelo painel — se esta tela desenhasse só na primeira vez, ela
+     mostraria o preço velho enquanto a vitrine mostra o novo. Duas
+     páginas do mesmo site com preços diferentes é pior que as duas
+     erradas: o cliente vê e não confia em nenhuma. */
+  function aplicarProduto() {
+    semEstoque = produto.estoque !== null && produto.estoque !== undefined &&
+                 produto.estoque !== '' && Number(produto.estoque) <= 0;
+    temControle = !(produto.estoque === null || produto.estoque === undefined ||
+                    produto.estoque === '');
+    maximo = temControle ? Math.max(1, Number(produto.estoque)) : 999;
+    if (quantidade > maximo) quantidade = maximo;
 
-  var foto = achar('foto');
-  foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
-  foto.alt = produto.nome + ' — Pharma Fit';
+    achar('caminho-nome').textContent = produto.nome;
+    achar('nome').textContent = produto.nome;
+    achar('categoria').textContent = produto.categoria || '';
+    achar('desc').textContent = produto.descricao || '';
+    document.title = produto.nome + ' — Pharma Fit';
 
-  var selo = achar('selo');
-  var textoSelo = semEstoque ? 'SEM ESTOQUE' : (produto.antes ? 'PROMOÇÃO' : produto.destaque);
-  if (textoSelo) {
-    selo.hidden = false;
-    selo.textContent = textoSelo;
+    var foto = achar('foto');
+    foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
+    foto.alt = produto.nome + ' — Pharma Fit';
+
+    var selo = achar('selo');
+    var textoSelo = semEstoque ? 'SEM ESTOQUE' : (produto.antes ? 'PROMOÇÃO' : produto.destaque);
+    /* `hidden` nas duas direções: antes era só `if (textoSelo)`, então um
+       produto que DEIXASSE de estar em promoção continuaria com o selo
+       "PROMOÇÃO" na tela depois da atualização. */
+    selo.hidden = !textoSelo;
+    selo.textContent = textoSelo || '';
     selo.classList.toggle('product__badge--off', semEstoque);
   }
+
+  aplicarProduto();
 
   /* ---------- as faixas ---------- */
 
@@ -264,4 +282,14 @@
   });
 
   pintarConta();
+
+  /* Quando o banco responde (catalogo-banco.js), redesenha com o que a
+     equipe salvou: preço, descrição, foto, estoque. O objeto do produto
+     é o mesmo do catálogo, então ele já vem atualizado — só falta pôr na
+     tela. */
+  document.addEventListener('pharmafit-catalogo', function () {
+    aplicarProduto();
+    pintarFaixas();
+    pintarConta();
+  });
 })();
