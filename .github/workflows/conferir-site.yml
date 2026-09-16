@@ -188,19 +188,48 @@ jobs:
           [ -n "$SITE_URL" ] && candidatos="$SITE_URL"
 
           achou=""
+          # UM NAVEGADOR DE VERDADE NO CABEÇALHO.
+          #
+          # Sem isto a Hostinger responde HTTP 403 com "Checking your browser
+          # before accessing" para o GitHub — é a proteção antirrobô dela, e
+          # quem está sendo barrado é esta conferência, não o cliente. Pedir
+          # 280 arquivos de uma vez, dez vezes seguidas, é exatamente o que
+          # parece robô; provavelmente fui eu que acendi o alarme.
+          NAVEGADOR="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
+
           echo "Procurando a Pharma Fit:"
+          barrado=0
           for bruto in $candidatos; do
             alvo="${bruto%/}"
-            codigo=$(curl -s -o /tmp/home.html -w '%{http_code}' --max-time 20 "$alvo/" || echo 000)
+            codigo=$(curl -s -A "$NAVEGADOR" -o /tmp/home.html -w '%{http_code}' --max-time 20 "$alvo/" || echo 000)
             titulo=$(grep -oiE '<title>[^<]*' /tmp/home.html | head -1 | sed 's/<title>//I')
             echo "  $alvo → HTTP $codigo  ${titulo}"
+            if grep -qiE 'checking your browser|just a moment|cf-browser-verification|__cf_chl' /tmp/home.html 2>/dev/null; then
+              barrado=1
+            fi
             if [ "$codigo" = "200" ] && printf '%s' "$titulo" | grep -qi "pharma"; then
               achou="$alvo"
             fi
           done
 
+          # PAREI DE CHAMAR "SITE FORA DO AR" O QUE É "NÃO CONSEGUI OLHAR".
+          #
+          # Em 16/09/2026 esta conferência escreveu "A Pharma Fit não respondeu
+          # em nenhum dos endereços" com o site funcionando perfeitamente: o
+          # que ela recebeu foi a tela de verificação de navegador. Duas coisas
+          # muito diferentes — uma é o site quebrado, a outra é a porta fechada
+          # para MIM — e dar o mesmo nome às duas manda o Brian procurar
+          # defeito onde não tem.
+          #
+          # Quando é a proteção, isto não reprova nada: ela não diz NADA sobre
+          # a publicação. Fica o aviso, e o jeito de voltar a poder conferir.
+          if [ -z "$achou" ] && [ "$barrado" = "1" ]; then
+            echo "::notice::Não deu para conferir o site no ar: a Hostinger devolveu a tela de verificação de navegador (proteção antirrobô) para o GitHub. ISTO NÃO DIZ QUE O SITE ESTÁ COM PROBLEMA — para o visitante, que usa navegador de verdade, ela passa sozinha. Para esta conferência voltar a funcionar: hPanel → Segurança → proteção antirrobô/bot, e liberar (ou desligar). Enquanto isso, o que dá para garantir daqui são as conferências que rodam sem internet, e essas passaram todas."
+            exit 0
+          fi
+
           if [ -z "$achou" ]; then
-            echo "::error::A Pharma Fit não respondeu em nenhum dos endereços acima."
+            echo "::error::A Pharma Fit não respondeu em nenhum dos endereços acima (e não foi proteção antirrobô: nenhuma resposta tinha a tela de verificação)."
             exit 1
           fi
 
@@ -209,7 +238,7 @@ jobs:
           falhou=0
 
           # ---- 1. acentos ----
-          tipo=$(curl -sI --max-time 20 "$achou/" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+          tipo=$(curl -sI -A "$NAVEGADOR" --max-time 20 "$achou/" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
           echo "página:  $tipo"
           case "$tipo" in
             *utf-8*|*UTF-8*) ;;
@@ -220,7 +249,7 @@ jobs:
           for pagina in index.html produtos.html atendimento.html parceiro.html atacado.html \
                         conta.html quiz.html representantes.html privacidade.html \
                         pedidos.html favoritos.html gestao/login.html; do
-            c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$pagina" || echo 000)
+            c=$(curl -s -A "$NAVEGADOR" -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$pagina" || echo 000)
             if [ "$c" != "200" ]; then
               echo "::error::$pagina respondeu HTTP $c"
               falhou=1
@@ -231,7 +260,7 @@ jobs:
           # ---- 3. estilo e script, com o tipo certo ----
           for par in "assets/css/styles.css:css" "assets/js/app.js:javascript"; do
             arq="${par%%:*}"; esperado="${par##*:}"
-            t=$(curl -sI --max-time 20 "$achou/$arq" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+            t=$(curl -sI -A "$NAVEGADOR" --max-time 20 "$achou/$arq" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
             echo "$arq → $t"
             case "$t" in
               *"$esperado"*) ;;
@@ -245,7 +274,7 @@ jobs:
           # arquivo. Arquivo respondendo 200 não prova que a pasta abre: quem
           # decide isso é o DirectoryIndex, e sem ele a pasta devolve 403 —
           # que foi exatamente o que apareceu na primeira tentativa.
-          c=$(curl -s -o /tmp/loja.html -w '%{http_code}' --max-time 20 "$achou/loja/" || echo 000)
+          c=$(curl -s -A "$NAVEGADOR" -o /tmp/loja.html -w '%{http_code}' --max-time 20 "$achou/loja/" || echo 000)
           if [ "$c" = "200" ] && grep -q 'id="raiz"' /tmp/loja.html; then
             echo "/loja/ → HTTP 200, e o que vem é a loja"
           else
@@ -264,7 +293,7 @@ jobs:
           # Tipo errado num .js é a falha mais cruel deste site: o navegador
           # recusa o módulo em silêncio e a loja abre BRANCA, sem uma palavra.
           for arq in $(find loja -type f -name '*.js' | sort); do
-            t=$(curl -sI --max-time 20 "$achou/$arq" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
+            t=$(curl -sI -A "$NAVEGADOR" --max-time 20 "$achou/$arq" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')
             echo "$arq → $t"
             case "$t" in
               *javascript*|*ecmascript*) ;;
@@ -296,7 +325,7 @@ jobs:
                           loja/.htaccess \
                           README.md \
                           $FERRAMENTAS; do
-            c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
+            c=$(curl -s -A "$NAVEGADOR" -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
             if [ "$c" = "200" ]; then
               echo "::error::$proibido está sendo servido ao público (HTTP 200). Isso entrega a estrutura do banco a quem passar."
               falhou=1
@@ -306,7 +335,7 @@ jobs:
           done
 
           # ---- 5. o 404 é a página da casa ----
-          c=$(curl -s -o /tmp/perdido.html -w '%{http_code}' --max-time 20 "$achou/pagina-que-nao-existe-$RANDOM" || echo 000)
+          c=$(curl -s -A "$NAVEGADOR" -o /tmp/perdido.html -w '%{http_code}' --max-time 20 "$achou/pagina-que-nao-existe-$RANDOM" || echo 000)
           if [ "$c" = "404" ] && grep -qi "pharma" /tmp/perdido.html; then
             echo "404: mostra a página própria, certo"
           else
@@ -331,7 +360,7 @@ jobs:
           # descobre por meses. Então isto fica conferido a cada dia: enquanto
           # for o endereço de teste, é só um recado; quando o robots mudar de
           # cara, o recado muda junto e a gente fica sabendo.
-          curl -fsS --max-time 20 "$achou/robots.txt" > /tmp/robots-no-ar.txt 2>/dev/null || true
+          curl -fsS -A "$NAVEGADOR" --max-time 20 "$achou/robots.txt" > /tmp/robots-no-ar.txt 2>/dev/null || true
           if grep -qi 'Googlebot' /tmp/robots-no-ar.txt && grep -qi 'Disallow: /' /tmp/robots-no-ar.txt; then
             echo "robots.txt: é o da Hostinger e barra o Google do site todo (esperado em endereço de teste)"
             echo "::notice::O Google está barrado deste site pelo robots.txt da Hostinger. Correto agora, por ser endereço de teste — mas no dia do domínio próprio isto tem de sair, ou o site fica invisível na busca."
@@ -513,7 +542,7 @@ jobs:
           # errado viram a mesma coisa no relatório, que foi meio caminho para
           # eu passar uma hora atrás da causa errada.
           baixar() {
-            if curl -fsS --max-time 20 "$1" -o /tmp/veio 2>/dev/null; then
+            if curl -fsS -A "$NAVEGADOR" --max-time 20 "$1" -o /tmp/veio 2>/dev/null; then
               md5sum /tmp/veio | cut -d' ' -f1
             else
               echo "SEM-RESPOSTA"
