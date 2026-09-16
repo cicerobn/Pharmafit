@@ -50,7 +50,31 @@
 
     catalogo.forEach(function (p) {
       var b = porNome[p.nome];
-      if (!b) return;
+
+      /* PRODUTO QUE NÃO ESTÁ MAIS NO BANCO SAI DO SITE.
+       *
+       * Isto existe por causa da edição de nome no painel. O casamento
+       * aqui é pelo NOME (é a única coisa que o catálogo do código e a
+       * tabela têm em comum). Então, quando a equipe renomeia um
+       * produto, o nome velho deixa de existir no banco e o nome novo
+       * entra como se fosse outro produto — sem esta linha, o site
+       * mostraria os DOIS: o antigo com o preço antigo, vindo do código,
+       * e o novo, vindo do banco. Dois cards do mesmo produto, com
+       * preços diferentes.
+       *
+       * Com ela, a lista da equipe manda: renomeado troca de nome,
+       * apagado desaparece. `foraDoSite` é a marca que a vitrine, os
+       * favoritos, o formulário de atacado e o modal de pedido já
+       * respeitam.
+       *
+       * Vale só quando o banco RESPONDEU (lá em cima: lista vazia ou
+       * erro faz esta função desistir antes). Sem isso, uma falha de
+       * rede esvaziaria a loja. */
+      if (!b) {
+        if (!p.foraDoSite) { p.foraDoSite = true; mudou = true; }
+        return;
+      }
+
       p.venda = Number(b.preco != null ? b.preco : p.venda);
       p.antes = Number(b.antes != null ? b.antes : p.antes);
       p.estoque = b.estoque;
