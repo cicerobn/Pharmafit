@@ -48,6 +48,10 @@ window.PHARMAFIT_ES ={
   "Apagar meus dados": "Borrar mis datos",
   "Apliquei hoje": "Apliqué hoy",
   "Apoio de vendas": "Apoyo de ventas",
+  /* Os nomes das faixas de quantidade. "Varejo/Atacado" é o par que o
+     comércio paraguaio escreve "Minorista/Mayorista". */
+  "Atacado": "Mayorista",
+  "Atacado +": "Mayorista +",
   "Atalhos": "Accesos rápidos",
   "Atendimento": "Atención",
   "Atendimento direto": "Atención directa",
@@ -80,7 +84,6 @@ window.PHARMAFIT_ES ={
   "Comprar para revender": "Comprar para revender",
   "Confirmamos tudo na conversa": "Confirmamos todo en la conversación",
   "Conta": "Cuenta",
-  "Conte um pouco do seu trabajo": "Cuéntenos un poco de su trabajo",
   "Conte um pouco do seu trabalho": "Cuéntenos un poco de su trabajo",
   "Continuar": "Continuar",
   "Continuar escolhendo": "Seguir eligiendo",
@@ -330,6 +333,7 @@ window.PHARMAFIT_ES ={
   "Transparência sobre o que guardamos e o que fica só com você.": "Transparencia sobre lo que guardamos y lo que queda solo con usted.",
   "Tratamentos com": "Tratamientos con",
   "Três perguntas rápidas. No fim, mostramos a indicação e você fala com a equipe.": "Tres preguntas rápidas. Al final, mostramos la indicación y usted habla con el equipo.",
+  "Varejo": "Minorista",
   "Vai levar bastante quantidade?": "¿Va a llevar bastante cantidad?",
   "Valores e condições sob consulta. Produtos de uso sob orientação profissional.": "Valores y condiciones a consultar. Productos de uso bajo orientación profesional.",
   "Vamos achar": "Vamos a encontrar",
@@ -424,6 +428,21 @@ window.PHARMAFIT_ES_PADROES = [
   { pt: /^Pergunta (\d+) de (\d+)$/, es: "Pregunta $1 de $2" },
   { pt: /^(\d+) itens?$/, es: "$1 ítems" },
   { pt: /^(\d+) unid\.$/, es: "$1 unid." },
+
+  /* AS FAIXAS DE ATACADO.
+     Entraram no site em 16/09 e eu esqueci o espanhol: quem abria a
+     página do Tirzec Pen em espanhol via a tabela de preços em
+     português — "Varejo", "Atacado", "10 unid. ou mais". Nenhuma
+     leitura de arquivo acharia, porque a tabela é escrita pelo
+     JavaScript na hora; e o meu conferidor de tela deixou passar
+     "10 unid. ou mais", porque a isenção dele dispensava tudo que
+     começasse com número seguido de "unid".
+     "1 a 4 unid." não entra aqui: sai igual nas duas línguas. */
+  { pt: /^(\d+) unid\. ou mais$/, es: "$1 unid. o más" },
+  { pt: /^Levando (\d+) unidade a mais, cada uma sai por (.+)\.$/,
+    es: "Llevando $1 unidad más, cada una sale por $2." },
+  { pt: /^Levando (\d+) unidades a mais, cada uma sai por (.+)\.$/,
+    es: "Llevando $1 unidades más, cada una sale por $2." },
   { pt: /^Tirar uma unidade de (.+)$/, es: "Quitar una unidad de $1" },
   { pt: /^Somar uma unidade de (.+)$/, es: "Sumar una unidad de $1" },
   { pt: /^Quantidade de (.+)$/, es: "Cantidad de $1" },

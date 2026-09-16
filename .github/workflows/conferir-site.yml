@@ -35,12 +35,18 @@ jobs:
       - name: Pegar o código
         uses: actions/checkout@v5
         with:
-          # Dois commits, não um. O passo "Conferir o site" pergunta ao git o
-          # que ESTE commit mudou, para não pedir 101 arquivos quando 28
-          # respondem. Com a profundidade 1 do padrão, `HEAD~1` não existe, a
-          # conferência cairia no caminho de reserva e a economia não
-          # aconteceria — sem nenhum erro para avisar.
-          fetch-depth: 2
+          # Vinte commits, não dois. O passo "Conferir o site" pergunta ao
+          # git o que este PUSH mudou, para não pedir 115 arquivos quando
+          # 34 respondem. Com a profundidade 1 do padrão, `HEAD~1` não
+          # existe, a conferência cai no caminho de reserva e a economia
+          # não acontece — sem nenhum erro para avisar.
+          #
+          # Dois não bastavam: quem manda três commits de uma vez tem o
+          # ponto de partida do push FORA do clone, e a conferência
+          # olhava só o último — um commit de CSS no meio da fila passava
+          # sem ninguém ver se chegou ao servidor. Vinte cobre qualquer
+          # push que este projeto faz, e continua sendo um clone raso.
+          fetch-depth: 20
 
       - name: Preparar o Node
         uses: actions/setup-node@v5
@@ -552,7 +558,36 @@ jobs:
           # site continua inteiro?", e a resposta pede a lista toda — o que
           # não custa, porque nessas rodadas o site já está assentado e a
           # primeira tentativa resolve.
-          if [ "$GITHUB_EVENT_NAME" = "push" ] && git rev-parse --verify -q HEAD~1 >/dev/null; then
+          # O PONTO DE PARTIDA É O DO PUSH, E NÃO "O COMMIT ANTERIOR".
+          #
+          # `HEAD~1 HEAD` olha só o ÚLTIMO commit. Quem manda dois ou três
+          # de uma vez — o que acontece toda hora — tem os primeiros
+          # conferidos apenas se mexeram em .html, porque as páginas
+          # entram pela outra lista. Um commit de CSS ou de JavaScript no
+          # meio da fila passava sem ninguém olhar se chegou.
+          #
+          # O GitHub diz de onde o push saiu em `github.event.before`. Ele
+          # vem com 40 zeros quando a branch é nova (não há de onde sair),
+          # e pode apontar para um commit que este clone não tem; nos dois
+          # casos eu caio no commit anterior, que é o que dava antes.
+          ANTES="${{ github.event.before }}"
+          PARTIDA="HEAD~1"
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            if [ -n "$ANTES" ] && ! printf '%s' "$ANTES" | grep -qE '^0{40}$'; then
+              if git cat-file -e "$ANTES^{commit}" 2>/dev/null; then
+                PARTIDA="$ANTES"
+              else
+                # E ISTO NÃO PASSA CALADO.
+                # Cair no atalho sem avisar é como a conferência funcionar
+                # menos e continuar dando verde. Se aparecer, é sinal de
+                # que a profundidade do clone ficou curta para o tamanho
+                # dos pushes.
+                echo "::notice::O commit de partida do push ($ANTES) não está neste clone, então conferi só o último commit. Se este aviso repetir, aumente o fetch-depth do passo \"Pegar o código\"."
+              fi
+            fi
+          fi
+
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && git rev-parse --verify -q "$PARTIDA" >/dev/null; then
             # `--diff-filter=d` = tudo menos o que foi APAGADO.
             #
             # Arquivo que este commit apagou não tem como chegar ao site: ele
@@ -561,7 +596,7 @@ jobs:
             # reclamava, a comparação dava diferente, e as dez tentativas
             # terminavam em "a publicação não chegou". Apagar um arquivo
             # reprovava a publicação para sempre.
-            MUDARAM=$(git diff --name-only --diff-filter=d HEAD~1 HEAD \
+            MUDARAM=$(git diff --name-only --diff-filter=d "$PARTIDA" HEAD \
                       | grep -vE '^(\.github/|loja-fonte/)' \
                       | grep -vE '\.(md|sql|ts|yml|yaml|mjs)$' \
                       | grep -v '^\.' || true)
