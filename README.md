@@ -177,6 +177,56 @@ No painel, a tabela de produtos mostra **Custo → Venda → Margem** lado a lad
 Na página de produtos dá para **ordenar** a vitrine (nossa seleção, menor preço,
 maior preço ou promoções primeiro) sem perder o filtro de categoria nem a busca.
 
+### Português e espanhol
+
+Na barra lateral há duas bandeiras — Brasil e Paraguai. Tocar troca o site
+inteiro entre **português do Brasil** e **espanhol do Paraguai**, a escolha fica
+guardada no aparelho e vale nas outras telas.
+
+**A tradução é completa, e isso é medido, não prometido.** O conferidor abre as
+16 páginas em espanhol, percorre tudo que aparece na tela e lista o que
+continuar em português: 1.415 textos olhados, zero sobrando.
+
+O que **não** se traduz, de propósito:
+
+- **nome, marca e dose de produto.** "Tirzec Pen 15 mg" é igual nas duas
+  línguas, porque é o nome da caixa que o cliente vai receber. Um tradutor
+  automático escreveria "Bolígrafo Tirzec" e ele pediria a coisa errada;
+- **"PHARMA FIT"** — marca não se traduz;
+- telefone, endereço e valor em real.
+
+Isso é garantido por construção: a tradução é um dicionário de **frases
+exatas** (`assets/js/idioma-es.js`), e o que não está lá não é tocado.
+
+**Para acrescentar ou corrigir uma frase**, mexa só nesse arquivo — uma linha
+por frase, e não é preciso abrir nenhuma das 16 páginas. Frase com número
+dentro ("ou em até 3x sem juros de R$ 366,33") entra na lista de padrões no fim
+do mesmo arquivo.
+
+O registro é **"usted"**, que é como o comércio paraguaio trata o cliente. Para
+mudar para o tratamento informal, é nesse arquivo também.
+
+Se alguém escrever texto novo numa página e esquecer o dicionário, a publicação
+para: `conferir-idioma.mjs` exige tradução para toda frase de tela. Meio
+traduzido é pior que não traduzido — o cliente paraguaio acha que quebrou.
+
+### O painel não aparece para o visitante
+
+O item "Gestão (equipe)" **não está no HTML de nenhuma página**. Ele é posto
+pelo JavaScript e só aparece para quem tem sessão do painel naquele aparelho.
+
+Duas coisas que isso **não** é:
+
+1. **Não é segurança.** Quem protege o painel é a tela de login e as regras do
+   banco (a RLS). Está conferido que um visitante sem login, digitando
+   `/gestao/index.html`, `/gestao/app/inicio.html`, `/gestao/relatorios.html` ou
+   `/gestao/ajustes.html` na mão, é jogado para o login nos quatro casos.
+   Esconder o link só faz o painel parar de ser anunciado a quem não tem nada a
+   ver com ele.
+2. **Não é um jeito de saber quem é da equipe.** É um sinal daquele navegador.
+   Se a equipe limpar os dados do navegador, o link desaparece — e o caminho
+   passa a ser digitar **`/gestao/login.html`**, que continua funcionando.
+
 Depois de enviar, o cliente vê uma **confirmação dentro do site** com o resumo do
 que pediu e um botão para abrir a conversa no WhatsApp. Antes o site tentava abrir
 o WhatsApp sozinho, o que o navegador do iPhone bloqueia — a pessoa tocava em

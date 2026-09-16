@@ -1637,6 +1637,106 @@ ul{margin:0;padding:0;list-style:none}
 
 .link-more{padding:8px 0 6px}
 
+/* ---------- as duas línguas, na barra lateral ----------
+
+   Dois botões em pílula, e um retângulo que DESLIZA de um para o
+   outro. O deslizante é um elemento só: ele move, e não aparece e
+   desaparece. É o que faz a troca parecer um interruptor em vez de
+   dois botões piscando.
+
+   A posição vem de `data-vale` no pai, escrito pelo JavaScript. Sem
+   JavaScript os botões não aparecem — e isso está certo: sem ele a
+   troca não funcionaria, e botão que não funciona não deve estar na
+   tela. */
+.idiomas{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0;
+  margin:18px 18px 4px;
+  padding:4px;
+  border-radius:14px;
+  background:var(--cream, #f4efe7);
+  border:1px solid var(--line);
+}
+
+.idiomas__deslizante{
+  position:absolute;
+  top:4px;
+  left:4px;
+  width:calc(50% - 4px);
+  height:calc(100% - 8px);
+  border-radius:11px;
+  background:var(--card);
+  box-shadow:0 1px 4px rgba(60,45,20,.12);
+  /* cubic-bezier com um empurrãozinho no fim: o movimento acompanha
+     o dedo em vez de parar seco. */
+  transition:transform .32s cubic-bezier(.32,.72,0,1);
+}
+.idiomas[data-vale="es"] .idiomas__deslizante{transform:translateX(100%)}
+
+.idiomas__opcao{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  /* 44px de altura: é um alvo de dedo, e foi a medida que faltou nos
+     links do site até hoje. */
+  min-height:44px;
+  padding:0 8px;
+  border-radius:11px;
+  font-size:13.5px;
+  font-weight:500;
+  color:var(--muted);
+  cursor:pointer;
+  transition:color .22s ease;
+}
+.idiomas__opcao.is-vale{color:var(--ink)}
+
+.idiomas__bandeira{
+  flex:none;
+  width:22px;height:16px;
+  border-radius:3px;
+  overflow:hidden;
+  display:block;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08);
+  /* a bandeira de quem não está valendo fica de lado, sem sumir:
+     a pessoa precisa vê-la para saber que dá para trocar */
+  opacity:.55;
+  transition:opacity .22s ease,transform .22s ease;
+}
+.idiomas__opcao.is-vale .idiomas__bandeira{opacity:1;transform:scale(1.06)}
+.idiomas__bandeira svg{display:block;width:100%;height:100%}
+
+.idiomas__nome{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+/* Em tela bem estreita o nome sai e ficam as bandeiras, que é o que
+   a pessoa reconhece mais rápido de qualquer jeito. */
+@media (max-width:339px){
+  .idiomas__nome{display:none}
+  .idiomas__bandeira{width:26px;height:19px}
+}
+
+/* A troca de língua: o conteúdo dá um passo curto e volta. Curto de
+   propósito — quem trocou quer ler, não assistir. */
+@keyframes trocaIdioma{
+  0%   {opacity:1;   transform:translateY(0)}
+  22%  {opacity:.25; transform:translateY(5px)}
+  100% {opacity:1;   transform:translateY(0)}
+}
+.is-trocando-idioma{animation:trocaIdioma .44s ease}
+
+@media (prefers-reduced-motion:reduce){
+  .idiomas__deslizante{transition:none}
+  .is-trocando-idioma{animation:none}
+}
+
 /* ---------- três classes que moravam na folha errada ----------
 
    Estas existiam só em gestao/assets/gestao.css. O site público não

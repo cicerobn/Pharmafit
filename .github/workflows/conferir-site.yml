@@ -94,6 +94,15 @@ jobs:
       - name: Conferir que cada página se anuncia como ela mesma
         run: node conferir-paginas.mjs
 
+      # O site fala português e espanhol, e a tradução é um dicionário de
+      # frases exatas. O risco é escrever frase nova numa página e esquecer o
+      # dicionário: aí o site em espanhol fica com um pedaço em português, e
+      # meio traduzido é pior que não traduzido — o cliente paraguaio acha que
+      # quebrou. Este passo exige que toda frase de tela tenha tradução, ou
+      # esteja na lista do que não se traduz (nome de produto, dose, marca).
+      - name: Conferir que não há texto sem tradução
+        run: node conferir-idioma.mjs
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela

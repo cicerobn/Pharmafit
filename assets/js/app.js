@@ -41,9 +41,67 @@
     if (e.key === 'Escape') toggleDrawer(false);
   });
 
+  /* ---------------------------------------------------------------
+     A GESTÃO NÃO APARECE PARA TODO MUNDO
+
+     O item "Gestão (equipe)" estava na barra lateral de todas as
+     páginas, visível para qualquer visitante. Ele saiu do HTML e
+     passa a ser posto aqui, e só quando existe sessão do painel NESTE
+     APARELHO — ou seja, só para quem já entrou com o login da equipe.
+
+     DUAS COISAS QUE ISTO NÃO É, e é importante não confundir:
+
+     1. NÃO é segurança. Quem proteje o painel é a tela de login e as
+        regras do banco (a RLS, provada em gestao/supabase/PROVA.md).
+        Esconder o link só faz o painel parar de ser anunciado a quem
+        não tem nada a ver com ele. Alguém que descubra o endereço
+        continua sendo barrado no login, como antes.
+
+     2. NÃO é um jeito de saber quem é da equipe. É só um sinal deste
+        navegador. Se a equipe limpar os dados do navegador, o link
+        desaparece e o caminho é digitar o endereço do painel
+        (/gestao/login.html) — o que continua funcionando.
+     --------------------------------------------------------------- */
+  function porGestaoSeForDaEquipe() {
+    var nav_ = drawer && drawer.querySelector('.drawer__nav');
+    if (!nav_) return;
+
+    var cfg = window.PHARMAFIT_CONFIG || {};
+    var chave = cfg.STORAGE_KEY || 'pharmafit_gestao_auth';
+
+    var entrou = false;
+    try {
+      /* O painel guarda a sessão de verdade no localStorage, e a de
+         demonstração no sessionStorage. Qualquer uma das duas quer
+         dizer "esta pessoa usa o painel neste aparelho". */
+      entrou = !!(localStorage.getItem(chave) || sessionStorage.getItem(chave + '_demo'));
+    } catch (e) { entrou = false; }
+
+    if (!entrou) return;
+
+    /* O caminho depende da profundidade da página: o 404 pode ser
+       servido em qualquer endereço. */
+    var pasta = location.pathname.replace(/[^/]*$/, '');
+    var fundo = pasta.split('/').filter(Boolean).length;
+    var destino = new Array(fundo + 1).join('../') + 'gestao/login.html';
+
+    var a = document.createElement('a');
+    a.href = destino;
+    a.innerHTML =
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 ' +
+      '2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg><span>Gestão (equipe)</span>';
+    nav_.appendChild(a);
+  }
+
   if (drawer) {
+    porGestaoSeForDaEquipe();
+
     /* Numera os itens para eles entrarem em cascata, e marca a página
-       em que a pessoa já está. */
+       em que a pessoa já está. A numeração vem DEPOIS de pôr a gestão,
+       senão o item novo ficaria sem atraso e entraria antes dos
+       outros, fora da cascata. */
     var aqui = location.pathname.split('/').pop() || 'index.html';
     var itens = drawer.querySelectorAll('.drawer__nav a');
 
