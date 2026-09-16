@@ -30,7 +30,12 @@ AddDefaultCharset UTF-8
 </IfModule>
 
 # ---- arquivos de projeto não são para o navegador --------
-<FilesMatch "\.(sql|ts|md|yml|yaml)$">
+#
+# `sh` entrou em 16/09/2026: o script da conferência do site saiu de dentro
+# do YAML e virou arquivo (.github/conferir-no-ar.sh), porque dentro do YAML
+# ele havia batido no tamanho que o GitHub consegue ler. Arquivo do
+# repositório é servido pela hospedagem até alguém dizer que não.
+<FilesMatch "\.(sql|ts|md|yml|yaml|sh)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
