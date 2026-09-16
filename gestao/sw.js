@@ -31,8 +31,8 @@ self.addEventListener('push', function (evento) {
   evento.waitUntil(
     self.registration.showNotification(dados.titulo, {
       body: dados.corpo,
-      icon: '../assets/img/logo-pf.svg',
-      badge: '../assets/img/logo-pf.svg',
+      icon: '../assets/img/logo-pf-marca.png',
+      badge: '../assets/img/logo-pf-marca.png',
       vibrate: [180, 80, 180],
       tag: 'pharmafit-pedido',
       renotify: true,

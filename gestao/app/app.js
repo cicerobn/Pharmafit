@@ -97,7 +97,7 @@
         '<button class="topo__botao" type="button" data-abrir-gaveta ' +
           'aria-label="Abrir o menu" aria-expanded="false">' + svg('menu', 22, 1.8) + '</button>' +
         '<a class="topo__marca" href="inicio.html">' +
-          '<img src="../../assets/img/logo-pf.svg" alt="">' +
+          '<img src="../../assets/img/logo-pf-marca.png" alt="">' +
           '<span>PHARMA FIT</span>' +
         '</a>' +
         '<a class="topo__botao sino" href="pedidos.html?ver=pendentes" ' +
@@ -126,7 +126,7 @@
 
       gaveta.innerHTML =
         '<div class="gaveta__topo">' +
-          '<img src="../../assets/img/logo-pf.svg" alt="">' +
+          '<img src="../../assets/img/logo-pf-marca.png" alt="">' +
           '<span class="gaveta__marca">PHARMA FIT</span>' +
         '</div>' +
         '<div class="gaveta__quem">' +

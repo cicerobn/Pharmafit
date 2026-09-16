@@ -109,7 +109,12 @@ ul{margin:0;padding:0;list-style:none}
    E a mesma familia do `1fr` que escondeu metade dos numeros do painel:
    o padrao do flex e do grid e "nao encolho", e a correcao e dizer que
    pode. */
-.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 auto}
+/* `flex:1 1 0` e nao `1 1 auto`: assim a largura da marca e exatamente o
+   espaco que sobrou depois dos icones, sem depender do texto de dentro —
+   e e isso que deixa a propria marca ser medida (o `container-type`
+   abaixo pede que a largura dela nao venha do conteudo). */
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 0;
+  container-type:inline-size}
 .brand__mark{width:46px;height:46px;flex:none}
 
 .brand__type{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -141,6 +146,60 @@ ul{margin:0;padding:0;list-style:none}
   width:14px;
   background:var(--gold);
   opacity:.7;
+}
+
+/* QUANDO O NOME NAO CABE, ELE SAI — NAO FICA CORTADO.
+ *
+ * Eu tinha resolvido a sobreposicao pondo reticencias no nome. Parou de
+ * invadir os icones, e eu chamei de consertado. A foto da tela mostrou o
+ * resultado: "PHARM…" na barra. Medido depois, em toda largura de
+ * celular comum:
+ *
+ *     320px  o nome precisa de 116px e tem  38  -> cortado
+ *     375px  precisa 124, tem  93              -> cortado
+ *     390px  precisa 124, tem 108             -> cortado
+ *     414px  precisa 124, tem 124             -> inteiro
+ *     600px  precisa 175, tem 163             -> cortado (aqui entra
+ *                                                mais um botao no canto)
+ *
+ * Marca cortada e pior que marca so com o monograma: o PF e a logo, diz
+ * a mesma coisa e cabe. Quem usa leitor de tela nao perde nada — o
+ * proprio link da barra tem o nome escrito por inteiro no aria-label.
+ *
+ * A pergunta e feita ao espaco QUE A MARCA RECEBEU (@container), e nao a
+ * largura da tela. E de proposito: a largura da tela nao sabe quantos
+ * icones o canto tem, e sao 182px numa pagina e 247px noutra — foi
+ * exatamente essa diferenca que cortou o nome em 600px enquanto 520px
+ * estava inteiro. Foi o mesmo erro que cortou os interesses na tela de
+ * atendimento, e agora as duas coisas perguntam para o lugar certo.
+ *
+ * Os numeros (58 = monograma 46 + vao 12):
+ *   nome inteiro   58 + 124 = 182px de marca
+ *   com a etiqueta 58 + 216 = 274px de marca
+ *
+ * Navegador antigo, sem @container, fica com o de hoje: nome visivel com
+ * reticencias se faltar espaco. Nao melhora, mas tambem nao piora.
+ *
+ * As regras ESCONDEM (e nao mostram) de proposito: mais abaixo no
+ * arquivo existe um `@media` que esconde a etiqueta abaixo de 520px, e
+ * quem vem depois ganha. Escrita como "esconder", a regra de container
+ * concorda com ele em vez de brigar; escrita como "mostrar", perderia.
+ *
+ * E a FONTE tambem pergunta ao espaco. Na primeira versao eu pus so o
+ * limite de 181px e fui medir: em 600px a marca recebe 221px, o que
+ * passa de 181 — mas ali a fonte e de 20px, o nome pede 175 e com o
+ * monograma sao 233. Cortava por 12px. O tamanho da letra vinha de um
+ * `@media`, ou seja, da tela, enquanto o espaco vinha do cartao: dois
+ * donos para a mesma conta, e por isso a conta nao fechava. Agora os
+ * dois saem do mesmo lugar. */
+@container (max-width:233px){
+  .brand__name{font-size:16px}
+}
+@container (max-width:181px){
+  .brand__name{display:none}
+}
+@container (max-width:273px){
+  .brand__tag{display:none}
 }
 
 .topbar__actions{
@@ -2229,6 +2288,17 @@ textarea:focus-visible{
   .topbar{gap:8px}
   .brand{min-width:0;flex:1}
   .brand__mark{width:40px;height:40px}
+  /* Quando o nome sai (marca com menos de 182px de espaco), o monograma
+     fica sozinho no canto: 44px iguala a altura dos botoes redondos do
+     outro lado e a barra volta a ficar equilibrada, em vez de ter uma
+     marquinha perdida na esquerda.
+     Esta regra mora AQUI DENTRO de proposito: escrita lá em cima, junto
+     das outras de container, ela existia e nao valia — a linha de 40px
+     acima vem depois no arquivo e ganhava. Regra morta e pior que regra
+     nenhuma, porque parece resolvido. */
+  @container (max-width:181px){
+    .brand__mark{width:44px;height:44px}
+  }
   .brand__name{font-size:16px;letter-spacing:.16em}
   .brand__tag{font-size:6.5px;letter-spacing:.16em}
   .brand__tag::before,.brand__tag::after{width:10px}

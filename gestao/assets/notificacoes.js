@@ -155,8 +155,8 @@
 
       var opcoes = {
         body: corpo,
-        icon: '../assets/img/logo-pf.svg',
-        badge: '../assets/img/logo-pf.svg',
+        icon: '../assets/img/logo-pf-marca.png',
+        badge: '../assets/img/logo-pf-marca.png',
         tag: 'pharmafit-pedido-' + ((pedido && pedido.id) || Date.now()),
         vibrate: [180, 80, 180],
         data: { url: location.href }

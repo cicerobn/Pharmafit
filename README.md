@@ -125,7 +125,27 @@ do Brian — não foi feito.
 1. **Fotos dos produtos** — as imagens são ilustrações vetoriais feitas para ficarem iguais às
    das telas. Substitua os arquivos em `assets/img/` pelas fotos reais (mesmos nomes, ou ajuste
    o `src` no HTML).
-2. **Logo oficial** — `assets/img/logo-pf.svg` é uma reconstrução do monograma PF.
+2. **Logo** — pronta. É a que você enviou em 16/09/2026, recortada do seu arquivo
+   (nada foi redesenhado por mim). O original está guardado em
+   `assets/img/logo-pf-original.png`, e dele saem:
+
+   | arquivo | onde aparece |
+   |---|---|
+   | `logo-pf-marca.png` | o monograma PF na barra de todas as páginas e no ícone da aba |
+   | `logo-pf-icone.png` | ícone de quem põe o site na tela inicial do iPhone |
+   | `logo-pf-192.png` e `logo-pf-512.png` | ícone de instalação no Android |
+   | `logo-pf-compartilhar.png` | a imagem que aparece quando alguém manda o link no WhatsApp |
+
+   Os arquivos têm fundo transparente, menos os de ícone: o iPhone e o Android põem o
+   ícone num quadradinho deles, e fundo transparente ali vira preto.
+
+   As palavras "PHARMA FIT" e a frase de baixo continuam sendo TEXTO na barra, e não
+   parte da imagem. É de propósito: texto o espanhol traduz e o leitor de tela lê;
+   imagem, não.
+
+   **Se o site ganhar um domínio próprio**, a imagem de compartilhar é o único lugar com
+   o endereço escrito à mão (`og:image` nas 16 páginas) — o robô do WhatsApp não busca
+   imagem por caminho relativo.
 3. **Estoque** — todos os produtos estão com 0 unidades; ajuste em `catalogo.js`
    (ou direto na tabela `produtos` do Supabase).
 4. **WhatsApp** — já configurado como `559285904669` (+55 92 8590-4669) em
