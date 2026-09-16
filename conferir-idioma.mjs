@@ -45,7 +45,28 @@ function pegarObjeto(texto, marca) {
     else if (texto[k] === '}') { nivel--; if (!nivel) { fim = k; break; } }
   }
   if (fim === -1) return null;
-  return JSON.parse(texto.slice(abre, fim + 1));
+
+  const cru = texto.slice(abre, fim + 1);
+  try {
+    return JSON.parse(cru);
+  } catch (erro) {
+    /* O dicionário é JAVASCRIPT, e JavaScript aceita comentário. Eu
+       agrupei frases novas com um `/* … *` + `/` e este conferidor parou
+       de rodar: ele lia o arquivo com JSON.parse, que não aceita.
+       Exigir arquivo sem comentário é o conferidor mandando no código,
+       e não o contrário — comentário agrupando frases é justamente o que
+       faz um dicionário de 373 linhas continuar legível.
+       Só tento tirar os comentários depois de a leitura direta falhar,
+       para não mexer no texto quando não precisa. */
+    const semComentario = cru.replace(/\/\*[\s\S]*?\*\//g, '');
+    try {
+      return JSON.parse(semComentario);
+    } catch (e2) {
+      console.error('Não consegui ler o dicionário. O erro original foi:');
+      console.error('  ' + erro.message);
+      return null;
+    }
+  }
 }
 
 const DICIONARIO = pegarObjeto(fonte, 'window.PHARMAFIT_ES =');

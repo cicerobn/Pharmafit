@@ -201,11 +201,14 @@
     /**
      * Os pedidos da pessoa.
      *
-     * Tenta a CONTA primeiro e cai para o aparelho. Hoje a consulta à
-     * conta volta vazia, porque a coluna que liga pedido e pessoa ainda
-     * não existe no banco — a migração está escrita e não aplicada. No
-     * dia em que ela entrar, esta função passa a trazer os pedidos da
-     * conta sem precisar de mudança aqui.
+     * Tenta a CONTA primeiro e cai para o aparelho. A coluna que liga
+     * pedido e pessoa (`cliente_id`) entrou no banco em 16/09/2026, e o
+     * pedido feito com a pessoa logada já nasce com o dono — então esta
+     * consulta passou a trazer os pedidos da conta em qualquer aparelho.
+     *
+     * A lista do aparelho fica como reserva, de propósito: pedido feito
+     * antes de a pessoa ter conta, ou feito sem login, só existe ali.
+     * Quem comprou nunca deve ver uma lista vazia.
      */
     pedidos: async function () {
       var doAparelho = [];

@@ -390,7 +390,17 @@ window.PHARMAFIT_ES ={
   "Área do parceiro — Pharma Fit": "Área del socio — Pharma Fit",
   "É a primeira vez": "Es la primera vez",
   "É por aqui que a equipe confirma o seu pedido.": "Por aquí el equipo confirma su pedido.",
-  "Últimos pedidos": "Últimos pedidos"
+  "Últimos pedidos": "Últimos pedidos",
+
+  /* a lista de pedidos: da conta ou do aparelho, e o andamento
+     (postas em 16/09/2026, quando a lista passou a vir da conta) */
+  "Estes são os pedidos da": "Estos son los pedidos de",
+  "sua conta": "su cuenta",
+  ", e aparecem em qualquer aparelho. O andamento de cada um a gente confirma pelo WhatsApp.": ", y aparecen en cualquier dispositivo. El avance de cada uno lo confirmamos por WhatsApp.",
+  ". Entre na sua conta para vê-los em qualquer lugar.": ". Ingrese a su cuenta para verlos en cualquier lugar.",
+  "Esperando a confirmação da equipe": "Esperando la confirmación del equipo",
+  "Confirmado pela equipe": "Confirmado por el equipo",
+  "Cancelado": "Cancelado"
 };
 
 

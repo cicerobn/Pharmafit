@@ -39,11 +39,51 @@
 
   /* ---------- meus pedidos ---------- */
 
-  function pintarPedidos() {
+  /* A LISTA VEM DA CONTA QUANDO HÁ CONTA.
+   *
+   * Era só `Area.pedidos()`: a lista deste navegador. Quem comprava no
+   * celular e abria no computador não achava o pedido — e concluía que o
+   * pedido havia sumido.
+   *
+   * `Conta.pedidos()` tenta a conta e cai para o aparelho. A coluna que
+   * liga pedido e pessoa entrou no banco em 16/09/2026, e o pedido feito
+   * com login já nasce com dono.
+   *
+   * As duas formas de pedido convivem aqui de propósito: o do banco tem
+   * `criado_em` e `status` (é ele que sabe se a equipe já confirmou), e o
+   * do aparelho tem `quando` e `endereco`. Cada pedaço só aparece quando
+   * existe — em vez de escrever "Invalid Date" ou inventar um status. */
+  async function pintarPedidos() {
     var lista = document.querySelector('[data-meus-pedidos]');
     if (!lista) return;
 
-    var pedidos = Area.pedidos();
+    var Conta = window.PharmaFitConta;
+    var pedidos = [];
+    var de = 'aparelho';
+    try {
+      if (Conta && Conta.pedidos) {
+        var r = await Conta.pedidos();
+        pedidos = (r && r.lista) || [];
+        de = (r && r.de) || 'aparelho';
+      } else {
+        pedidos = Area.pedidos();
+      }
+    } catch (e) {
+      pedidos = Area.pedidos();
+    }
+
+    /* O aviso passa a dizer a verdade sobre ESTA lista. Dizer "deste
+       aparelho" para quem está vendo a lista da conta é mentira pequena,
+       e mentira pequena faz desconfiar do resto. */
+    var aviso = document.querySelector('[data-aviso-lista]');
+    if (aviso) {
+      aviso.innerHTML = de === 'conta'
+        ? 'Estes são os pedidos da <b>sua conta</b>, e aparecem em qualquer aparelho. ' +
+          'O andamento de cada um a gente confirma pelo WhatsApp.'
+        : 'Estes são os pedidos feitos <b>neste aparelho</b>. Entre na sua conta para ' +
+          'vê-los em qualquer lugar.';
+    }
+
     document.querySelector('[data-pedidos-vazio]').hidden = pedidos.length > 0;
     lista.hidden = !pedidos.length;
 
@@ -51,6 +91,8 @@
       var texto = 'Olá! Queria saber do meu pedido de ' + p.produto +
         (p.quantidade > 1 ? ' (' + p.quantidade + ' unidades)' : '') + '.';
       var link = Area.linkLoja(texto);
+      var quando = p.quando || p.criado_em;
+      var st = String(p.status || '').toLowerCase();
 
       return '' +
         '<article class="pedido">' +
@@ -58,7 +100,14 @@
             '<p class="pedido__nome">' + esc(p.produto) + '</p>' +
             (p.quantidade > 1 ? '<span class="pedido__qtd">' + p.quantidade + ' un.</span>' : '') +
           '</div>' +
-          '<p class="pedido__data">Enviado em ' + data(p.quando) + '</p>' +
+          (quando ? '<p class="pedido__data">Enviado em ' + data(quando) + '</p>' : '') +
+          (st
+            ? '<p class="pedido__estado">' +
+                (st === 'pendente' ? 'Esperando a confirmação da equipe'
+                  : st === 'cancelado' ? 'Cancelado'
+                  : 'Confirmado pela equipe') +
+              '</p>'
+            : '') +
           (p.endereco ? '<p class="pedido__endereco">📍 ' + esc(p.endereco) + '</p>' : '') +
           '<div class="pedido__acoes">' +
             '<button class="btn btn--primary" type="button" data-pedido="' + esc(p.produto) +

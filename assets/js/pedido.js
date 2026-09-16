@@ -16,8 +16,8 @@
   var Nuvem = window.PharmaFitNuvem;
 
   /** Grava o pedido como pendente, para a equipe confirmar depois. */
-  function registrarPedido(pedido) {
-    return Nuvem.inserir('pedidos', {
+  async function registrarPedido(pedido) {
+    var registro = {
       cliente: pedido.cliente,
       telefone: pedido.telefone,
       endereco: pedido.endereco,
@@ -26,7 +26,30 @@
       valor: 0,
       status: 'pendente',
       origem: 'site'
-    });
+    };
+
+    /* DE QUEM É O PEDIDO, quando a pessoa está logada.
+     *
+     * Sem isto, "Meus pedidos" só mostra o que está guardado NESTE
+     * navegador: a pessoa compra no celular e não acha o pedido no
+     * computador. A coluna `cliente_id` entrou no banco hoje, e a regra
+     * de lá exige que, havendo conta, o dono seja quem está enviando —
+     * ninguém carimba pedido no nome de outro.
+     *
+     * Quem compra SEM conta continua comprando: o campo vai vazio, que é
+     * o que a regra do banco permite.
+     *
+     * O telefone NÃO serve para isso, e é por isso que existe a coluna:
+     * o telefone fica no cadastro que a própria pessoa edita, então
+     * qualquer um trocaria pelo telefone de outro e leria os pedidos do
+     * outro. Já está provado no banco que esse caminho está fechado. */
+    try {
+      var Conta = window.PharmaFitConta;
+      var u = Conta ? await Conta.usuario() : null;
+      if (u && u.id) registro.cliente_id = u.id;
+    } catch (e) { /* sem conta, o pedido nasce sem dono */ }
+
+    return Nuvem.inserir('pedidos', registro);
   }
 
   /* ---------- interface ---------- */
