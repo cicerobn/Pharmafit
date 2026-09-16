@@ -391,9 +391,22 @@ jobs:
             -not -name '*.yaml' \
             -not -name '*.mjs' \
             -not -name 'robots.txt' \
-            | sed 's|^\./||' | sort | tr '\n' ' ')
+            | sed 's|^\./||' | sort)
 
-          echo "O site tem $(echo $ARQUIVOS | wc -w) arquivos publicáveis."
+          # UMA LINHA POR ARQUIVO, e nunca separado por espaço.
+          #
+          # Era separado por espaço, e em 16/09/2026 o Brian subiu pelo GitHub
+          # um arquivo chamado "ChatGPT Image 16 de set. de 2026, 05_14_27.png".
+          # A conferência partiu o nome em sete pedaços, procurou por "ChatGPT",
+          # "Image", "16"... no site, não achou nenhum, e reprovou a publicação
+          # dizendo "não chegou: 05_14_27.png 16 2026, ChatGPT Image de set." —
+          # com o recado para conferir se a Hostinger estava ligada no Git.
+          #
+          # A Hostinger estava certa. A publicação tinha chegado. O errado era
+          # a conferência, e o pior não foi reprovar: foi apontar a causa
+          # errada. Conferidor que erra o diagnóstico manda a gente arrumar o
+          # que não está quebrado.
+          echo "O site tem $(printf '%s\n' "$ARQUIVOS" | grep -c .) arquivos publicáveis."
 
           echo
           echo "Conferindo se a publicação chegou (comparando com este commit):"
@@ -460,17 +473,26 @@ jobs:
           # não custa, porque nessas rodadas o site já está assentado e a
           # primeira tentativa resolve.
           if [ "$GITHUB_EVENT_NAME" = "push" ] && git rev-parse --verify -q HEAD~1 >/dev/null; then
-            MUDARAM=$(git diff --name-only HEAD~1 HEAD \
+            # `--diff-filter=d` = tudo menos o que foi APAGADO.
+            #
+            # Arquivo que este commit apagou não tem como chegar ao site: ele
+            # deixou de existir de propósito. Sem este filtro, a conferência
+            # pedia o md5 de um arquivo que não está mais aqui, o md5sum
+            # reclamava, a comparação dava diferente, e as dez tentativas
+            # terminavam em "a publicação não chegou". Apagar um arquivo
+            # reprovava a publicação para sempre.
+            MUDARAM=$(git diff --name-only --diff-filter=d HEAD~1 HEAD \
                       | grep -vE '^(\.github/|loja-fonte/)' \
                       | grep -vE '\.(md|sql|ts|yml|yaml|mjs)$' \
                       | grep -v '^\.' || true)
-            PAGINAS=$(printf '%s\n' $ARQUIVOS | grep '\.html$' || true)
-            ALVOS=$(printf '%s\n' $MUDARAM $PAGINAS | sort -u | tr '\n' ' ')
-            echo "  vão ser conferidos $(echo $ALVOS | wc -w) arquivos:"
-            echo "  $(echo $MUDARAM | wc -w) que este commit mudou + $(echo $PAGINAS | wc -w) páginas"
+            PAGINAS=$(printf '%s\n' "$ARQUIVOS" | grep '\.html$' || true)
+            printf '%s\n%s\n' "$MUDARAM" "$PAGINAS" | grep -v '^$' | sort -u > /tmp/alvos.txt
+            echo "  vão ser conferidos $(grep -c . /tmp/alvos.txt) arquivos:"
+            echo "  $(printf '%s\n' "$MUDARAM" | grep -c . || true) que este commit mudou" \
+                 "+ $(printf '%s\n' "$PAGINAS" | grep -c . || true) páginas"
           else
-            ALVOS="$ARQUIVOS"
-            echo "  rodada $GITHUB_EVENT_NAME: conferindo os $(echo $ALVOS | wc -w) arquivos"
+            printf '%s\n' "$ARQUIVOS" | grep -v '^$' > /tmp/alvos.txt
+            echo "  rodada $GITHUB_EVENT_NAME: conferindo os $(grep -c . /tmp/alvos.txt) arquivos"
           fi
           echo
 
@@ -499,22 +521,27 @@ jobs:
           }
 
           # ---- pergunta 1: chegou ao servidor? ----
-          ausentes=""
+          #
+          # A lista vem de ARQUIVO e o laço é `while read`, não `for`. Assim
+          # nome com espaço dentro continua sendo UM nome — foi o `for` que
+          # partiu "ChatGPT Image 16 de set..." em sete e acusou a Hostinger.
+          : > /tmp/ausentes.txt
           for tentativa in 1 2 3 4 5 6 7 8 9 10; do
-            ausentes=""
-            for arq in $ALVOS; do
+            : > /tmp/ausentes.txt
+            while IFS= read -r arq; do
+              [ -n "$arq" ] || continue
               aqui=$(md5sum "$arq" | cut -d' ' -f1)
               # `?nocache=` diferente a cada pedido: sem isto, a própria
               # pergunta viraria cache e as dez tentativas leriam a mesma
               # resposta velha, o que faz o laço não servir para nada.
               la=$(baixar "$achou/$arq?nocache=$RANDOM$RANDOM$tentativa")
-              [ "$aqui" = "$la" ] || ausentes="$ausentes $arq"
-            done
-            if [ -z "$ausentes" ]; then
-              echo "Chegou ao servidor: os $(echo $ALVOS | wc -w) arquivos são os deste commit."
+              [ "$aqui" = "$la" ] || printf '%s\n' "$arq" >> /tmp/ausentes.txt
+            done < /tmp/alvos.txt
+            if [ ! -s /tmp/ausentes.txt ]; then
+              echo "Chegou ao servidor: os $(grep -c . /tmp/alvos.txt) arquivos são os deste commit."
               break
             fi
-            echo "Tentativa ${tentativa}: ainda não chegou →${ausentes}"
+            echo "Tentativa ${tentativa}: ainda não chegou →$(sed 's/^/ · /' /tmp/ausentes.txt | tr '\n' ' ')"
             [ "$tentativa" = "10" ] || sleep 30
           done
 
@@ -522,11 +549,12 @@ jobs:
           #
           # UMA vez por arquivo, e só agora que a 1 passou. Em laço, este
           # trecho seria o próprio envenenador.
-          cdn_velho=""
-          if [ -z "$ausentes" ]; then
+          : > /tmp/cdn-velho.txt
+          if [ ! -s /tmp/ausentes.txt ]; then
             echo
             echo "Conferindo o endereço que o visitante pede (um pedido por arquivo):"
-            for arq in $ALVOS; do
+            while IFS= read -r arq; do
+              [ -n "$arq" ] || continue
               aqui=$(md5sum "$arq" | cut -d' ' -f1)
               if estampado "$arq"; then
                 url="$achou/$arq?v=$(esperado8 "$arq")"
@@ -534,20 +562,24 @@ jobs:
                 url="$achou/$arq"
               fi
               [ "$aqui" = "$(baixar "$url")" ] && continue
-              cdn_velho="$cdn_velho $arq"
-            done
-            if [ -z "$cdn_velho" ]; then
+              printf '%s\n' "$arq" >> /tmp/cdn-velho.txt
+            done < /tmp/alvos.txt
+            if [ ! -s /tmp/cdn-velho.txt ]; then
               echo "  todos: o visitante recebe a versão deste commit"
             fi
           fi
 
-          if [ -n "$cdn_velho" ]; then
-            echo "::notice::O CDN da Hostinger ainda guarda a versão anterior destes, no endereço SEM a marca de versão:${cdn_velho}. Não afeta ninguém — as páginas pedem o endereço com marca, e ali já vem a versão nova. Some sozinho em até 24h."
+          if [ -s /tmp/cdn-velho.txt ]; then
+            echo "::notice::O CDN da Hostinger ainda guarda a versão anterior destes, no endereço SEM a marca de versão: $(tr '\n' ' ' < /tmp/cdn-velho.txt). Não afeta ninguém — as páginas pedem o endereço com marca, e ali já vem a versão nova. Some sozinho em até 24h."
           fi
 
-          if [ -n "$ausentes" ]; then
-            echo "::error::A publicação não chegou depois de 5 minutos, nem em pedidos repetidos. Não chegaram:${ausentes}"
-            echo "Confira se a Hostinger está ligada no Git desta branch (main) e com deploy automático."
+          if [ -s /tmp/ausentes.txt ]; then
+            echo "::error::A publicação não chegou depois de 5 minutos, nem em pedidos repetidos. Não chegaram: $(tr '\n' ' ' < /tmp/ausentes.txt)"
+            echo "Antes de mexer na Hostinger, confira se algum desses nomes tem espaço ou"
+            echo "acento estranho, e se algum deles foi APAGADO neste commit: as duas coisas"
+            echo "já fizeram esta conferência culpar a hospedagem sem motivo."
+            echo "Se os nomes estiverem normais, então sim: confira se a Hostinger está ligada"
+            echo "no Git desta branch (main) e com deploy automático."
             falhou=1
           fi
 
