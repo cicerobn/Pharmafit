@@ -566,11 +566,19 @@ jobs:
           # entram pela outra lista. Um commit de CSS ou de JavaScript no
           # meio da fila passava sem ninguém olhar se chegou.
           #
-          # O GitHub diz de onde o push saiu em `github.event.before`. Ele
-          # vem com 40 zeros quando a branch é nova (não há de onde sair),
-          # e pode apontar para um commit que este clone não tem; nos dois
-          # casos eu caio no commit anterior, que é o que dava antes.
-          ANTES="${{ github.event.before }}"
+          # O GitHub diz de onde o push saiu no campo `before` do evento.
+          # Ele vem com 40 zeros quando a branch é nova (não há de onde
+          # sair), e pode apontar para um commit que este clone não tem;
+          # nos dois casos eu caio no commit anterior, que é o que dava
+          # antes.
+          #
+          # LIDO DO ARQUIVO DO EVENTO, e não por `${{ … }}`. Primeiro
+          # porque expressão colada dentro de script é porta de injeção:
+          # aqui o valor é um SHA e não faz estrago, mas o hábito é o de
+          # não colar. Segundo porque foi a única coisa nova que o
+          # GitHub recusou — ele parou de ler o arquivo inteiro, e a
+          # conferência nem começou.
+          ANTES=$(python3 -c 'import json,os;print(json.load(open(os.environ["GITHUB_EVENT_PATH"])).get("before",""))' 2>/dev/null || true)
           PARTIDA="HEAD~1"
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then
             if [ -n "$ANTES" ] && ! printf '%s' "$ANTES" | grep -qE '^0{40}$'; then
