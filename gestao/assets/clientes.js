@@ -19,7 +19,7 @@
   var PASSO_LISTA = 10;
 
   var estado = {
-    pedidos: [], representantes: [], orcamentos: [], espera: [],
+    pedidos: [], representantes: [], orcamentos: [], espera: [], atendimentos: [],
     busca: '', limiteTodos: PASSO_LISTA
   };
 
@@ -296,10 +296,13 @@
         return;
       }
 
-      var alvo = e.target.closest('[data-aprovar-rep],[data-excluir-rep],[data-responder-orc],[data-excluir-orc],[data-excluir-esp]');
+      var alvo = e.target.closest('[data-aprovar-rep],[data-excluir-rep],[data-responder-orc],' +
+        '[data-excluir-orc],[data-excluir-esp],[data-atendido],[data-excluir-at]');
       if (!alvo) return;
 
       var acoes = [
+        ['data-atendido',      function (id) { return Dados.atualizar('atendimentos', id, { status: 'atendido' }); }, 'Atendimento marcado como atendido.', false],
+        ['data-excluir-at',    function (id) { return Dados.excluir('atendimentos', id); },                           'Pedido excluído.',        true],
         ['data-aprovar-rep',   function (id) { return Dados.atualizar('representantes', id, { status: 'aprovado' }); },   'Representante aprovado.', false],
         ['data-excluir-rep',   function (id) { return Dados.excluir('representantes', id); },                            'Cadastro excluído.',      true],
         ['data-responder-orc', function (id) { return Dados.atualizar('orcamentos', id, { status: 'respondido' }); },     'Orçamento respondido.',   false],
@@ -329,6 +332,52 @@
     });
   }
 
+  /* OS PEDIDOS DE ATENDIMENTO, vindos do formulário do site.
+   *
+   * Eles chegam mesmo quando a conversa não começa: o site grava no
+   * momento em que a pessoa toca no botão, antes de abrir o WhatsApp. É
+   * esse o caso que estava se perdendo — preencheu tudo, desistiu de
+   * mandar a mensagem, e ninguém nunca soube que existiu um
+   * interessado. */
+  function pintarAtendimentos() {
+    var lista = filtrar(estado.atendimentos, ['nome', 'telefone', 'cidade', 'objetivo'])
+      .slice().sort(function (a, b) {
+        return new Date(b.criado_em) - new Date(a.criado_em);
+      });
+
+    contador('at-contador', lista.filter(function (a) {
+      return String(a.status || 'novo') === 'novo';
+    }).length);
+    document.getElementById('at-vazio').hidden = lista.length > 0;
+
+    document.getElementById('tabela-atendimentos').innerHTML = lista.map(function (a) {
+      var st = String(a.status || 'novo');
+      var interesses = (a.interesses || []).join(', ');
+      var primeiro = String(a.nome || '').trim().split(' ')[0];
+      var texto = 'Olá ' + primeiro + '! Vi seu pedido de atendimento na Pharma Fit' +
+        (interesses ? ' sobre ' + interesses : '') + '. Posso te ajudar por aqui?';
+
+      return '<tr>' +
+        '<td><b>' + data(a.criado_em) + '</b>' +
+          '<span class="tag tag--' + (st === 'novo' ? 'pendente' : 'pago') + '">' +
+            esc(st) + '</span></td>' +
+        '<td><b>' + esc(a.nome) + '</b>' +
+          (a.cidade ? '<span class="sub">' + esc(a.cidade) + '</span>' : '') + '</td>' +
+        '<td>' + esc(interesses || '—') + '</td>' +
+        '<td>' + esc(a.objetivo || '—') + '</td>' +
+        '<td>' + esc(a.telefone || '—') + '</td>' +
+        '<td class="col-num acoes-linha">' +
+          botaoZap(a.telefone, texto) +
+          (st === 'novo'
+            ? '<button class="btn-mini btn-mini--ok" type="button" data-atendido="' +
+                esc(a.id) + '">Atendido</button>'
+            : '') +
+          '<button class="btn-mini" type="button" data-excluir-at="' + esc(a.id) + '">Excluir</button>' +
+        '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
   /* ---------- carga ---------- */
 
   async function recarregar() {
@@ -337,6 +386,7 @@
     estado.representantes = await Dados.listar('representantes');
     estado.orcamentos = await Dados.listar('orcamentos');
     estado.espera = await Dados.listar('espera');
+    estado.atendimentos = await Dados.listar('atendimentos');
 
     pintarTudo();
   }
@@ -344,6 +394,9 @@
   function pintarTudo() {
     pintarTodos();
     pintarInativos();
+    /* primeiro os atendimentos: é o contato mais novo e o mais quente —
+       alguém que acabou de pedir para ser atendido */
+    pintarAtendimentos();
     pintarRepresentantes();
     pintarOrcamentos();
     pintarEspera();

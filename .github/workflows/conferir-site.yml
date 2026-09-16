@@ -120,6 +120,14 @@ jobs:
       - name: Conferir que não há texto sem tradução
         run: node conferir-idioma.mjs
 
+      # Tabela nova no painel precisa entrar em duas listas escritas à mão:
+      # a do teste de conexão e a da CÓPIA DE SEGURANÇA. Esquecer a segunda
+      # faz o backup sair incompleto sem avisar — e isso só aparece no dia
+      # de precisar dele. Este passo lê as coleções que o painel realmente
+      # usa e exige que todas estejam nas duas listas.
+      - name: Conferir que nenhuma tabela ficou fora do backup
+        run: node conferir-listas.mjs
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela

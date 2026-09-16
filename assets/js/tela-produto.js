@@ -8,9 +8,8 @@
 
    Quando o produto tem faixas no catálogo, elas aparecem lado a
    lado e a faixa da quantidade escolhida fica marcada. Quando não
-   tem — e hoje nenhum tem, porque esses preços são números do
-   negócio e o Brian ainda não passou —, a tela mostra o preço
-   normal e nenhuma faixa. Faixa vazia não aparece.
+   tem, a tela mostra o preço normal e nenhuma faixa — faixa vazia não
+   aparece. Hoje só o Tirzec Pen tem faixa.
    ========================================================= */
 (function () {
   'use strict';

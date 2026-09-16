@@ -6,20 +6,24 @@
    já com tudo preenchido, para a equipe não precisar perguntar
    nada do começo.
 
-   POR QUE NÃO GRAVA NO BANCO (AINDA)
+   O PEDIDO TAMBÉM FICA GUARDADO
 
-   Os outros formulários do site (representante, atacado, fila de
-   espera) gravam numa tabela e aparecem no painel. Este não, por um
-   motivo simples: a tabela `pf_atendimentos` não existe, e apontar
-   para uma tabela que não existe faria a pessoa preencher tudo e ler
-   "não conseguimos enviar" — um formulário quebrado, que é
-   exatamente o que a regra 1 proíbe.
+   Além de abrir a conversa, ele grava em `pf_atendimentos` e aparece
+   no painel. Isso importa para o caso mais comum de perda: a pessoa
+   preenche tudo e desiste antes de mandar a mensagem. Sem a gravação,
+   aquele contato não existia para ninguém.
 
-   A migração está escrita e pronta em
-   gestao/supabase/migracao-05-atendimentos.sql, e não foi aplicada
-   porque mexer em produção é decisão do Brian. No dia em que entrar,
-   o pedido também cai no painel; até lá ele vive na conversa do
-   WhatsApp, que é onde este negócio fecha de qualquer jeito.
+   A GRAVAÇÃO NÃO ESPERA, E ISSO É DE PROPÓSITO
+
+   O WhatsApp abre primeiro, no mesmo toque. Se eu esperasse a resposta
+   do banco para só depois abrir, o navegador trataria a janela como
+   "não pedida pela pessoa" e o bloqueador de pop-up a mataria — o
+   toque no botão não faria nada. Então a conversa abre na hora e a
+   gravação segue por trás.
+
+   Consequência assumida: se a gravação falhar (rede caiu no meio), o
+   pedido não fica no painel. A pessoa não perde nada — ela está na
+   conversa, com tudo preenchido, que é onde este negócio fecha.
 
    OS INTERESSES
 
@@ -30,7 +34,25 @@
 (function () {
   'use strict';
 
-  var form = document.getElementById('form-atendimento');
+  /* `form-atend`, e NÃO `form-atendimento`.
+   *
+   * Eu batizei este formulário de `form-atendimento` — o mesmo id que o
+   * `pedido.js` dá ao formulário DENTRO do modal de pedido, que ele
+   * injeta em todas as páginas. Dois elementos com o mesmo id, e
+   * `getElementById` devolve o primeiro: o desta página.
+   *
+   * O estrago era duplo, e nenhum dos dois aparecia na tela:
+   *
+   *   1. o `pedido.js` pendurava o "criar pedido" NESTE formulário. Cada
+   *      pessoa que pedisse atendimento criava também um PEDIDO
+   *      pendente, com produto qualquer, na fila da equipe.
+   *   2. e o formulário do modal ficava sem ouvinte nenhum: o botão
+   *      "Continuar no WhatsApp" recarregava a página e não gravava
+   *      pedido nenhum. O modal de pedido estava morto nesta página.
+   *
+   * Achei medindo: o teste passou a deixar a biblioteca do Supabase
+   * viva, e apareceu uma gravação em `pf_pedidos` que ninguém pediu. */
+  var form = document.getElementById('form-atend');
   if (!form) return;
 
   var cfg = window.PHARMAFIT_CONFIG || {};
@@ -127,6 +149,25 @@
     if (texto) {
       botao.classList.add('is-feito');
       texto.textContent = 'Abrindo o WhatsApp…';
+    }
+
+    /* GUARDA O PEDIDO, SEM ESPERAR.
+       Disparado antes de abrir a conversa e sem `await`: a janela do
+       WhatsApp precisa nascer no mesmo toque do dedo (o porquê está no
+       cabeçalho deste arquivo). O `catch` existe para uma falha de rede
+       não virar um erro no console do cliente. */
+    var Nuvem = window.PharmaFitNuvem;
+    if (Nuvem) {
+      try {
+        Nuvem.inserir('atendimentos', {
+          nome: nome,
+          telefone: zap,
+          cidade: cidade,
+          objetivo: objetivo,
+          interesses: interesses,
+          status: 'novo'
+        }).catch(function () { /* a conversa já está aberta com tudo dentro */ });
+      } catch (err) { /* idem */ }
     }
 
     var url = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(linhas.join('\n'));

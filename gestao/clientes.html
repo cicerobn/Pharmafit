@@ -63,7 +63,8 @@
     <div class="admin__head">
       <div>
         <h1 class="admin__title">Clientes e parceiros</h1>
-        <p class="admin__sub">Recuperação, representantes, atacado e fila de interesse.</p>
+        <p class="admin__sub">Recuperação, representantes, pedidos de atendimento,
+          atacado e fila de interesse.</p>
       </div>
       <div class="field__box field__box--busca">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
@@ -146,6 +147,28 @@
       </div>
     </section>
 
+    <!-- pedidos de atendimento, vindos do formulário da página de atendimento -->
+    <section class="card-block">
+      <div class="card-block__head">
+        <h2 class="card-block__title">
+          Pedidos de atendimento
+          <span class="contador" id="at-contador" hidden>0</span>
+        </h2>
+        <span class="card-block__hint">Quem preencheu o formulário do site</span>
+      </div>
+      <div class="card-block__body">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Quando</th><th>Pessoa</th><th>Interesse</th><th>Objetivo</th><th>Contato</th><th></th></tr>
+            </thead>
+            <tbody id="tabela-atendimentos"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="at-vazio" hidden>Nenhum pedido de atendimento ainda.</p>
+      </div>
+    </section>
+
     <!-- orçamentos -->
     <section class="card-block">
       <div class="card-block__head">
@@ -191,11 +214,11 @@
 <script src="assets/config.js?v=55118931"></script>
 <script src="assets/util.js?v=a2c25918"></script>
 <script src="../assets/js/modal.js?v=9146042c"></script>
-<script src="../assets/js/catalogo.js?v=47d1a5bc"></script>
+<script src="../assets/js/catalogo.js?v=3f137909"></script>
 <script src="assets/auth.js?v=4cb1bc04"></script>
 <script src="assets/dados.js?v=3e7d09d1"></script>
 <script src="assets/analise.js?v=e2445f21"></script>
 <script src="assets/menu.js?v=68390af3"></script>
-<script src="assets/clientes.js?v=e1da69fa"></script>
+<script src="assets/clientes.js?v=bec00b01"></script>
 </body>
 </html>

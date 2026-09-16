@@ -60,9 +60,8 @@
    * O preço de um produto para uma quantidade.
    *
    * Quando o produto tem faixas de atacado no catálogo, a faixa manda.
-   * Quando não tem — e hoje nenhum tem, porque os preços de atacado são
-   * decisão do Brian e ele ainda não passou —, vale o preço de venda e
-   * a tela não mostra faixa nenhuma. Faixa vazia não aparece.
+   * Quando não tem, vale o preço de venda e a tela não mostra faixa
+   * nenhuma — faixa vazia não aparece. Hoje só o Tirzec Pen tem faixa.
    */
   function precoPara(produto, quantidade) {
     if (!produto) return { preco: 0, faixa: null, faixas: [] };

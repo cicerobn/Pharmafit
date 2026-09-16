@@ -42,10 +42,11 @@
      · diz "levando 4 unidades a mais, cada uma sai por R$ 1.050,00";
      · usa o preço da faixa no carrinho e no total.
 
-   NENHUM PRODUTO TEM `atacado` HOJE, de propósito: esses preços são
-   números do negócio, e eu não invento preço. Sem `atacado`, o
-   produto mostra o preço normal e nenhuma faixa aparece — a tela não
-   fica com espaço vazio nem com faixa de mentira.
+   HOJE SÓ O `Tirzec Pen 15 mg` TEM FAIXA, com os números que o Brian
+   passou. Os outros não têm, e isso não é esquecimento: preço é número
+   do negócio e eu não invento preço. Sem `atacado`, o produto mostra o
+   preço normal e nenhuma faixa aparece — a tela não fica com espaço
+   vazio nem com faixa de mentira.
    ========================================================= */
 
 window.PHARMAFIT_CATALOGO = [
@@ -56,6 +57,15 @@ window.PHARMAFIT_CATALOGO = [
     categoria: 'Tirzepatida',
     descricao: 'Caneta aplicadora de tirzepatida 15 mg, pronta para uso.',
     custo: 520, venda: 1099, antes: 0,
+    /* As faixas que o Brian passou (16/09/2026, "vá fazendo").
+       `venda` fica em 1099 de propósito: é o preço de uma unidade, e a
+       primeira faixa repete o mesmo número. Se os dois discordassem, o
+       cartão mostraria um preço e o carrinho outro. */
+    atacado: [
+      { nome: 'Varejo',    de: 1,  ate: 4, preco: 1099 },
+      { nome: 'Atacado',   de: 5,  ate: 9, preco: 1050 },
+      { nome: 'Atacado +', de: 10,         preco: 999  }
+    ],
     imagem: 'assets/img/prod-caneta.svg',
     destaque: 'MAIS VENDIDO',
     estoque: null

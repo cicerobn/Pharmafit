@@ -80,8 +80,7 @@
 
     elItens.innerHTML = conta.itens.map(function (i) {
       /* A frase da faixa só existe quando há faixa e falta pouco. Sem
-         faixa cadastrada ela não aparece — e hoje nenhum produto tem,
-         porque os preços de atacado são decisão do Brian. */
+         faixa cadastrada ela não aparece; hoje só o Tirzec Pen tem. */
       var faixa = '';
       if (i.proxima && i.faltam > 0) {
         faixa = '<p class="carrinho__faixa">Levando ' + i.faltam +

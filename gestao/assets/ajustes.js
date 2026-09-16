@@ -21,7 +21,13 @@
   var Dados = window.PharmaFitDados;
   var cfg = window.PHARMAFIT_CONFIG || {};
 
-  /* tabelas que o painel usa, e para quê */
+  /* Tabelas que o painel usa, e para quê.
+   *
+   * ESTA LISTA E A `COLECOES` (mais abaixo, a da cópia de segurança)
+   * precisam andar juntas. Tabela nova que entre só numa das duas cria
+   * um dos dois estragos: ou ela não aparece no teste de conexão, ou —
+   * pior — ela fica FORA do backup, e o backup passa a esconder que
+   * está incompleto. Quem acrescentar uma tabela aqui, acrescente lá. */
   var TABELAS = [
     { nome: 'produtos',       para: 'catálogo, preços e estoque' },
     { nome: 'pedidos',        para: 'vendas e fila de confirmação' },
@@ -29,6 +35,7 @@
     { nome: 'representantes', para: 'cadastros de parceiros' },
     { nome: 'orcamentos',     para: 'pedidos de atacado' },
     { nome: 'espera',         para: 'fila de interesse' },
+    { nome: 'atendimentos',   para: 'quem pediu atendimento pelo site' },
     { nome: 'pessoal',        para: 'seu painel pessoal' },
     { nome: 'notas',          para: 'observações da ficha do cliente' },
     { nome: 'configuracoes',  para: 'meta do mês' }
@@ -199,8 +206,11 @@
 
   /* ---------- cópia de segurança ---------- */
 
+  /* A lista do backup. Ela e a `TABELAS` lá em cima têm de ter os mesmos
+     nomes — tabela que fique fora daqui não entra na cópia de segurança,
+     e o arquivo sai incompleto sem dizer que saiu. */
   var COLECOES = ['pedidos', 'produtos', 'despesas', 'representantes', 'orcamentos',
-                  'espera', 'pessoal', 'notas', 'configuracoes'];
+                  'espera', 'atendimentos', 'pessoal', 'notas', 'configuracoes'];
 
   var CHAVE_BACKUP = 'pharmafit_ultimo_backup';
 
