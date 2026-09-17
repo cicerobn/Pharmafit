@@ -274,8 +274,20 @@
             '<h3 class="protocol__name">' + esc(p.nome) + '</h3>' +
             '<p class="protocol__desc">' + esc(p.descricao) + '</p>' +
             '<div class="protocol__preco">' + blocoPreco(p) + '</div>' +
-            '<div class="mini-list">' + minis + '</div>' +
           '</div>' +
+          /* OS BENEFÍCIOS SAÍRAM DE DENTRO DA COLUNA DE TEXTO.
+             Brian, 17/09/2026: "Isso aqui ta muito feio", com a foto do
+             cartão. Estava mesmo: os três benefícios viviam na coluna
+             da direita, que num celular de 390 tem 148px. Divididos em
+             três, cada rótulo ficava com 45px — menos que a palavra
+             "Acompanhamento" precisa em QUALQUER tamanho de letra
+             legível. O resultado era "Redução de / peso", "Controle do
+             / apetite" e "Acompanha- / mento / médico": três alturas
+             diferentes, tudo quebrado, parecendo defeito.
+             Agora eles são uma faixa na largura INTEIRA do cartão,
+             embaixo da foto e do texto. A mesma fileira de três da foto
+             dele, com 94px por coluna em vez de 45. */
+          '<div class="mini-list">' + minis + '</div>' +
         '</article>';
     }).join('');
   }

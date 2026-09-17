@@ -615,16 +615,28 @@ body:has(.hero__art--foto) .topbar{
 }
 .carousel::-webkit-scrollbar{display:none}
 
+/* A FAIXA DOS BENEFÍCIOS ATRAVESSA O CARTÃO.
+   A foto e o texto dividem a linha de cima; os três benefícios ficam
+   numa linha só deles, embaixo, da borda esquerda à direita. Antes
+   eles moravam dentro da coluna de texto e sobravam 45px por rótulo,
+   o que quebrava "Acompanhamento" no meio. O porquê completo está em
+   `loja.js`, onde o cartão é montado. */
 .protocol{
   flex:0 0 92%;
   scroll-snap-align:center;
   display:grid;
   grid-template-columns:44% 1fr;
+  grid-template-areas:
+    "foto corpo"
+    "bene bene";
   background:var(--card);
   border-radius:20px;
   overflow:hidden;
   box-shadow:var(--shadow-md);
 }
+.protocol__media{grid-area:foto}
+.protocol__body{grid-area:corpo}
+.protocol .mini-list{grid-area:bene}
 
 .protocol__media{
   position:relative;
@@ -3566,71 +3578,79 @@ textarea:focus-visible{
     font-size:12.5px;
     line-height:1.45;
     margin:0 0 9px;
-    /* duas linhas e reticências: a frase inteira está na página do
-       produto, e três linhas aqui empurravam o preço para fora da
-       primeira olhada. */
+    /* TRÊS LINHAS, E NÃO DUAS.
+       Eram duas porque a terceira empurrava o preço para fora da
+       primeira olhada — mas isso era quando os três benefícios
+       moravam nesta mesma coluna. Eles saíram para a faixa de baixo e
+       sobrou altura aqui. Com duas, a descrição mais comprida do
+       catálogo ("Caneta aplicadora de tirzepatida 15 mg, pronta para
+       uso.", 56 letras) morria em "pronta para…", que parece coisa
+       quebrada. Com três, a frase termina. */
     display:-webkit-box;
-    -webkit-line-clamp:2;
+    -webkit-line-clamp:3;
     -webkit-box-orient:vertical;
     overflow:hidden;
   }
   .protocol__preco{margin:0}
   .protocol__preco .product__price{font-size:18px}
   .protocol__preco .product__installment{font-size:10.5px;line-height:1.35}
-  /* OS TRÊS BENEFÍCIOS VOLTAM AO CARTÃO — ELES ESTÃO NA FOTO DELE.
-     Aqui estava `display:none`, e o meu comentário lá em cima explica
-     por quê: eles não cabiam junto com o preço, e a informação está na
-     página do produto, a um toque daqui. Era uma escolha defensável.
-     Só que a tela que ele mandou em 17/09/2026 TEM os três, e o pedido
-     foi "tudo 100% igual".
+  /* A FAIXA DOS TRÊS BENEFÍCIOS, NA LARGURA DO CARTÃO.
+     Eles estão na tela que ele mandou, e por isso voltaram ao cartão.
+     O que estava feio — "Isso aqui ta muito feio", 17/09/2026 — era
+     ONDE eles moravam: dentro da coluna de texto, com 148px para
+     dividir entre três. Sobravam 45px por rótulo, e "Acompanhamento"
+     não cabe em 45px com nenhuma letra que se leia. Saía "Redução de
+     / peso", "Controle do / apetite" e "Acompanha- / mento /
+     médico" — três alturas diferentes, tudo quebrado no meio da
+     palavra, parecendo defeito.
 
-     O desenho dele não mostra preço no cartão; o nosso mostra. Em vez
-     de eu decidir tirar preço da vitrine — que é decisão de venda, não
-     de desenho — o cartão passa a caber os DOIS: os três benefícios
-     entram e a altura cresce uns 60px. Perguntei a ele se quer o preço
-     fora; enquanto ele não disser, ninguém perde informação.
+     Agora a faixa atravessa o cartão inteiro, embaixo da foto e do
+     texto: 94px por coluna num celular de 390 e 84px num de 320. A
+     palavra mais comprida do site, "Acompanhamento", mede 70px em
+     10px de letra — cabe nas duas. Está medido coluna por coluna em
+     `faixa-do-cartao.mjs`, comparando a largura da coluna com a
+     largura real da palavra mais longa do rótulo.
 
-     As medidas são apertadas de propósito: 18px de ícone e 9,5px de
-     letra, que é o que cabe em 64px de coluna num celular de 390. */
+     E como a faixa saiu de dentro do corpo, a coluna de texto ficou
+     com espaço: a descrição pode ir a três linhas e a frase termina,
+     em vez de morrer num "…". */
   .protocol .mini-list{
     display:grid;
     grid-template-columns:repeat(3,1fr);
-    gap:4px;
-    margin-top:11px;
-    padding-top:10px;
+    gap:6px;
+    margin:0;
+    padding:11px 12px 13px;
     border-top:1px solid var(--line);
   }
-  /* `min-width:0` É O QUE FAZ A PALAVRA QUEBRAR.
-     Sem ele o item não pode encolher abaixo do próprio conteúdo, então
-     "Acompanhamento" mantinha a caixa maior que a coluna e VAZAVA para
-     fora do cartão — o `overflow-wrap` nem entrava em ação, porque a
-     linha "cabia" numa caixa que tinha esticado. É o mesmo alfinete de
-     sempre em grid e flex, e a medição pegou a 320px. */
+  /* `min-width:0` continua aqui de propósito: ele é a rede. Se um dia
+     entrar um benefício com palavra mais comprida que a coluna, o
+     item encolhe e a palavra quebra DENTRO do cartão. Sem ele a caixa
+     estica e o texto vaza para fora — foi o que já aconteceu, e é o
+     mesmo alfinete de sempre em grid e flex. */
   .protocol .mini{gap:5px;min-width:0}
-  .protocol .mini svg{width:18px;height:18px}
+  .protocol .mini svg{width:19px;height:19px}
   .protocol .mini span{
-    font-size:9px;
-    line-height:1.24;
-    /* "Acompanhamento" é uma palavra de 14 letras e a coluna tem 40px
-       numa tela de 320: sem isto ela VAZA para fora do cartão em vez
-       de quebrar.
-       E `max-width:100%` é o que faz o `break-word` funcionar. Medido:
-       o rótulo tinha 73px dentro de uma coluna de 40px e passava 3px
-       da borda do cartão. A culpa é do `align-items:center` do bloco
-       de cima — em coluna flex ele deixa o filho crescer além do pai,
-       então a linha "cabia" numa caixa que havia esticado e nada
-       quebrava. O limite devolve a caixa ao tamanho da coluna. */
+    font-size:10px;
+    line-height:1.3;
+    /* rede, junto com o `min-width:0` de cima; e o tracinho, quando
+       precisa, vem do hífen suave que está no rótulo em `loja.js`. */
     overflow-wrap:break-word;
     max-width:100%;
-    /* O TRACINHO VEM DO TEXTO, NÃO DAQUI.
-       `hyphens:auto` seria o caminho natural, mas depende do
-       dicionário de hifenização do navegador e no Chromium daqui não
-       faz absolutamente nada — a palavra continuava quebrando sem
-       tracinho. Quem põe o ponto de quebra é o hífen suave dentro do
-       próprio rótulo, em `loja.js`, que funciona em qualquer aparelho.
-       Este `break-word` fica como rede de segurança para qualquer
-       palavra longa que apareça sem hífen suave. */
   }
+}
+
+/* NO CELULAR MAIS ESTREITO, A FAIXA APERTA.
+   Em 320px a coluna fica com 73,9px e "Acompanhamento" mede 81,2px em
+   10px de letra: não cabe, e voltava a quebrar no meio da palavra —
+   que é exatamente o que eu estava consertando. Com menos respiro e
+   9px de letra a coluna vai a 77,2px e a palavra a 73,1px: cabe, com
+   4px de sobra. Os números saíram da medição, não do gosto
+   (`faixa-do-cartao.mjs` mede a palavra desenhada na fonte real).
+   339px e não 320: entre 320 e 340 a conta dá o mesmo aperto. */
+@media (max-width:339px){
+  .protocol .mini-list{gap:4px;padding:10px 9px 12px}
+  .protocol .mini svg{width:17px;height:17px}
+  .protocol .mini span{font-size:9px}
 }
 
 /* ---------------------------------------------------------
