@@ -504,6 +504,115 @@ a{color:inherit;text-decoration:none}
 .lista .item:first-child{border-top:0}
 .item:active{background:var(--line-2)}
 
+/* ---------------------------------------------------------
+   A LINHA DO CLIENTE, COM O WHATSAPP AO LADO
+
+   O corpo da linha é um botão que abre a ficha; o WhatsApp é um
+   link vizinho, não um botão dentro do botão (isso é HTML
+   inválido, e o toque acabaria abrindo a ficha).
+
+   A borda de cima passou do botão para o <li>: com ela nos dois
+   a linha ganhava duas bordas de espessuras diferentes, uma
+   parando no meio.
+   --------------------------------------------------------- */
+
+.linha-cliente{
+  display:flex;
+  align-items:stretch;
+  border-top:1px solid var(--line-2);
+  background:var(--card);
+}
+.lista .linha-cliente:first-child{border-top:0}
+.linha-cliente .item{
+  flex:1;
+  min-width:0;
+  border-top:0;
+}
+/* A setinha da direita sai da linha do cliente.
+   Ela era a dica de "isto abre"; agora quem ocupa a direita é o
+   WhatsApp, e duas marcas do lado direito é confusão. Medido a 320px:
+   sem ela o nome "Renata Figueiredo" cabe inteiro; com ela e com o
+   ícone juntos, o nome saía cortado. Espaço em tela estreita é
+   orçamento, e a setinha era o item mais dispensável dele. */
+.linha-cliente .item__seta{display:none}
+
+/* O NOME DO CLIENTE QUEBRA, NÃO CORTA.
+   Medido a 320px: "Renata Figueiredo" precisa de 127px e tinha 68 —
+   saía "Renata Figuei…". E já cortava por 13px ANTES de eu pôr o ícone
+   do WhatsApp; o ícone só deixou evidente.
+   Nome cortado não é só feio: com dois clientes de nome parecido, o
+   pedaço que sobra pode ser o mesmo nos dois, e a equipe abre a ficha
+   errada. Duas linhas resolvem em qualquer largura. O telefone continua
+   numa linha só, com reticências — ali o começo do número já
+   identifica, e telefone quebrado em duas linhas fica ilegível. */
+.linha-cliente .item__nome{
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  /* `break-word` e não `anywhere`: com `anywhere` o navegador corta no
+     meio da palavra ao primeiro aperto, e a primeira medição a 320px
+     saiu "Renata / Figueired / o". Com `break-word` ele só parte uma
+     palavra quando ela sozinha não cabe de jeito nenhum. */
+  overflow-wrap:break-word;
+  line-height:1.3;
+}
+
+/* ---------------------------------------------------------
+   EM TELA ESTREITA, A LINHA DO CLIENTE EMPILHA
+
+   Medido: a 320px a coluna do nome ficava com 68px e o nome
+   pedia 127px. Com o valor (76px) e o ícone do WhatsApp (46px)
+   ocupando a direita, não há aperto de texto que resolva — o
+   que falta é largura, e ela só existe numa segunda linha.
+
+   Então abaixo de 380px o valor desce para debaixo do nome, e
+   o nome passa a ter a largura inteira da linha. Acima disso o
+   desenho de três colunas cabe e continua como estava.
+   --------------------------------------------------------- */
+@media (max-width:379px){
+  .linha-cliente .item{
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr);
+    column-gap:12px;
+    row-gap:3px;
+    align-items:center;
+  }
+  .linha-cliente .item__inicial{grid-row:1 / span 2}
+  .linha-cliente .item__corpo{grid-column:2;grid-row:1}
+  .linha-cliente .item__lado{
+    grid-column:2;grid-row:2;
+    flex-direction:row;
+    align-items:baseline;
+    justify-content:flex-start;
+    gap:8px;
+    text-align:left;
+  }
+  /* o telefone volta a caber inteiro, então nada de reticências */
+  .linha-cliente .item__linha{white-space:normal;overflow:visible}
+}
+.linha-cliente__zap{
+  flex:none;
+  width:46px;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  border-left:1px solid var(--line-2);
+  transition:background .15s ease,color .15s ease;
+}
+.linha-cliente__zap:active{
+  background:var(--st-pago-bg);
+  color:var(--st-pago);
+}
+/* No computador, onde existe ponteiro, a cor do WhatsApp aparece ao
+   passar o mouse. No celular isto nunca dispara, e é por isso que o
+   `:active` acima existe separado. */
+@media (hover:hover){
+  .linha-cliente__zap:hover{
+    background:var(--st-pago-bg);
+    color:var(--st-pago);
+  }
+}
+
 .item__icone{
   flex:none;
   width:38px;height:38px;
@@ -1444,6 +1553,24 @@ button.item{-webkit-appearance:none;appearance:none}
   font-variant-numeric:tabular-nums;
 }
 
+/* O endereço de entrega mais recente, embaixo do telefone. Quebra em
+   várias linhas de propósito: endereço não cabe numa linha e cortar com
+   reticências é justamente perder o número da casa. */
+.ficha-endereco{
+  margin:6px 0 0;
+  font-size:13px;
+  line-height:1.45;
+  color:var(--ink-2);
+}
+
+/* Endereço e observação dentro da linha de cada pedido. */
+.ficha-pedido__dado{
+  margin:5px 0 0;
+  font-size:12px;
+  line-height:1.45;
+  color:var(--muted);
+}
+
 .ficha-numeros{
   display:grid;
   /* DOIS por linha, e o dinheiro sozinho na primeira.
@@ -1567,3 +1694,44 @@ textarea:focus-visible,
    uma moldura na tela toda. */
 .folha:focus-visible,
 .gaveta:focus-visible{outline:none}
+
+/* ---------------------------------------------------------
+   AVISO: O PAINEL NÃO ESTÁ LIGADO AO BANCO
+
+   Cor de pendência, não de erro: não está quebrado, está
+   desligado — e tem um botão que resolve. Fica logo abaixo do
+   cabeçalho da página, antes de qualquer número, porque saber
+   DE ONDE o número veio precede o número.
+   --------------------------------------------------------- */
+
+.aviso-banco{
+  margin:14px 18px 0;
+  padding:14px 15px;
+  border-radius:14px;
+  background:var(--st-pendente-bg);
+  border:1px solid var(--gold-soft);
+}
+.aviso-banco__titulo{
+  margin:0;
+  font-size:14px;
+  font-weight:700;
+  color:var(--st-pendente);
+}
+.aviso-banco__texto{
+  margin:6px 0 0;
+  font-size:12.5px;
+  line-height:1.5;
+  color:var(--ink-2);
+}
+.aviso-banco__acao{
+  display:inline-flex;
+  align-items:center;
+  min-height:40px;
+  margin-top:10px;
+  padding:0 16px;
+  border-radius:11px;
+  background:var(--st-pendente);
+  color:#fff;
+  font-size:13.5px;
+  font-weight:600;
+}

@@ -42,7 +42,6 @@
   }
   var CHAVE_PEDIDOS = PREFIXO + 'pedidos';
   var CHAVE_PRODUTOS = PREFIXO + 'produtos';
-  var CHAVE_SEED = PREFIXO + 'seed';
 
   /* ---------- dados iniciais do modo demonstração ---------- */
 
@@ -64,38 +63,56 @@
     };
   });
 
-  function pedidosBase() {
-    var hoje = new Date();
-    function dia(menos) {
-      var d = new Date(hoje);
-      d.setDate(d.getDate() - menos);
-      return d.toISOString();
-    }
-    return [
-      { id: 'dem-1', cliente: 'Ana Ribeiro',     telefone: '(92) 99145-2201', produto: 'Tirzec Pen 15 mg',           valor: 1099, custo: 520, pagamento: 'Pix',            vendedor: 'Equipe Pharma Fit', status: 'confirmado', criado_em: dia(0) },
-      { id: 'dem-2', cliente: 'Marcos Teixeira', telefone: '(92) 98832-1140', produto: 'Tirzec 15 mg — 4 ampolas',   valor: 999,  custo: 450, pagamento: 'Cartão de crédito', vendedor: 'Equipe Pharma Fit', status: 'confirmado', criado_em: dia(1) },
-      { id: 'dem-3', cliente: 'Juliana Alves',   telefone: '(92) 99610-7788', produto: 'Lipoless 15 mg — 4 ampolas', valor: 999,  custo: 435, pagamento: '',                vendedor: '', status: 'pendente',   criado_em: dia(0) },
-      { id: 'dem-4', cliente: 'Rafael Souza',    telefone: '(92) 99312-4590', produto: 'GHK-Cu 100 mg',              valor: 799,  custo: 200, pagamento: 'Pix',             vendedor: 'Equipe Pharma Fit', status: 'confirmado', criado_em: dia(2) },
-      { id: 'dem-5', cliente: 'Carla Menezes',   telefone: '(92) 98477-3021', produto: 'Klow 70 mg',                 valor: 870,  custo: 300, pagamento: '',                vendedor: '', status: 'pendente',   criado_em: dia(0) },
-      { id: 'dem-6', cliente: 'Ana Ribeiro',     telefone: '(92) 99145-2201', produto: 'Gluconex 15 mg — 4 ampolas', valor: 999,  custo: 450, pagamento: 'Pix',             vendedor: 'Equipe Pharma Fit', status: 'confirmado', criado_em: dia(9) },
-      { id: 'dem-7', cliente: 'Paula Nogueira',  telefone: '(92) 99208-6633', produto: 'Retatrutide ZPHC 120 mg',    valor: 3249, custo: 2060, pagamento: 'Transferência',  vendedor: 'Equipe Pharma Fit', status: 'confirmado', criado_em: dia(75) }
-    ];
+  /* OS SETE CLIENTES INVENTADOS SAÍRAM DAQUI.
+   *
+   * Havia sete pedidos de exemplo escritos neste arquivo — Ana Ribeiro,
+   * Marcos Teixeira, Juliana Alves, Rafael Souza, Carla Menezes e Paula
+   * Nogueira — com telefone, produto e valor. Eles nasceram para a tela
+   * do painel não ficar vazia antes de existir venda.
+   *
+   * O estrago apareceu em 17/09/2026: o Brian abriu a tela de Clientes e
+   * viu seis pessoas que não existem, sem nada na tela dizendo que eram
+   * exemplo. Ele pediu para tirar, e está certo — dado inventado com
+   * cara de dado real é pior que tela vazia, porque a decisão tomada
+   * olhando aquilo sai errada.
+   *
+   * Ficou a lista vazia, e a tela vazia agora diz o que é. */
+
+  /* E O QUE JÁ FOI GRAVADO NO NAVEGADOR TAMBÉM SAI.
+   *
+   * Tirar do código não bastava: na primeira abertura do painel os sete
+   * foram gravados no armazenamento do navegador, e ficariam lá para
+   * sempre — o Brian continuaria vendo a Ana Ribeiro depois de eu
+   * publicar.
+   *
+   * A limpeza tira SÓ o que começa com `dem-`, que é a marca que eu
+   * mesmo pus nos inventados. Pedido criado pela equipe nasce com `loc-`
+   * e não é tocado; pedido do banco nem passa por aqui. Ela roda uma vez
+   * e deixa um bilhete, para não ficar varrendo a cada abertura. */
+  var CHAVE_LIMPEZA = PREFIXO + 'sem_exemplos_v1';
+
+  function limparExemplos() {
+    try {
+      if (localStorage.getItem(CHAVE_LIMPEZA)) return;
+      var atual = JSON.parse(localStorage.getItem(CHAVE_PEDIDOS) || '[]');
+      var limpos = atual.filter(function (p) {
+        return !/^dem-/.test(String((p && p.id) || ''));
+      });
+      if (limpos.length !== atual.length) {
+        localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(limpos));
+      }
+      localStorage.setItem(CHAVE_LIMPEZA, '1');
+    } catch (e) {}
   }
 
   /* ---------- armazenamento local (demonstração) ---------- */
 
-  /** Na primeira abertura do painel, junta os pedidos de exemplo aos que já existirem. */
   function lerPedidos() {
+    limparExemplos();
     try {
-      var atual = JSON.parse(localStorage.getItem(CHAVE_PEDIDOS) || '[]');
-      if (!localStorage.getItem(CHAVE_SEED)) {
-        atual = atual.concat(pedidosBase());
-        localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify(atual));
-        localStorage.setItem(CHAVE_SEED, '1');
-      }
-      return atual;
+      return JSON.parse(localStorage.getItem(CHAVE_PEDIDOS) || '[]');
     } catch (e) {
-      return pedidosBase();
+      return [];
     }
   }
 

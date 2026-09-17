@@ -107,6 +107,39 @@
     return lista;
   }
 
+  /* ---------------------------------------------------------
+     O ENDEREÇO DA CONVERSA, NUM LUGAR SÓ
+
+     Esta regra estava escrita dentro da ficha do cliente. Agora a
+     lista também precisa dela, e código igual escrito em dois
+     lugares envelhece diferente — já aconteceu neste projeto com o
+     foco das janelas. Fica aqui, e as duas telas chamam a mesma.
+
+     Devolve null quando não dá para montar a conversa; quem chama
+     usa isso para NÃO desenhar o botão, em vez de desenhar um botão
+     que não leva a lugar nenhum.
+     --------------------------------------------------------- */
+  function enderecoZap(telefone) {
+    var digitos = U.digitos(telefone || '');
+    if (digitos.length < 10) return null;
+    /* 10 ou 11 dígitos = número brasileiro sem o país; acima disso a
+       pessoa já digitou o país junto. */
+    return 'https://wa.me/' + (digitos.length <= 11 ? '55' + digitos : digitos);
+  }
+
+  /* O ícone de WhatsApp da linha da lista. A conversa ABRE; nada é
+     enviado — quem escreve é a equipe. */
+  function botaoZap(c) {
+    var href = enderecoZap(c.telefone);
+    if (!href) return '';
+    return '<a class="linha-cliente__zap" href="' + esc(href) + '" ' +
+      'target="_blank" rel="noopener" ' +
+      'aria-label="Abrir conversa no WhatsApp com ' + esc(c.nome) + '" ' +
+      'title="WhatsApp de ' + esc(c.nome) + '">' +
+      Moldura.svg('zap', 20, 1.7) +
+    '</a>';
+  }
+
   function pintar() {
     var lista = filtrar();
     var alvo = document.querySelector('[data-clientes]');
@@ -138,20 +171,30 @@
          `telefone` e `nome`, respondia "Nenhum cliente foi escolhido.
          Volte para a lista e clique em um nome". Ou seja: entrar no
          cliente não funcionava. Agora a ficha abre aqui mesmo. */
-      return '<li><button class="item" type="button" data-cliente="' + esc(c.chave) + '">' +
-        '<span class="item__inicial" style="color:' + cor[0] + ';background:' + cor[1] + '">' +
-          esc(iniciais(c.nome)) + '</span>' +
-        '<span class="item__corpo">' +
-          '<span class="item__nome">' + esc(c.nome) + '</span>' +
-          '<span class="item__linha">' + esc(c.telefone || 'sem telefone') + '</span>' +
-        '</span>' +
-        '<span class="item__lado">' +
-          '<span class="item__valor">' + moeda(c.total) + '</span>' +
-          '<span class="item__hora">' + c.pedidos +
-            (c.pedidos === 1 ? ' pedido' : ' pedidos') + '</span>' +
-        '</span>' +
-        '<span class="item__seta">' + Moldura.svg('seta', 17, 1.9) + '</span>' +
-      '</button></li>';
+      /* O WHATSAPP FICA FORA DO BOTÃO, e não dentro.
+         A linha inteira é um botão que abre a ficha; botão dentro de
+         botão é HTML inválido e o navegador resolve como quer — o toque
+         acabaria abrindo a ficha em vez da conversa. Então os dois são
+         vizinhos dentro do <li>, cada um com o seu alvo.
+         Sem telefone, o ícone não aparece: link de WhatsApp sem número
+         é um botão que não faz nada. */
+      return '<li class="linha-cliente">' +
+        '<button class="item" type="button" data-cliente="' + esc(c.chave) + '">' +
+          '<span class="item__inicial" style="color:' + cor[0] + ';background:' + cor[1] + '">' +
+            esc(iniciais(c.nome)) + '</span>' +
+          '<span class="item__corpo">' +
+            '<span class="item__nome">' + esc(c.nome) + '</span>' +
+            '<span class="item__linha">' + esc(c.telefone || 'sem telefone') + '</span>' +
+          '</span>' +
+          '<span class="item__lado">' +
+            '<span class="item__valor">' + moeda(c.total) + '</span>' +
+            '<span class="item__hora">' + c.pedidos +
+              (c.pedidos === 1 ? ' pedido' : ' pedidos') + '</span>' +
+          '</span>' +
+          '<span class="item__seta">' + Moldura.svg('seta', 17, 1.9) + '</span>' +
+        '</button>' +
+        botaoZap(c) +
+      '</li>';
     }).join('');
   }
 
@@ -216,6 +259,13 @@
       '</div>' +
       '<div class="folha__corpo">' +
         '<p class="ficha-tel" data-ficha-tel></p>' +
+        /* O QUE O CLIENTE DIGITOU NA COMPRA.
+           O endereço de entrega estava sendo gravado e não aparecia em
+           lugar nenhum do painel novo: a equipe tinha o dado e não
+           tinha onde ler. Mostro o mais recente aqui, e o de cada
+           pedido na linha dele — endereço muda, e o que vale para
+           separar a encomenda é o do pedido. */
+        '<p class="ficha-endereco" data-ficha-endereco hidden></p>' +
         '<div class="ficha-numeros">' +
           /* O DINHEIRO OCUPA A LINHA INTEIRA.
              Os três números dividiam a largura em três, e eu medi com um
@@ -271,6 +321,21 @@
 
     folha.querySelector('[data-ficha-nome]').textContent = c.nome;
     folha.querySelector('[data-ficha-tel]').textContent = c.telefone || 'sem telefone';
+
+    /* O endereço mais recente que ele digitou. `lista` já está ordenada
+       do mais novo para o mais antigo. */
+    var end = folha.querySelector('[data-ficha-endereco]');
+    var ultimoEndereco = '';
+    for (var i = 0; i < lista.length; i++) {
+      if (lista[i].endereco) { ultimoEndereco = String(lista[i].endereco); break; }
+    }
+    if (ultimoEndereco) {
+      end.hidden = false;
+      end.textContent = 'Última entrega: ' + ultimoEndereco;
+    } else {
+      end.hidden = true;
+    }
+
     folha.querySelector('[data-ficha-total]').textContent = moeda(c.total);
     folha.querySelector('[data-ficha-qtd]').textContent = c.pedidos;
     folha.querySelector('[data-ficha-pendentes]').textContent =
@@ -296,6 +361,12 @@
               (p.pagamento ? '<span>· ' + esc(p.pagamento) + '</span>' : '') +
               '<span class="marca marca--' + st[0] + '">' + st[1] + '</span>' +
             '</div>' +
+            /* Endereço e observação só aparecem quando existem. Linha
+               "Entrega: —" ocupa espaço para dizer nada. */
+            (p.endereco
+              ? '<p class="ficha-pedido__dado">Entrega: ' + esc(p.endereco) + '</p>' : '') +
+            (p.observacao
+              ? '<p class="ficha-pedido__dado">Observação: ' + esc(p.observacao) + '</p>' : '') +
           '</li>';
         }).join('')
       : '<li class="ficha-pedido ficha-pedido--vazio">Nenhum pedido registrado.</li>';
@@ -304,10 +375,10 @@
        equipe. Sem telefone, o botão sai da tela em vez de ficar ali sem
        fazer nada. */
     var zap = folha.querySelector('[data-ficha-zap]');
-    var digitos = U.digitos(c.telefone || '');
-    if (digitos.length >= 10) {
+    var href = enderecoZap(c.telefone);
+    if (href) {
       zap.hidden = false;
-      zap.href = 'https://wa.me/' + (digitos.length <= 11 ? '55' + digitos : digitos);
+      zap.href = href;
     } else {
       zap.hidden = true;
     }

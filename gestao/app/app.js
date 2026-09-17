@@ -39,7 +39,13 @@
     escudo: '<path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z"/><path d="m9 12 2 2 4-4"/>',
     tabela: '<path d="M3 5h18v14H3z"/><path d="M3 10h18M3 15h18M9 5v14M15 5v14"/>',
     calendario: '<path d="M4 6h16v14H4z"/><path d="M4 10h16M8 3v4M16 3v4"/>',
-    rosca: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/>'
+    rosca: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/>',
+    /* WhatsApp: a bolha com o rabicho e o fone dentro. Desenhado em
+       traço, como todos os outros daqui, para herdar a cor e a grossura
+       do lugar onde for usado — ícone de marca colado em cor fixa
+       aparece errado no botão escuro e no claro. */
+    zap: '<path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.6-4.3A8.5 8.5 0 1 1 20.5 11.6Z"/>' +
+         '<path d="M9.2 9.1c.2-.5.5-.5.8-.5h.5c.2 0 .4 0 .5.4l.7 1.6c.1.2 0 .4-.1.6l-.4.5c-.1.2-.2.3 0 .6a6 6 0 0 0 2.4 2.2c.3.1.4 0 .6-.1l.5-.5c.2-.2.4-.2.6-.1l1.6.8c.3.2.3.3.3.5v.5c0 .4-.4.8-.9.9-1.3.2-3-.4-4.6-1.8a9.2 9.2 0 0 1-2.5-3.5c-.4-1-.4-1.9-.1-2.6Z"/>'
   };
 
   function svg(nome, tamanho, grossura) {
@@ -217,7 +223,52 @@
     dados: async function () {
       var r = await Dados.listarPainel();
       Moldura.marcarSino(r.pedidos);
+      Moldura.avisarSemBanco(r.exemplo);
       return r;
+    },
+
+    /* -------------------------------------------------------
+       QUANDO O PAINEL NÃO ESTÁ LIGADO AO BANCO, ELE DIZ.
+
+       A camada de dados já devolvia essa informação (`exemplo`),
+       e o painel novo simplesmente não a usava: a tela ficava
+       igualzinha, mostrando o que está guardado neste aparelho
+       como se fosse o banco. Duas consequências, as duas ruins:
+
+         · venda feita no site NÃO aparece, e ninguém entende por
+           quê — o dono conclui que o site não está vendendo;
+         · o que ele digitar aqui fica só neste aparelho, e
+           desaparece no outro.
+
+       Em 17/09/2026 isso apareceu junto com os sete clientes
+       inventados: o Brian viu seis pessoas que não existem e
+       nenhuma das vendas de verdade. Tela que esconde de qual
+       fonte o dado veio é pior que tela vazia.
+       ------------------------------------------------------- */
+    avisarSemBanco: function (semBanco) {
+      var jaTem = document.querySelector('[data-aviso-sem-banco]');
+
+      if (!semBanco) {
+        if (jaTem) jaTem.remove();
+        return;
+      }
+      if (jaTem) return;
+
+      var onde = document.querySelector('.pagina') || document.querySelector('.app');
+      if (!onde) return;
+
+      var aviso = document.createElement('div');
+      aviso.className = 'aviso-banco';
+      aviso.setAttribute('data-aviso-sem-banco', '');
+      aviso.setAttribute('role', 'status');
+      aviso.innerHTML =
+        '<p class="aviso-banco__titulo">Este painel não está ligado ao banco de dados</p>' +
+        '<p class="aviso-banco__texto">O que aparece nas telas é só o que está guardado ' +
+        'neste aparelho. As vendas feitas no site <b>não chegam aqui</b>, e o que você ' +
+        'digitar fica só neste navegador.</p>' +
+        '<a class="aviso-banco__acao" href="configuracoes.html">Ligar ao banco</a>';
+
+      onde.parentNode.insertBefore(aviso, onde.nextSibling);
     },
 
     /* -------------------------------------------------------
