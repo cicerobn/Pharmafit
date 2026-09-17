@@ -4,8 +4,8 @@
 # domínio da Hostinger. Este arquivo é o único lugar de onde se consegue OLHAR.
 #
 # Adivinhar a causa é o erro que já custou uma manhã neste projeto. Isto não
-# conserta nada: pede os arquivos várias vezes e imprime cabeçalhos, tamanho,
-# md5 e a diferença, para a causa aparecer em vez de ser chutada.
+# conserta nada: pede os arquivos, imprime cabeçalhos, tamanho, md5 e o que
+# mais der, para a causa aparecer em vez de ser chutada.
 #
 # Roda só quando alguém pede (workflow_dispatch). É diagnóstico, não guarda.
 
@@ -25,108 +25,87 @@ jobs:
         run: |
           alvo="https://darkblue-deer-373108.hostingersite.com"
 
-          # A PERGUNTA DE AGORA
+          # A PERGUNTA DE AGORA (17/09/2026)
           #
-          # A conferencia reprovou tres publicacoes seguidas dizendo que
-          # `gestao/assets/gestao.css` e `gestao/assets/painel.js` nao chegaram.
-          # Mas o relatorio dela se contradiz: `dados.js` aparece como AUSENTE
-          # na tentativa 1, PRESENTE na 3, ausente de novo na 4 e presente na 5.
+          # A conferencia completa reprovou dizendo que 7 imagens nao chegaram:
+          # os seis PNG do logo e um arquivo chamado "ChatGPT Image 17 de set.
+          # de 2026, 10_08_52.png", solto na raiz.
           #
-          # Arquivo publicado nao despublica. Uma lista que oscila desse jeito
-          # nao esta medindo se o arquivo chegou — esta medindo outra coisa.
+          # A causa MUDA O QUE E URGENTE, e as duas possiveis pedem consertos
+          # opostos:
           #
-          # A SUSPEITA: a conferencia pede ~101 arquivos, ate duas vezes cada,
-          # dez vezes seguidas. Sao uns 2000 pedidos ao mesmo servidor em cinco
-          # minutos. Se ele comeca a recusar ou a demorar, o `curl -fsS` falha,
-          # a saida vem VAZIA, e o md5 do vazio nunca bate com o md5 do arquivo.
-          # Pedido recusado e conteudo errado viram a mesma coisa no relatorio.
+          #   a) o arquivo nao esta no servidor (HTTP 404) -> o logo esta
+          #      QUEBRADO para todo visitante, e o conserto e na publicacao;
           #
-          # Isto NAO conserta nada. Pede o mesmo arquivo 40 vezes em sequencia e
-          # imprime o codigo HTTP de cada pedido, para a causa aparecer:
+          #   b) o arquivo esta la, valido, mas com bytes diferentes dos do
+          #      repositorio -> a hospedagem recomprimiu a imagem, o site esta
+          #      CERTO, e quem esta errado e a conferencia, que compara md5 de
+          #      imagem e vai reprovar todo dia, para sempre, sem motivo.
           #
-          #   · se todos derem 200 com o md5 certo → a suspeita esta errada e o
-          #     problema e outro (edge do CDN com copias diferentes, por ex.)
-          #   · se os primeiros derem 200 e os seguintes 429/503/000 → e limite
-          #     de pedidos, e o conserto e na conferencia, nao no site
-          alvo2="$alvo"
-          for arq in gestao/assets/gestao.css gestao/assets/painel.js; do
-            marca=$(grep -ho "$(basename "$arq")?v=[a-f0-9]*" gestao/*.html *.html 2>/dev/null | head -1 | sed 's/.*?v=//')
-            aqui=$(md5sum "$arq" | cut -d' ' -f1)
-            echo "================================================================"
-            echo "  40 pedidos seguidos de $arq?v=$marca"
-            echo "  md5 no repositorio: ${aqui:0:12}"
-            echo "================================================================"
-            certos=0; errados=0; recusados=0
-            linha=""
-            for n in $(seq 1 40); do
-              cod=$(curl -s -o /tmp/veio2 -w '%{http_code}' --max-time 20 \
-                    "$alvo2/$arq?v=$marca" 2>/dev/null || echo 000)
-              la=$(md5sum /tmp/veio2 | cut -d' ' -f1)
-              if [ "$cod" = "200" ] && [ "$la" = "$aqui" ]; then
-                linha="$linha."; certos=$((certos+1))
-              elif [ "$cod" = "200" ]; then
-                linha="$linha?"; errados=$((errados+1))
-                echo "    pedido $n: HTTP 200 mas md5 ${la:0:12} (conteudo diferente)"
-              else
-                linha="$linha X"; recusados=$((recusados+1))
-                echo "    pedido $n: HTTP $cod (o servidor nao entregou)"
-              fi
-            done
-            echo "    $linha"
-            echo "    certos=$certos  conteudo-diferente=$errados  nao-entregues=$recusados"
-            echo "    ( . = certo   ? = 200 com outro conteudo   X = nao entregue )"
-            echo
-          done
-
-          echo "================================================================"
-          echo "  E agora o exame de sempre, arquivo por arquivo"
-          echo "================================================================"
-          for arq in gestao/assets/gestao.css assets/css/styles.css; do
-            marca=$(grep -ho "$(basename "$arq")?v=[a-f0-9]*" gestao/*.html *.html 2>/dev/null | head -1 | sed 's/.*?v=//')
-            aqui=$(md5sum "$arq" | cut -d' ' -f1)
-
+          # O que separa (a) de (b): o codigo HTTP, o tipo do que veio (PNG
+          # comeca com \x89PNG) e o tamanho. PNG valido e menor que o do
+          # repositorio e (b).
+          #
+          # Nao adianta perguntar pelo endereco com marca de versao: imagem
+          # aqui nao leva marca. Pergunto no endereco cru, que e o que o
+          # visitante pede, e furando o cache, que e a unica forma de saber o
+          # que esta NO SERVIDOR.
+          #
+          # E pergunto com o nome como esta e com os espacos em %20: nome com
+          # espaco e virgula e uma das suspeitas, e a propria conferencia
+          # avisa para olhar isso antes de culpar a hospedagem.
+          for arq in \
+            assets/img/logo-pf-marca.png \
+            assets/img/logo-pf-icone.png \
+            assets/img/logo-pf-192.png \
+            assets/img/logo-pf-512.png \
+            assets/img/logo-pf-compartilhar.png \
+            assets/img/logo-pf-original.png \
+            "ChatGPT Image 17 de set. de 2026, 10_08_52.png" \
+          ; do
             echo "================================================================"
             echo "  $arq"
             echo "================================================================"
-            echo "  no repositorio: $(wc -c < "$arq") bytes · md5 $aqui"
-            echo "  marca nas paginas: ${marca:-<nenhuma>}"
+            if [ -f "$arq" ]; then
+              aqui=$(md5sum "$arq" | cut -d' ' -f1)
+              echo "  no repositorio: $(wc -c < "$arq") bytes · md5 ${aqui:0:12} · $(file -b "$arq" | cut -c1-60)"
+            else
+              aqui="(nao existe aqui)"
+              echo "  no repositorio: NAO EXISTE — se a conferencia cobra este"
+              echo "                  arquivo, o problema esta na lista dela"
+            fi
             echo
 
-            # O CORPO VAI PARA ARQUIVO, e nao para uma variavel.
-            #
-            # A primeira versao disto fazia `corpo=$(curl ...)`, e o $( ) do
-            # shell COME o \n do fim. Resultado: todo arquivo de texto aparecia
-            # com um byte a menos e md5 diferente, inclusive o styles.css, que a
-            # conferencia de verdade aprova dez vezes por dia. Meu proprio
-            # diagnostico estava mentindo, do mesmo jeito que as coisas que eu
-            # passei o dia consertando. Arquivo nao tem essa mania.
-            for forma in "sem marca:$alvo/$arq" "com marca:$alvo/$arq?v=$marca" "furando o cache:$alvo/$arq?nocache=$RANDOM$RANDOM"; do
+            escapado=$(printf '%s' "$arq" | sed 's/ /%20/g')
+
+            for forma in "cru:$alvo/$arq" "escapado:$alvo/$escapado" "furando o cache:$alvo/$escapado?nocache=$RANDOM$RANDOM"; do
               rotulo="${forma%%:*}"; url="${forma#*:}"
-              if curl -fsS --max-time 20 "$url" -o /tmp/veio 2>/dev/null; then
-                la=$(md5sum /tmp/veio | cut -d' ' -f1)
-                tam=$(wc -c < /tmp/veio)
-                igual="DIFERENTE"
-                [ "$la" = "$aqui" ] && igual="IGUAL ao repositorio"
-                printf '  %-16s %6d bytes  %s  %s\n' "$rotulo" "$tam" "${la:0:12}" "$igual"
-                if [ "$igual" = "DIFERENTE" ]; then
-                  echo "      primeira diferenca: $(cmp "$arq" /tmp/veio 2>&1 | head -1)"
-                fi
-              else
-                printf '  %-16s  nao respondeu\n' "$rotulo"
-              fi
+              cod=$(curl -s -o /tmp/veio -w '%{http_code}' --max-time 25 "$url" 2>/dev/null || echo 000)
+              tam=$(wc -c < /tmp/veio 2>/dev/null || echo 0)
+              tipo=$(file -b /tmp/veio 2>/dev/null | cut -c1-38)
+              la=$(md5sum /tmp/veio 2>/dev/null | cut -d' ' -f1)
+              igual="DIFERENTE"
+              [ "$la" = "$aqui" ] && igual="IGUAL ao repositorio"
+              [ "$cod" != "200" ] && igual="—"
+              printf '  %-16s HTTP %s %8d bytes  %s  %-20s %s\n' \
+                     "$rotulo" "$cod" "$tam" "${la:0:12}" "$igual" "$tipo"
             done
 
             echo
-            echo "  cabecalhos do endereco sem marca (procurando sinal de cache):"
-            curl -sI --max-time 20 "$alvo/$arq" | tr -d '\r' \
-              | grep -iE 'HTTP/|content-length|etag|last-modified|age|cache|expires|x-litespeed|x-cache|vary|server' \
-              | sed 's/^/      /'
-            echo
-            echo "  cabecalhos do endereco COM marca:"
-            curl -sI --max-time 20 "$alvo/$arq?v=$marca" | tr -d '\r' \
-              | grep -iE 'HTTP/|content-length|etag|last-modified|age|cache|expires|x-litespeed|x-cache|vary|server' \
+            echo "  cabecalhos (sinal de cache ou de otimizacao):"
+            curl -sI --max-time 25 "$alvo/$escapado" | tr -d '\r' \
+              | grep -iE 'HTTP/|content-type|content-length|etag|last-modified|age|cache|expires|x-litespeed|x-cache|vary|server' \
               | sed 's/^/      /'
             echo
           done
 
+          echo "================================================================"
+          echo "  COMO LER O RESULTADO"
+          echo "================================================================"
+          echo "  · 404 em todas as formas -> o arquivo NAO esta publicado"
+          echo "  · 200 com PNG valido e tamanho menor -> a hospedagem"
+          echo "    recomprimiu: o site esta certo e a conferencia e que tem"
+          echo "    de parar de comparar md5 de imagem"
+          echo "  · 200 no escapado e 404 no cru -> e o nome do arquivo"
+          echo
           echo "Fim do diagnostico. Nada foi alterado."
