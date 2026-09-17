@@ -474,6 +474,78 @@ baixar() {
   fi
 }
 
+# =================================================================
+# PARA IMAGEM, "CHEGOU IGUAL" NÃO É BYTE A BYTE.
+# =================================================================
+#
+# Esta conferência reprovou a publicação dizendo que sete imagens não
+# chegaram — entre elas os seis PNG do logo, que estão na barra de
+# cima de TODAS as páginas. Se fosse verdade, o logo estaria quebrado
+# para todo visitante.
+#
+# Não era. O diagnóstico (17/09/2026) pediu cada um dos sete, no
+# endereço cru e furando o cache, e imprimiu o que veio:
+#
+#   logo-pf-192.png           repo   7.193 → servidor   7.734  192x192
+#   logo-pf-512.png           repo  28.557 → servidor  30.052  512x512
+#   logo-pf-compartilhar.png  repo  66.135 → servidor  66.750  1200x630
+#   logo-pf-original.png      repo 442.394 → servidor 335.957  1600x541 (!)
+#
+# Todos HTTP 200, todos PNG válido, todos no tamanho certo — menos o
+# último, que a hospedagem ENCOLHEU (era 2157x729). Ou seja: a
+# Hostinger recomprime imagem na entrega e limita a dimensão. O site
+# está certo; os bytes é que nunca mais vão bater.
+#
+# Comparar md5 de imagem, aqui, é uma conferência que reprova todo dia
+# por um motivo que não existe. E conferência que grita sem motivo é
+# pior que conferência nenhuma: ela ensina a gente a ignorar o
+# vermelho, e no dia em que o vermelho for de verdade ninguém olha.
+#
+# Então para imagem a pergunta passa a ser a que dá para responder:
+# veio uma IMAGEM VÁLIDA, com as MESMAS MEDIDAS? O 404 e o arquivo
+# corrompido continuam sendo pegos, que é o que importa.
+#
+# O QUE ISTO DEIXA PASSAR, e eu prefiro escrever do que esconder: uma
+# versão ANTERIOR da mesma imagem, se tiver as mesmas medidas, passa
+# como se fosse a nova. Para logo e ícone isso não muda nada. No dia
+# em que uma foto de produto for trocada mantendo o tamanho, é olho
+# humano que vai ver — não este script.
+#
+# SVG não entra nesta regra: é texto, ninguém recomprime, e ali o md5
+# vale.
+eh_imagem() {
+  case "$(printf '%s' "${1##*.}" | tr 'A-Z' 'a-z')" in
+    png|jpg|jpeg|webp|gif|avif) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# As medidas pelo `file`, que já está na máquina. Ele escreve de
+# formas diferentes por formato — "PNG image data, 192 x 192",
+# "Web/P image, VP8 encoding, 620x407" — então pego o primeiro
+# "<número> x <número>" e tiro os espaços.
+medidas() {
+  file -b "$1" 2>/dev/null | grep -oE '[0-9]+ ?x ?[0-9]+' | head -1 | tr -d ' '
+}
+
+# Devolve IGUAL, DIFERENTE ou SEM-RESPOSTA.
+confere() {   # $1 = arquivo daqui   $2 = endereço
+  if ! curl -fsS -A "$NAVEGADOR" --max-time 20 "$2" -o /tmp/veio 2>/dev/null; then
+    echo "SEM-RESPOSTA"; return
+  fi
+  if eh_imagem "$1"; then
+    if [ -n "$(medidas /tmp/veio)" ] && [ "$(medidas "$1")" = "$(medidas /tmp/veio)" ]; then
+      echo "IGUAL"
+    else
+      echo "DIFERENTE"
+    fi
+  elif [ "$(md5sum /tmp/veio | cut -d' ' -f1)" = "$(md5sum "$1" | cut -d' ' -f1)" ]; then
+    echo "IGUAL"
+  else
+    echo "DIFERENTE"
+  fi
+}
+
 # ---- pergunta 1: chegou ao servidor? ----
 #
 # A lista vem de ARQUIVO e o laço é `while read`, não `for`. Assim
@@ -484,12 +556,11 @@ for tentativa in 1 2 3 4 5 6 7 8 9 10; do
   : > /tmp/ausentes.txt
   while IFS= read -r arq; do
     [ -n "$arq" ] || continue
-    aqui=$(md5sum "$arq" | cut -d' ' -f1)
     # `?nocache=` diferente a cada pedido: sem isto, a própria
     # pergunta viraria cache e as dez tentativas leriam a mesma
     # resposta velha, o que faz o laço não servir para nada.
-    la=$(baixar "$achou/$arq?nocache=$RANDOM$RANDOM$tentativa")
-    [ "$aqui" = "$la" ] || printf '%s\n' "$arq" >> /tmp/ausentes.txt
+    [ "$(confere "$arq" "$achou/$arq?nocache=$RANDOM$RANDOM$tentativa")" = "IGUAL" ] \
+      || printf '%s\n' "$arq" >> /tmp/ausentes.txt
   done < /tmp/alvos.txt
   if [ ! -s /tmp/ausentes.txt ]; then
     echo "Chegou ao servidor: os $(grep -c . /tmp/alvos.txt) arquivos são os deste commit."
@@ -509,13 +580,12 @@ if [ ! -s /tmp/ausentes.txt ]; then
   echo "Conferindo o endereço que o visitante pede (um pedido por arquivo):"
   while IFS= read -r arq; do
     [ -n "$arq" ] || continue
-    aqui=$(md5sum "$arq" | cut -d' ' -f1)
     if estampado "$arq"; then
       url="$achou/$arq?v=$(esperado8 "$arq")"
     else
       url="$achou/$arq"
     fi
-    [ "$aqui" = "$(baixar "$url")" ] && continue
+    [ "$(confere "$arq" "$url")" = "IGUAL" ] && continue
     printf '%s\n' "$arq" >> /tmp/cdn-velho.txt
   done < /tmp/alvos.txt
   if [ ! -s /tmp/cdn-velho.txt ]; then
