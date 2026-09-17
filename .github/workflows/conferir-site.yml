@@ -143,6 +143,17 @@ jobs:
       - name: Conferir que o preço de compra não está no código do site
         run: node conferir-custo-no-site.mjs
 
+      # A barra lateral e a barra de baixo estão escritas à mão nas 16 páginas.
+      # Dezesseis cópias mantidas por memória, e elas desencontraram: medido em
+      # 17/09/2026, em 13 das 16 a barra lateral não tinha Atendimento nem
+      # Conta, e a página de erro tinha um item só. O visitante que abrisse o
+      # menu no carrinho via um site menor do que o site é — e nada na tela
+      # dava erro para alguém notar.
+      #
+      # Este passo não pede menu bonito nem completo: pede menu IGUAL em todas.
+      - name: Conferir que o menu é o mesmo em toda página
+        run: node conferir-menus.mjs
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela

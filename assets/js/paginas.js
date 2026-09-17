@@ -206,16 +206,38 @@
       });
     }
 
-    /* resumo do que está guardado */
+    /* O RESUMO, E A CONTAGEM DE PEDIDOS VEM DA CONTA.
+     *
+     * Ela vinha de `Area.pedidos()`, que é a lista DESTE APARELHO.
+     * Enquanto os pedidos tinham aba própria embaixo, isso passava: quem
+     * quisesse ver ia direto. Desde 17/09/2026 a Conta é a ÚNICA porta
+     * para os pedidos — e uma porta escrita "0 pedidos" para quem tem
+     * três é uma porta que ninguém abre.
+     *
+     * A conta primeiro, o aparelho como reserva: é a mesma ordem da
+     * tela de pedidos, para as duas nunca dizerem números diferentes. */
     var resumo = document.querySelector('[data-resumo-conta]');
     if (resumo) {
       var favoritos = window.PharmaFitFavoritos ? window.PharmaFitFavoritos.ler().length : 0;
-      var pedidos = Area.pedidos().length;
-      resumo.innerHTML =
-        '<a class="resumo-item" href="favoritos.html"><b>' + favoritos + '</b><span>' +
-          (favoritos === 1 ? 'favorito' : 'favoritos') + '</span></a>' +
-        '<a class="resumo-item" href="pedidos.html"><b>' + pedidos + '</b><span>' +
-          (pedidos === 1 ? 'pedido' : 'pedidos') + '</span></a>';
+
+      function desenharResumo(quantos) {
+        resumo.innerHTML =
+          '<a class="resumo-item" href="favoritos.html"><b>' + favoritos + '</b><span>' +
+            (favoritos === 1 ? 'favorito' : 'favoritos') + '</span></a>' +
+          '<a class="resumo-item" href="pedidos.html"><b>' + quantos + '</b><span>' +
+            (quantos === 1 ? 'pedido' : 'pedidos') + '</span></a>';
+      }
+
+      /* desenha na hora com o que o aparelho tem, e corrige quando a
+         conta responder — a tela não espera a rede para aparecer */
+      desenharResumo(Area.pedidos().length);
+
+      var Conta = window.PharmaFitConta;
+      if (Conta && Conta.pedidos) {
+        Conta.pedidos().then(function (r) {
+          desenharResumo((r && r.lista ? r.lista : []).length);
+        }).catch(function () {});
+      }
     }
   }
 
@@ -231,10 +253,69 @@
     });
   }
 
+  /* ---------- sair da conta ---------- */
+
+  /* A FUNÇÃO DE SAIR EXISTIA E NENHUM BOTÃO CHAMAVA ELA.
+   *
+   * `Conta.sair()` está escrito desde o começo, e em 17/09/2026 o Brian
+   * descobriu do pior jeito: entrou e não tinha como sair. Não dava para
+   * trocar de conta, nem para deixar o telefone de outra pessoa sem a
+   * conta aberta. Código que existe sem porta é a mesma coisa que código
+   * que não existe — só pior, porque parece feito.
+   *
+   * O bloco nasce escondido e só aparece para quem está logado: sem
+   * conta não há de onde sair.
+   */
+  async function ligarSair() {
+    var bloco = document.querySelector('[data-sair-bloco]');
+    if (!bloco) return;
+
+    var Conta = window.PharmaFitConta;
+    if (!Conta) return;
+
+    var u = null;
+    try { u = await Conta.usuario(); } catch (e) { u = null; }
+    if (!u) return;
+
+    bloco.hidden = false;
+    var onde = bloco.querySelector('[data-sair-email]');
+    if (onde) onde.textContent = u.email || '';
+
+    bloco.querySelector('[data-sair-conta]').addEventListener('click', async function () {
+      var certeza = await window.PharmaFitConfirmar({
+        titulo: 'Sair da conta?',
+        texto: 'Seus pedidos e seus dados continuam guardados na conta e voltam ' +
+               'quando você entrar de novo. Deste aparelho eles saem.',
+        confirmar: 'Sair da conta',
+        cancelar: 'Continuar na conta'
+      });
+      if (!certeza) return;
+
+      /* PRIMEIRO SAIR, DEPOIS LIMPAR. A ORDEM IMPORTA.
+         Eu havia escrito o contrário, e a medição mostrou a fresta:
+         enquanto a sessão ainda existe, qualquer sincronização que
+         rode nesse intervalo baixa o cadastro da conta e reescreve o
+         que eu acabei de apagar. Saindo primeiro, não existe intervalo
+         — não há sessão para sincronizar nada. */
+      await Conta.sair();
+
+      /* O ESPELHO DO APARELHO SAI TAMBÉM.
+         Nome, WhatsApp e endereço neste navegador foram copiados DA
+         CONTA. Deixá-los aqui depois de sair entrega os dados de uma
+         pessoa para a próxima que pegar o telefone — e o pedido de
+         "sair" é justamente o de não deixar rastro. Na conta eles
+         continuam, e voltam no próximo login. */
+      try { if (Area && Area.limparDados) Area.limparDados(); } catch (e) {}
+
+      location.href = 'index.html';
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     pintarPedidos();
     ligarPedidos();
     ligarConta();
     ligarFaq();
+    ligarSair().catch(function () {});
   });
 })();

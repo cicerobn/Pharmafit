@@ -350,9 +350,19 @@
           '</button>';
       }).join('');
 
-    /* Antes do rodapé da gaveta, que é o último bloco dela. */
+    /* LÁ NO FIM DA GAVETA, e não no meio dela.
+     *
+     * Antes esta caixa entrava ANTES do rodapé — e é o rodapé que tem o
+     * `margin-top:auto`, o que empurra para baixo só o que vem depois
+     * dele. Resultado: a troca de idioma ficava colada nos links do
+     * menu, no meio da gaveta, disputando atenção com eles. O Brian
+     * pediu "mais para baixo".
+     *
+     * Agora ela vai DEPOIS do rodapé: o rodapé continua empurrando o
+     * par dos dois para o fim, e a troca de idioma fica a última coisa
+     * da gaveta — que é onde se procura ajuste, não caminho. */
     var pe = gaveta.querySelector('.drawer__foot');
-    if (pe) gaveta.insertBefore(caixa, pe);
+    if (pe && pe.parentNode) pe.parentNode.insertBefore(caixa, pe.nextSibling);
     else gaveta.appendChild(caixa);
 
     caixa.addEventListener('click', function (e) {

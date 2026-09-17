@@ -2122,7 +2122,12 @@ ul{margin:0;padding:0;list-style:none}
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:0;
-  margin:18px 18px 4px;
+  /* A margem de baixo era 4px porque esta caixa ficava no MEIO da
+     gaveta, com o rodapé embaixo dela. Desde 17/09/2026 ela é a última
+     coisa da gaveta, e 4px deixava os botões encostados na borda: num
+     iPhone, colados na barrinha do sistema. O painel da gaveta já
+     reserva o vão do aparelho; estes 14px são o respiro de dentro. */
+  margin:14px 18px;
   padding:4px;
   border-radius:14px;
   background:var(--cream);
@@ -3325,4 +3330,34 @@ textarea:focus-visible{
   .protocol__preco .product__price{font-size:18px}
   .protocol__preco .product__installment{font-size:10.5px;line-height:1.35}
   .protocol .mini-list{display:none}
+}
+
+/* ---------------------------------------------------------
+   SAIR DA CONTA
+
+   Aparece só para quem está logado. Fica no fim da página de
+   conta, depois dos atalhos: sair é a última coisa que se faz
+   ali, e ação de saída no meio da tela é convite a errar o
+   toque.
+
+   O botão é o discreto (`btn--ghost`), e não o dourado: sair
+   não é o que a pessoa veio fazer, é o que ela precisa poder
+   fazer. Quem grita na tela é "Salvar", não "Sair".
+   --------------------------------------------------------- */
+
+.sair-conta{
+  margin-top:22px;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+  text-align:center;
+}
+.sair-conta__quem{
+  margin:0 0 10px;
+  font-size:13px;
+  color:var(--muted);
+}
+.sair-conta__quem b{
+  color:var(--ink);
+  font-weight:600;
+  overflow-wrap:anywhere;
 }
