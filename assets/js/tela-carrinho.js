@@ -1,5 +1,12 @@
 /* =========================================================
    PHARMA FIT — a tela do carrinho
+
+   precisa: carrinho, minha-area, pedido
+
+   O `pedido.js` entrou nesta lista em 17/09/2026: o botão "Fechar
+   pedido no WhatsApp" passou a REGISTRAR o pedido, e quem sabe gravar
+   pedido é aquele arquivo. Ele se anuncia em `window.PharmaFitPedido`,
+   então tem de rodar antes deste.
    ========================================================= */
 (function () {
   'use strict';
@@ -174,6 +181,79 @@
 
     var alvo = document.getElementById('fechar');
     alvo.href = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(linhas.join('\n'));
+    alvo.__conta = conta;
+  }
+
+  /* O PEDIDO DO CARRINHO PASSA A SER REGISTRADO.
+   *
+   * ACHADO EM 17/09/2026, medindo o caminho do dinheiro de ponta a
+   * ponta: este botão abria o WhatsApp e NÃO gravava nada. O modal de
+   * um produto grava (pedido pendente, que a equipe confirma na fila);
+   * o carrinho não gravava. Dois caminhos de compra no mesmo site, um
+   * com registro e outro sem.
+   *
+   * O que isso custava:
+   *   · o pedido não entrava na "Fila de pedidos" do painel. Se a
+   *     equipe perdesse a mensagem do WhatsApp, não havia rastro
+   *     NENHUM de que alguém quis comprar;
+   *   · nem aparecia em "Meus pedidos" do cliente;
+   *   · e o carimbo do dono (`cliente_id`), que eu pus hoje justamente
+   *     para os pedidos seguirem a pessoa de aparelho em aparelho, era
+   *     pulado por inteiro nessa metade das compras.
+   *
+   * COMO FICOU, e por que assim:
+   *
+   *   · uma linha por produto, que é a forma da tabela e do painel —
+   *     igual ao que o modal já faz;
+   *   · `valor: 0`, decidido lá dentro do `pedido.js`: preço não vem do
+   *     navegador de quem compra, quem põe é a equipe;
+   *   · NÃO espero a resposta do banco. O link tem `target="_blank"`,
+   *     então a página fica de pé e o pedido termina de subir sozinho.
+   *     Esperar atrasaria o WhatsApp, e o WhatsApp é o que a pessoa
+   *     está querendo abrir;
+   *   · NÃO limpo o carrinho. Se o WhatsApp não abrir, a pessoa perderia
+   *     a escolha dela sem ter comprado nada;
+   *   · e uma trava para o toque duplo, só nesta visita: dois toques
+   *     seguidos no mesmo carrinho não viram dois pedidos na fila. */
+  var jaRegistrei = '';
+
+  function registrarAoFechar(alvo) {
+    alvo.addEventListener('click', function () {
+      var conta = alvo.__conta;
+      var Pedido = window.PharmaFitPedido;
+      if (!conta || !conta.itens || !conta.itens.length || !Pedido) return;
+
+      /* a assinatura do carrinho: mesmos itens e quantidades = mesmo
+         pedido, e eu não registro de novo */
+      var assinatura = conta.itens.map(function (i) {
+        return i.nome + 'x' + i.quantidade;
+      }).join('|');
+      if (assinatura === jaRegistrei) return;
+      jaRegistrei = assinatura;
+
+      var dados = {};
+      try { dados = (Area && Area.dados()) || {}; } catch (e) { dados = {}; }
+
+      conta.itens.forEach(function (i) {
+        Pedido.registrar({
+          cliente: dados.nome || '',
+          telefone: dados.telefone || '',
+          endereco: dados.endereco || '',
+          produto: i.nome,
+          quantidade: i.quantidade
+        }).catch(function () { /* o WhatsApp abre de todo jeito */ });
+
+        /* e entra em "Meus pedidos" deste aparelho, como o modal faz */
+        try {
+          if (window.PharmaFitArea) {
+            window.PharmaFitArea.registrarPedido({
+              cliente: dados.nome || '', produto: i.nome,
+              quantidade: i.quantidade, endereco: dados.endereco || ''
+            });
+          }
+        } catch (e) {}
+      });
+    });
   }
 
   /* ---------- os botões ---------- */
@@ -241,4 +321,6 @@
      estava no código quando a página abriu — e o total é o número que a
      pessoa leva para a conversa do WhatsApp. */
   document.addEventListener('pharmafit-catalogo', function () { pintar(); });
+  registrarAoFechar(document.getElementById('fechar'));
+
 })();

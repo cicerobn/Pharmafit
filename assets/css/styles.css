@@ -3222,6 +3222,17 @@ textarea:focus-visible{
   .carrinho__acoes-sep{display:none}
 }
 .carrinho__atacado{margin:18px 0 0;text-align:center;font-size:13px;color:var(--muted)}
+/* ALVO DE DEDO NO LINK DO ATACADO.
+   Ele nasceu com 15px de altura — é a altura da letra, e é o que
+   acontece quando um link fica no meio de um parágrafo. Quinze pixels
+   "funciona" com mouse e erra com o polegar, e este link é o caminho
+   de quem vai comprar em QUANTIDADE, que é o pedido grande. Com o
+   `padding` ele vai para 44px, e `inline-block` é o que faz o padding
+   valer em cima e embaixo num link de texto corrido. */
+.carrinho__atacado .linkish{
+  display:inline-block;
+  padding:12px 6px;
+}
 
 /* ---- o resumo ---- */
 .resumo{

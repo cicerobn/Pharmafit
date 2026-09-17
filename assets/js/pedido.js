@@ -60,6 +60,19 @@
     return Nuvem.inserir('pedidos', registro);
   }
 
+  /* QUEM SABE GRAVAR PEDIDO É ESTE ARQUIVO, E SÓ ELE.
+   *
+   * O carrinho precisa gravar também (achado em 17/09/2026: ele abria o
+   * WhatsApp e não registrava nada). Eu poderia copiar estas vinte
+   * linhas para lá — e aí as duas cópias divergiriam, que é a doença
+   * que eu passei o dia consertando neste site: menu em 16 cópias,
+   * script em 16 listas, contador em dois lugares.
+   *
+   * Então o carrinho pede emprestado. O carimbo do dono (`cliente_id`),
+   * a origem e o `valor: 0` continuam sendo decididos aqui, num lugar
+   * só. */
+  window.PharmaFitPedido = { registrar: registrarPedido };
+
   /* ---------- interface ---------- */
 
   /* Catálogo padrão, completado com o que estiver na página atual,
