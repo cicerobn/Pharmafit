@@ -407,15 +407,62 @@
 
   var pedidoEmConfirmacao = null;
 
+  /* O VALOR SUGERIDO TEM DE CONTAR A QUANTIDADE.
+   *
+   * Isto sugeria `produto.preco` — o preço de UMA unidade — mesmo num
+   * pedido de duas, cinco ou dez. E o campo abre já preenchido com a
+   * sugestão, selecionada, para quem quiser só apertar Enter. Quem
+   * fizesse isso num pedido de 2 registrava R$ 1.099 numa venda de
+   * R$ 2.198: metade do faturamento, para sempre, sem nada na tela
+   * dizendo que estava errado. E o Brian pediu o preço de compra
+   * justamente "pra ver o lucro e a receita" — receita pela metade
+   * estraga exatamente aquilo.
+   *
+   * Medido em 17/09/2026, com um pedido de 2 unidades do Tirzec Pen:
+   * sugeria 1099, e o certo era 2198.
+   *
+   * E conta a FAIXA DE ATACADO quando o produto tem: acima de certa
+   * quantidade o preço por unidade cai, e multiplicar o preço de
+   * varejo por dez erraria para o outro lado, a mais. As faixas moram
+   * no catálogo do site (`catalogo.js`), que esta página já carrega.
+   *
+   * Continua sendo SUGESTÃO: o que vale é o valor fechado na conversa,
+   * e o campo segue aberto para mudar. */
+  function precoSugerido(pedido) {
+    var qtd = Math.max(1, Number(pedido.quantidade || 1));
+
+    var produto = estado.produtos.filter(function (p) { return p.nome === pedido.produto; })[0];
+    var unitario = produto ? Number(produto.preco || 0) : 0;
+
+    var noCatalogo = (window.PHARMAFIT_CATALOGO || []).filter(function (p) {
+      return p.nome === pedido.produto;
+    })[0];
+    var faixas = (noCatalogo && noCatalogo.atacado) || [];
+    for (var i = 0; i < faixas.length; i++) {
+      var de = Number(faixas[i].de || 1);
+      var ate = faixas[i].ate ? Number(faixas[i].ate) : Infinity;
+      if (qtd >= de && qtd <= ate && Number(faixas[i].preco) > 0) {
+        unitario = Number(faixas[i].preco);
+        break;
+      }
+    }
+
+    return unitario * qtd;
+  }
+
   function abrirValor(pedido) {
     pedidoEmConfirmacao = pedido;
 
-    var sugestao = 0;
-    var produto = estado.produtos.filter(function (p) { return p.nome === pedido.produto; })[0];
-    if (produto) sugestao = Number(produto.preco || 0);
+    var sugestao = precoSugerido(pedido);
 
     document.getElementById('cv-quem').textContent = pedido.cliente || 'cliente';
-    document.getElementById('cv-produto').textContent = pedido.produto || '';
+    /* A QUANTIDADE APARECE AQUI, junto do produto. Sem ela a caixa
+       mostrava só "Tirzec Pen 15 mg" e um valor, e quem conferisse não
+       tinha como saber se aquele número era de uma unidade ou de dez —
+       nem perceber que a sugestão estava errada, como estava. */
+    var qtd = Math.max(1, Number(pedido.quantidade || 1));
+    document.getElementById('cv-produto').textContent =
+      (pedido.produto || '') + (qtd > 1 ? ' · ' + qtd + ' unidades' : '');
     var campo = document.getElementById('cv-valor');
     campo.value = Number(pedido.valor) > 0 ? Number(pedido.valor) : (sugestao > 0 ? sugestao : '');
 
