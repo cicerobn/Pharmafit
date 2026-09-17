@@ -286,29 +286,32 @@ body:has(.hero__art--foto) .topbar{
 
 /* ---------- hero ---------- */
 
-/* O BRANCO ATRÁS DA FOTO — E A MEDIDA DELE É A LARGURA.
+/* O TOPO É BRANCO INTEIRO, E O CREME COMEÇA NOS CARTÕES.
  *
- * "Ainda não está igual a foto que eu te mostrei", 17/09/2026, com a
- * tela do site no ar. E dava para ver o retângulo da foto: uma linha
- * horizontal atravessando embaixo dela e o tom mudando ao lado.
+ * "Ainda não está igual a foto que eu te mostrei" — dava para ver o
+ * retângulo da foto: uma linha atravessando embaixo dela.
  *
- * Medi as duas superfícies. A foto é branco 253 em TODAS as bordas
- * dela, inclusive na última linha (248, e o mais escuro 237). O creme
- * da página é 246,242,236. A diferença é pequena no vermelho e grande
- * no azul — o suficiente para o olho desenhar a borda.
+ * Medi as duas superfícies em vez de adivinhar. A foto é branco 253 em
+ * TODAS as bordas, inclusive na última linha (248). O creme da página é
+ * 246,242,236 — pouca diferença no vermelho, muita no azul, e o olho
+ * desenha a borda com isso. Não há recorte a fazer: basta a página ser
+ * branca onde a foto está.
  *
- * Então não há recorte a fazer: basta a página ser branca onde a foto
- * está. O que eu tinha errado foi a MEDIDA. Eu pintava um degradê na
- * altura do bloco (`#fff 0%, #fff 62%, creme 100%`), e a altura do
- * bloco depende do texto: com o título em quatro linhas, os 62% caíam
- * exatamente no fim da foto, então o creme começava junto com a borda
- * dela em vez de depois.
+ * DUAS TENTATIVAS ERRADAS, E POR QUE CADA UMA FALHOU
  *
- * A foto termina a 76,9% da LARGURA (11,8% de topo + 65,1% de altura
- * própria). Esse número não depende de texto nenhum. O `padding-top`
- * em porcentagem se mede pela largura do pai — é com ele que este
- * bloco branco tem sempre a altura certa, em 320px ou em 520px, e o
- * degradê começa a virar creme só depois da foto acabar.
+ *   1. degradê na ALTURA do bloco (`#fff 0%, #fff 62%, creme 100%`).
+ *      A altura do bloco depende do texto: com o título em quatro
+ *      linhas, os 62% caíam exatamente no fim da foto, então o creme
+ *      começava JUNTO com a borda dela.
+ *   2. um bloco branco com `padding-top:100%`, medido pela LARGURA.
+ *      Resolveu em 320 e 390, e apareceu em 520: o bloco ficava mais
+ *      alto que o topo, e o `overflow:hidden` cortava o degradê no
+ *      meio — sobrava um degrau de 19 na emenda. Medido.
+ *
+ * O jeito certo não depende de altura NENHUMA: o topo é branco do
+ * começo ao fim, e quem faz a passagem para o creme é o bloco de
+ * baixo, em pixels fixos. Assim não existe número que dependa de
+ * quantas linhas o texto tem.
  *
  * `overflow:hidden` porque a foto encosta na direita e, se um dia
  * passar dela, tem de ser cortada e não virar rolagem lateral — que é
@@ -317,21 +320,7 @@ body:has(.hero__art--foto) .topbar{
   padding:6px 20px 8px;
   position:relative;
   overflow:hidden;
-  background:var(--cream);
-}
-.hero::before{
-  content:'';
-  position:absolute;
-  left:0;right:0;top:0;
-  /* 100% da LARGURA de altura; o branco firme vai até 77% dela, que é
-     onde a foto acaba, e desmancha nos 23% seguintes */
-  padding-top:100%;
-  background:linear-gradient(180deg,
-    #fdfdfd 0%,
-    #fdfdfd 77%,
-    rgba(253,253,253,0) 100%);
-  z-index:0;
-  pointer-events:none;
+  background:#fdfdfd;
 }
 
 .hero__grid{display:block}
@@ -346,7 +335,17 @@ body:has(.hero__art--foto) .topbar{
      anel. Medido nos pixels: o fundo atrás daquelas duas linhas caía
      de 254 para 189. Com 21px ela mede 120px e cabe. */
   font-size:clamp(21px,6.6vw,28px);
-  line-height:1.14;
+  /* 1,02 SAIU DA FOTO DELE. As quatro linhas do título dele estão a
+     61px uma da outra numa tela de 900 — 26,4px num celular de 390,
+     com fonte de 26px. Entrelinha 1,02, bem mais fechada que a 1,14
+     que eu tinha.
+     Isto não é detalhe de gosto: com o título mais alto, o texto
+     começava 35px mais abaixo que no desenho — e nessa altura o corpo
+     da seringa já entrou pela esquerda, então as duas primeiras linhas
+     caíam sobre ela. Medido nos pixels: o mais escuro atrás da linha
+     ia a 149. Fechando a entrelinha, o texto sobe para onde ele está
+     no desenho, onde a seringa ainda está mais à direita. */
+  line-height:1.02;
   letter-spacing:-.01em;
   margin:6px 0 0;
   /* ESTREITO, E ISSO NÃO É GOSTO: É ONDE A SERINGA COMEÇA.
@@ -372,8 +371,16 @@ body:has(.hero__art--foto) .topbar{
 }
 
 .hero__text{
-  font-size:15px;
-  line-height:1.58;
+  /* 12,5px SAIU DA FOTO DELE, medida na foto e não escolhida por mim.
+     A linha mais longa do desenho é "e acompanhamento especializado":
+     ela ocupa 47,8% da largura da tela. Trinta letras em 47,8% de
+     390px dão 6,2px por letra, que é uma fonte de 12,4px.
+     É pequeno para ler no celular, e eu disse isso a ele. Ele
+     respondeu "tudo 100% igual" — é a tela dele, é a decisão dele, e
+     com esta medida o texto fecha nas cinco linhas do desenho em vez
+     de sete. */
+  font-size:12.5px;
+  line-height:1.62;
   color:var(--ink-2);
   /* MAIS LARGO QUE O TÍTULO, e por uma razão de medida.
      Eu havia apertado o texto em 40% da largura: virou OITO linhas, e
@@ -390,7 +397,7 @@ body:has(.hero__art--foto) .topbar{
      gosto. A 62% quatro linhas caíam sobre o corpo da seringa e sobre
      o mármore; a 56%, duas. A 54% nenhuma letra encosta em nada —
      medido nos pixels atrás de cada linha, em 320, 390 e 1280. */
-  max-width:min(54%,211px);
+  max-width:min(52%,203px);
   margin:0;
   position:relative;
   z-index:2;
@@ -410,6 +417,12 @@ body:has(.hero__art--foto) .topbar{
 .hero__copy{position:relative;z-index:2}
 
 .hero__cta{margin:18px 0 4px;position:relative;z-index:2}
+
+/* O RISQUINHO DOURADO DO TOPO É MAIS APERTADO QUE O DAS OUTRAS PÁGINAS.
+   Ele tem `margin:22px 0 20px` em todo o site, o que dá 45px entre o
+   título e o texto. No desenho dele são 28px. Os 17px de diferença
+   empurravam o texto para dentro da seringa. */
+.hero .rule{margin:13px 0 12px}
 
 /* O BOTÃO DO TOPO NÃO ATRAVESSA A TELA.
    `.btn--primary` tem `min-width:min(100%,300px)`, que é o certo no
@@ -499,6 +512,11 @@ body:has(.hero__art--foto) .topbar{
   grid-template-columns:repeat(4,1fr);
   gap:10px;
   padding:26px 20px 6px;
+  /* A PASSAGEM DO BRANCO DO TOPO PARA O CREME DA PÁGINA MORA AQUI.
+     Em pixels fixos, e não em porcentagem: 46px de degradê a partir do
+     alto deste bloco. Nenhuma conta dependendo de quantas linhas o
+     texto do topo tem — foi isso que me fez errar duas vezes. */
+  background:linear-gradient(180deg,#fdfdfd 0,var(--cream) 46px);
 }
 
 .feature{
@@ -2495,10 +2513,18 @@ textarea:focus-visible{
   .topbar__actions{flex:none}
   .icon-btn{width:40px;height:40px}
 
-  /* diferenciais: dois por linha respiram melhor que quatro */
-  .features{grid-template-columns:repeat(2,1fr);gap:12px}
-  .feature{padding:18px 12px}
-  .feature__label{font-size:13px}
+  /* DIFERENCIAIS: QUATRO NUMA LINHA, COMO NO DESENHO DELE.
+     Aqui estava `repeat(2,1fr)` com o comentário "dois por linha
+     respiram melhor que quatro". Respiram mesmo — mas o desenho que
+     ele mandou em 17/09/2026 tem os quatro numa linha, e o pedido foi
+     "tudo 100% igual".
+     O preço disso é a letra: em 390px cada cartão fica com 84px, e
+     "Acompanhamento" (14 letras) não cabe em 13px. A letra cai para
+     10,5px e o padding aperta, que é o que o desenho dele mostra. */
+  .features{grid-template-columns:repeat(4,1fr);gap:7px;padding-inline:14px}
+  .feature{padding:14px 5px 12px;gap:7px;border-radius:14px}
+  .feature__icon svg{width:24px;height:24px}
+  .feature__label{font-size:10.5px;line-height:1.25}
 
   /* AQUI HAVIA `.hero__title{font-size:30px}` E ELE MANDAVA EM TUDO.
      Esta faixa é `max-width:430px`, então ela vale em QUALQUER celular
@@ -2509,6 +2535,14 @@ textarea:focus-visible{
      tela, e é ele que mantém o título em quatro linhas ao lado da
      foto. Regra fixa dentro de faixa de celular é o jeito mais fácil
      de ter uma medida que não obedece a ninguém. */
+
+  /* CINCO ABAS EM 320px CUSTAM LETRA.
+     Com cinco abas, cada uma fica com 57px numa tela de 320 —
+     "Atendimento" em 11px mede 62px e era CORTADO (a medição pegou;
+     no olho parecia só apertado). Em 9,5px ela mede 52px e cabe.
+     É o preço de ter cinco abas em vez de quatro, e o desenho dele
+     pede cinco. */
+  .tab{font-size:9.5px;gap:4px}
 
   /* A foto NÃO muda de proporção em tela estreita: ela vale 75,2% da
      largura, e 75,2% de 320px é menor em pixel mas igual em desenho.

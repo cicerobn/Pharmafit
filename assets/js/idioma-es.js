@@ -246,6 +246,11 @@ window.PHARMAFIT_ES ={
   "Produto de interesse": "Producto de interés",
   "Produto retirado do protocolo.": "Producto quitado del protocolo.",
   "Produto — Pharma Fit": "Producto — Pharma Fit",
+  /* A aba "Produtos" da barra de baixo virou "Protocolos" no desenho
+     que ele mandou. A palavra é a mesma nas duas línguas, mas ela
+     tem de estar no dicionário: o que não está lá o conferidor
+     acusa, e com razão — é assim que ele descobre frase nova. */
+  "Protocolos": "Protocolos",
   "Produtos": "Productos",
   "Produtos de uso sob orientação profissional.": "Productos de uso bajo orientación profesional.",
   "Produtos de uso sob orientação profissional. Resultados variam de pessoa para pessoa.": "Productos de uso bajo orientación profesional. Los resultados varían de persona a persona.",
@@ -372,7 +377,10 @@ window.PHARMAFIT_ES ={
   "e suporte": "y soporte",
   "encontrada": "encontrada",
   "especializado": "especializado",
-  "especializado para transformar seu corpo, sua mente e seu bem-estar. Atendimento em Manaus · AM 🇧🇷": "especializado para transformar su cuerpo, su mente y su bienestar. Atención en Manaos · AM 🇧🇷",
+  /* O TOPO DIZ "Atendimento no Paraguai" desde 17/09/2026: o Brian
+     mandou a tela que ele quer e pediu tudo igual, escritas
+     incluídas. A frase antiga dizia Manaus. */
+  "especializado para transformar seu corpo, sua mente e seu bem-estar. Atendimento no Paraguai 🇵🇾": "especializado para transformar su cuerpo, su mente y su bienestar. Atención en Paraguay 🇵🇾",
   "favorito": "favorito",
   "favoritos": "favoritos",
 
