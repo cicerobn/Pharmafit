@@ -139,107 +139,30 @@
     });
   }
 
-  /* ---------- minha conta ---------- */
-
-  function ligarConta() {
-    var form = document.getElementById('form-conta');
-    if (!form) return;
-
-    function preencher() {
-      var meus = Area.dados();
-      document.getElementById('c-nome').value = meus.nome;
-      document.getElementById('c-zap').value = meus.telefone;
-      document.getElementById('c-endereco').value = meus.endereco;
-    }
-    preencher();
-
-    /* O CADASTRO DA CONTA CHEGA DEPOIS, e o formulário precisa saber.
-       A tela desenha na hora com o que está no aparelho; a leitura da
-       conta é uma ida ao servidor e termina depois. Sem isto, quem
-       abrisse num aparelho novo veria os campos vazios mesmo tendo
-       cadastro guardado na conta, e concluiria que a conta não guarda
-       nada. O aviso não sobrescreve o que a pessoa já estiver
-       digitando: se algum campo está com o foco, ele fica como está. */
-    document.addEventListener('pharmafit-meus-dados', function () {
-      var focado = document.activeElement;
-      if (focado && form.contains(focado)) return;
-      preencher();
-    });
-
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      var dados = {
-        nome: document.getElementById('c-nome').value,
-        telefone: document.getElementById('c-zap').value,
-        endereco: document.getElementById('c-endereco').value
-      };
-      Area.salvarDados(dados);
-
-      /* Com conta, sobe para a conta e o recado diz isso — "salvo neste
-         aparelho" para quem tem conta seria mentira pela metade, e é
-         justamente a dúvida que faz a pessoa digitar tudo de novo no
-         outro aparelho. */
-      var Conta = window.PharmaFitConta;
-      if (Conta) {
-        var r = await Conta.salvarCadastro(dados);
-        if (r && r.ok) { toast('Dados salvos na sua conta.'); return; }
-      }
-      toast('Dados salvos neste aparelho.');
-    });
-
-    var apagar = document.querySelector('[data-apagar-dados]');
-    if (apagar) {
-      apagar.addEventListener('click', async function () {
-        var certeza = await window.PharmaFitConfirmar({
-          titulo: 'Apagar seus dados?',
-          texto: 'Nome, WhatsApp e endereço saem deste aparelho. Você vai precisar ' +
-                 'digitar de novo no próximo pedido.',
-          confirmar: 'Apagar dados'
-        });
-        if (!certeza) return;
-
-        Area.limparDados();
-        document.getElementById('c-nome').value = '';
-        document.getElementById('c-zap').value = '';
-        document.getElementById('c-endereco').value = '';
-        toast('Dados apagados.');
-      });
-    }
-
-    /* O RESUMO, E A CONTAGEM DE PEDIDOS VEM DA CONTA.
-     *
-     * Ela vinha de `Area.pedidos()`, que é a lista DESTE APARELHO.
-     * Enquanto os pedidos tinham aba própria embaixo, isso passava: quem
-     * quisesse ver ia direto. Desde 17/09/2026 a Conta é a ÚNICA porta
-     * para os pedidos — e uma porta escrita "0 pedidos" para quem tem
-     * três é uma porta que ninguém abre.
-     *
-     * A conta primeiro, o aparelho como reserva: é a mesma ordem da
-     * tela de pedidos, para as duas nunca dizerem números diferentes. */
-    var resumo = document.querySelector('[data-resumo-conta]');
-    if (resumo) {
-      var favoritos = window.PharmaFitFavoritos ? window.PharmaFitFavoritos.ler().length : 0;
-
-      function desenharResumo(quantos) {
-        resumo.innerHTML =
-          '<a class="resumo-item" href="favoritos.html"><b>' + favoritos + '</b><span>' +
-            (favoritos === 1 ? 'favorito' : 'favoritos') + '</span></a>' +
-          '<a class="resumo-item" href="pedidos.html"><b>' + quantos + '</b><span>' +
-            (quantos === 1 ? 'pedido' : 'pedidos') + '</span></a>';
-      }
-
-      /* desenha na hora com o que o aparelho tem, e corrige quando a
-         conta responder — a tela não espera a rede para aparecer */
-      desenharResumo(Area.pedidos().length);
-
-      var Conta = window.PharmaFitConta;
-      if (Conta && Conta.pedidos) {
-        Conta.pedidos().then(function (r) {
-          desenharResumo((r && r.lista ? r.lista : []).length);
-        }).catch(function () {});
-      }
-    }
-  }
+  /* ---------- minha conta ----------
+   *
+   * ESTE PEDAÇO FOI EMBORA em 17/09/2026, com o formulário "Meus dados"
+   * que ele servia. O Brian pediu para tirar a tela, e código que
+   * atende uma tela que não existe mais é pior do que código que
+   * falta: ele parece feito.
+   *
+   * O que estava aqui e para onde foi:
+   *
+   *   - preencher os campos com o cadastro (e refazer isso quando a
+   *     conta responde) -> não há campos para preencher. Quem lê o
+   *     cadastro da conta continua sendo `Conta.sincronizarCadastro()`,
+   *     que roda sozinho na abertura e alimenta o pedido.
+   *   - salvar o cadastro na conta -> passou para a hora do PEDIDO,
+   *     em `assets/js/pedido.js`. Era obrigatório mexer nisso junto:
+   *     sem o formulário, o endereço novo digitado na compra ficaria
+   *     só no aparelho e a sincronização da abertura seguinte o
+   *     substituiria pelo antigo da conta, sem erro nenhum na tela.
+   *   - "Apagar meus dados" -> saiu com o formulário. Quem quer sair
+   *     de vez usa "Sair da conta", logo abaixo, que limpa o aparelho.
+   *   - um resumo em `[data-resumo-conta]` que JÁ estava morto: esse
+   *     atributo não existe em página nenhuma. Quem desenha o resumo
+   *     da Conta é `assets/js/cliente.js`, em `[data-resumo-cliente]`.
+   */
 
   /* ---------- perguntas frequentes ---------- */
 
@@ -314,7 +237,6 @@
   document.addEventListener('DOMContentLoaded', function () {
     pintarPedidos();
     ligarPedidos();
-    ligarConta();
     ligarFaq();
     ligarSair().catch(function () {});
   });

@@ -1,9 +1,11 @@
 /* =========================================================
    PHARMA FIT — área do cliente
 
-   Simples de propósito: sem cadastro, sem senha. Tudo fica
-   guardado no aparelho de quem usa — inclusive o controle das
-   aplicações, que é a parte que mais ajuda no dia a dia.
+   Desenha a tela da Conta: a saudação, o resumo e os últimos
+   pedidos. Os pedidos vêm da CONTA quando há conta, e do aparelho
+   como reserva — quem comprou nunca deve ver uma lista vazia.
+
+   precisa: minha-area, conta
    ========================================================= */
 (function () {
   'use strict';
@@ -267,19 +269,24 @@
       '</div>';
   }
 
-  function pintarResumo() {
+  function pintarResumo(lista) {
     var caixa = document.querySelector('[data-resumo-cliente]');
     if (!caixa) return;
 
-    var pedidos = Area.pedidos();
+    var quantos = (lista || Area.pedidos()).length;
     var favoritos = window.PharmaFitFavoritos ? window.PharmaFitFavoritos.ler().length : 0;
-    var s = Protocolo.situacao();
 
+    /* O TERCEIRO CARTÃO, "aplicações", SAIU em 17/09/2026.
+     *
+     * Ele apontava para `#protocolo`, e essa seção saiu da Conta a
+     * pedido do Brian. Sobrou na tela um cartão escrito "— aplicações"
+     * que não levava a lugar nenhum: clicar não fazia nada. É
+     * exatamente o que ele proibiu — ou funciona, ou não aparece na
+     * tela. O controle de aplicações continua escrito no código, agora
+     * sem tela nenhuma, e o que fazer com ele é decisão dele. */
     var itens = [
-      { valor: pedidos.length, rotulo: pedidos.length === 1 ? 'pedido' : 'pedidos', href: 'pedidos.html' },
-      { valor: favoritos, rotulo: favoritos === 1 ? 'favorito' : 'favoritos', href: 'favoritos.html' },
-      { valor: s.estado === 'sem-inicio' ? '—' : s.semana,
-        rotulo: 'aplicações', href: '#protocolo' }
+      { valor: quantos, rotulo: quantos === 1 ? 'pedido' : 'pedidos', href: 'pedidos.html' },
+      { valor: favoritos, rotulo: favoritos === 1 ? 'favorito' : 'favoritos', href: 'favoritos.html' }
     ];
 
     caixa.innerHTML = itens.map(function (i) {
@@ -288,11 +295,11 @@
     }).join('');
   }
 
-  function pintarUltimosPedidos() {
+  function pintarUltimosPedidos(lista) {
     var caixa = document.getElementById('ultimos-pedidos');
     if (!caixa) return;
 
-    var pedidos = Area.pedidos().slice(0, 2);
+    var pedidos = (lista || Area.pedidos()).slice(0, 2);
 
     if (!pedidos.length) {
       caixa.innerHTML = '<p class="empty">Você ainda não fez pedidos por aqui.</p>';
@@ -300,17 +307,47 @@
     }
 
     caixa.innerHTML = pedidos.map(function (p) {
+      /* `quando` é o nome no aparelho; `criado_em` é o nome no banco.
+         Sem os dois, o pedido que vem da conta apareceria sem data. */
+      var quando = p.quando || p.criado_em;
       return '<div class="pedido pedido--enxuto">' +
         '<div class="pedido__topo">' +
           '<p class="pedido__nome">' + esc(p.produto) + '</p>' +
           (p.quantidade > 1 ? '<span class="pedido__qtd">' + p.quantidade + ' un.</span>' : '') +
         '</div>' +
-        '<p class="pedido__data">Enviado em ' + dataCurta(p.quando) + '</p>' +
+        (quando ? '<p class="pedido__data">Enviado em ' + dataCurta(quando) + '</p>' : '') +
         '<button class="linkish linkish--repetir" type="button" data-pedido="' + esc(p.produto) +
           '" data-quantidade="' + Number(p.quantidade || 1) + '">Pedir de novo</button>' +
       '</div>';
     }).join('') +
     '<a class="linkish" href="pedidos.html">Ver todos os pedidos</a>';
+  }
+
+  /* OS PEDIDOS DA CONTA, E NÃO SÓ OS DESTE APARELHO.
+   *
+   * As duas funções acima liam `Area.pedidos()`, que é a lista guardada
+   * NESTE navegador. Enquanto "Meus pedidos" tinha aba própria na barra
+   * de baixo isso passava. Desde 17/09/2026 a Conta é a ÚNICA porta
+   * para os pedidos — e uma porta escrita "0 pedidos" para quem tem
+   * três é uma porta que ninguém abre. Quem comprou no celular e abrisse
+   * no computador leria "Você ainda não fez pedidos por aqui", que é
+   * mentira, e concluiria que o pedido sumiu.
+   *
+   * A tela desenha PRIMEIRO com o que o aparelho tem e corrige quando a
+   * conta responde: nada espera a rede para aparecer. É a mesma ordem da
+   * tela de pedidos, para as duas nunca dizerem números diferentes. Se a
+   * conta não responder, fica valendo o do aparelho — como era antes. */
+  function corrigirComAConta() {
+    var Conta = window.PharmaFitConta;
+    if (!Conta || !Conta.pedidos) return;
+    if (!document.querySelector('[data-resumo-cliente]') &&
+        !document.getElementById('ultimos-pedidos')) return;
+
+    Conta.pedidos().then(function (r) {
+      if (!r || r.de !== 'conta' || !r.lista) return;
+      pintarResumo(r.lista);
+      pintarUltimosPedidos(r.lista);
+    }).catch(function () {});
   }
 
   function saudacao() {
@@ -374,6 +411,7 @@
     pintarResumo();
     pintarProtocolo();
     pintarUltimosPedidos();
+    corrigirComAConta();
   });
 
   window.PharmaFitProtocolo = Protocolo;

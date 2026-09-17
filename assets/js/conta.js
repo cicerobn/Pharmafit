@@ -23,6 +23,8 @@
    qualquer cliente poderia pôr o telefone de outro e ler os pedidos
    dele. O vínculo tem de ser o identificador da conta, que o
    servidor escreve e ninguém de fora consegue trocar.
+
+   precisa: nuvem, minha-area
    ========================================================= */
 (function () {
   'use strict';

@@ -3361,3 +3361,40 @@ textarea:focus-visible{
   font-weight:600;
   overflow-wrap:anywhere;
 }
+
+/* ---------------------------------------------------------
+   A FOTO DO TOPO DA PÁGINA INICIAL
+
+   A arte antiga era um desenho de linha com fundo
+   transparente, e por isso podia ficar ATRÁS do título,
+   sangrando pela direita. A foto que entrou em 17/09/2026 é
+   uma composição de estúdio com fundo branco próprio: no
+   mesmo lugar, ela viraria uma caixa branca em cima do creme,
+   com o título escrito por cima do frasco.
+
+   Então ela ocupa o lugar dela — bloco próprio, cantos
+   arredondados, sombra fraca — e o título volta a ter o
+   espaço inteiro. Foto de estúdio se apresenta como foto.
+   --------------------------------------------------------- */
+
+.hero__art--foto{
+  position:static;
+  top:auto;right:auto;
+  display:block;
+  width:100%;
+  max-width:none;
+  height:auto;
+  margin:18px 0 0;
+  border-radius:20px;
+  /* a sombra é fraca de propósito: a foto já tem fundo claro, e
+     sombra forte em fundo claro parece adesivo colado na tela */
+  box-shadow:0 14px 34px rgba(40,30,10,.10);
+  pointer-events:auto;
+}
+
+@media (min-width:900px){
+  .hero__art--foto{
+    margin:0;
+    max-width:520px;
+  }
+}

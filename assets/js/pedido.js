@@ -8,6 +8,14 @@
 
    Sem Supabase configurado, o pedido é guardado neste
    navegador (modo demonstração) — o painel lê do mesmo lugar.
+
+   precisa: nuvem, minha-area, conta
+
+   Esta linha é lida por `conferir-scripts.mjs`, e ela existe porque o
+   `conta.js` estava em 4 das 16 páginas enquanto este arquivo estava
+   em todas: o pedido nascia sem dono em 12 delas, calado. A ordem
+   também conta — os três se anunciam em `window.…` e têm de rodar
+   antes deste.
    ========================================================= */
 (function () {
   'use strict';
@@ -347,6 +355,25 @@
         window.PharmaFitArea.registrarPedido({
           cliente: nome, produto: produto, quantidade: quantidade, endereco: endereco
         });
+      }
+
+      /* E SOBE PARA A CONTA, quando existe conta.
+       *
+       * Desde 17/09/2026 o pedido é o ÚNICO lugar onde a pessoa digita
+       * nome, WhatsApp e endereço — a tela "Meus dados" saiu da Conta.
+       * Sem esta linha havia um defeito silencioso: o endereço novo
+       * ficava só no navegador, e na abertura seguinte a sincronização
+       * (que dá razão à conta) o trocaria pelo endereço ANTIGO. A
+       * pessoa mudou de casa, comprou no endereço certo, e o site
+       * voltaria a mostrar o velho sem nenhum erro na tela.
+       *
+       * Vai depois do pedido já estar registrado e sem `await` na
+       * frente do que o cliente vê: se falhar, o pedido está feito e a
+       * tela de sucesso aparece igual. */
+      if (window.PharmaFitConta && window.PharmaFitConta.salvarCadastro) {
+        window.PharmaFitConta
+          .salvarCadastro({ nome: nome, telefone: zap, endereco: endereco })
+          .catch(function () {});
       }
 
       var link = linkWhatsApp({

@@ -154,6 +154,23 @@ jobs:
       - name: Conferir que o menu é o mesmo em toda página
         run: node conferir-menus.mjs
 
+      # A lista de scripts também é escrita à mão nas 16 páginas, e o
+      # estrago de errar ali é pior que no menu: menu diferente a pessoa
+      # VÊ; script faltando ninguém vê.
+      #
+      # Medido em 17/09/2026: `conta.js` estava em 4 das 16 páginas, e
+      # `pedido.js` — que está nas 16 — pergunta a ele quem está logado
+      # para carimbar o dono do pedido. Nas outras 12 esse objeto não
+      # existia, o `try/catch` engolia, e o pedido era gravado SEM dono
+      # mostrando sucesso na tela. Quem comprasse logado pela página
+      # inicial não achava o pedido no outro aparelho.
+      #
+      # Cada script declara de quem depende numa linha "precisa:", junto
+      # do código que tem a necessidade; este passo confere as 16 páginas
+      # contra essa declaração, inclusive a ORDEM das tags.
+      - name: Conferir que cada página carrega o que seus scripts precisam
+        run: node conferir-scripts.mjs
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela

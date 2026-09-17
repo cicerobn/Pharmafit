@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=b8007856">
+<link rel="stylesheet" href="assets/css/styles.css?v=ce1296a9">
 </head>
 <body>
 
@@ -88,7 +88,31 @@
           </a>
         </div>
       </div>
-      <img class="hero__art" src="assets/img/hero.svg" alt="Frasco de tirzepatida Pharma Fit ao lado de uma seringa">
+      <!-- A FOTO DO PRODUTO, e não mais o desenho.
+           O Brian mandou esta imagem em 17/09/2026 para o topo da
+           inicial. Ela é uma composição de estúdio com fundo próprio
+           (branco, anel dourado, mármore) — então ela entra como FOTO
+           enquadrada, e não como a arte transparente que sangrava atrás
+           do título. Eu tentei recortar o branco: a enchente a partir da
+           borda não alcança o branco de DENTRO do anel dourado, porque a
+           linha do anel bloqueia, e o resultado ficou um remendo de
+           branco com creme. Foto de estúdio se apresenta como foto.
+
+           1.395 KB no arquivo original viraram 43 KB e 23 KB em WebP,
+           em dois tamanhos: no topo da página, peso é tempo de espera
+           no 4G, e esta é a primeira coisa que o cliente vê.
+
+           `width`/`height` para o texto não pular quando ela carrega,
+           e `fetchpriority="high"` porque ela está acima da dobra —
+           adiar a imagem do topo é adiar a primeira impressão. -->
+      <img class="hero__art hero__art--foto"
+           src="assets/img/hero-tirzepatida-620.webp"
+           srcset="assets/img/hero-tirzepatida-620.webp 620w,
+                   assets/img/hero-tirzepatida-1040.webp 1040w"
+           sizes="(min-width:900px) 520px, 100vw"
+           width="1160" height="1167"
+           fetchpriority="high"
+           alt="Frasco de tirzepatida Pharma Fit ao lado de uma seringa">
     </div>
   </section>
 
@@ -290,6 +314,7 @@
 <script src="assets/js/modal.js?v=9146042c"></script>
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/minha-area.js?v=101981a3"></script>
-<script src="assets/js/pedido.js?v=d92618a4"></script>
+<script src="assets/js/conta.js?v=5b35fb28"></script>
+<script src="assets/js/pedido.js?v=a1f4494d"></script>
 </body>
 </html>
