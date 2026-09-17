@@ -40,7 +40,16 @@
     if (!Nuvem || jaFoi) return false;
     jaFoi = true;
 
-    var doBanco = await Nuvem.buscar('produtos', 'nome');
+    /* A VITRINE, E NÃO A TABELA.
+     *
+     * `pf_produtos` tem a coluna `custo` — quanto a Pharma Fit paga por
+     * cada caixa. Este arquivo roda no navegador do visitante, com a
+     * chave que está escrita dentro do código do site; então tudo que ele
+     * consegue pedir é tudo que qualquer pessoa consegue pedir. Medido em
+     * 17/09/2026: dava para ler a margem inteira, produto por produto.
+     *
+     * `pf_produtos_publico` é a mesma lista sem essa coluna. */
+    var doBanco = await Nuvem.buscar('produtos_publico', 'nome');
     if (!doBanco || !doBanco.length) return false;
 
     var porNome = {};
@@ -97,7 +106,10 @@
       if (b.ativo === false) return;
       catalogo.push({
         nome: b.nome, categoria: b.categoria || 'Outros',
-        descricao: b.descricao || '', custo: b.custo, venda: b.preco,
+        /* sem `custo`: a vitrine não traz esse número, e o site não tem
+           o que fazer com ele. Quem precisa dele é o painel, que lê a
+           tabela com o login da equipe. */
+        descricao: b.descricao || '', venda: b.preco,
         antes: b.antes || 0, estoque: b.estoque,
         /* a foto que a equipe subiu; sem ela, o frasco genérico, que é
            melhor que um retângulo vazio do tamanho de uma foto */

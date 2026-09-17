@@ -70,6 +70,34 @@
     return 'Estoque: ' + n + (n === 1 ? ' unidade' : ' unidades');
   }
 
+  /* Venda menos compra, por unidade, na linha do produto.
+   *
+   * Três respostas possíveis, e nenhuma delas é o silêncio:
+   *   · tem os dois números  -> o lucro em reais e em porcento;
+   *   · falta o de compra    -> diz que falta, e é clicável logo ali;
+   *   · compra >= venda      -> avisa, porque isso custa dinheiro.
+   *
+   * Esta linha só existe no painel, que roda com o login da equipe. O
+   * site não recebe a coluna de custo — é o que a migração 08 fechou. */
+  function lucroDoProduto(p, preco) {
+    var compra = Number(p.custo || 0);
+    var venda = Number(preco || 0);
+
+    if (!venda) return '';
+    if (!compra) {
+      return '<p class="prod__lucro prod__lucro--falta">Falta o preço de compra</p>';
+    }
+
+    var lucro = venda - compra;
+    if (lucro <= 0) {
+      return '<p class="prod__lucro prod__lucro--ruim">' +
+        (lucro === 0 ? 'Lucro zero' : 'Prejuízo de ' + moeda(Math.abs(lucro))) +
+        '</p>';
+    }
+    return '<p class="prod__lucro">Lucro ' + moeda(lucro) +
+      ' · ' + Math.round((lucro / venda) * 100) + '%</p>';
+  }
+
   function situacao(p) {
     if (p.ativo === false) return '<span class="marca marca--off">Fora do site</span>';
     var tem = !(p.estoque === null || p.estoque === undefined || p.estoque === '');
@@ -164,6 +192,15 @@
           '<h3 class="prod__nome">' + esc(p.nome) + '</h3>' +
           '<p class="prod__estoque">' + esc(estoqueTexto(p)) + '</p>' +
           '<p class="prod__preco">' + moeda(preco) + '</p>' +
+          /* O LUCRO DE CADA PRODUTO, NA LISTA.
+             O Brian pediu o preço de compra "pra ver o lucro e a
+             receita". Faturamento e lucro do mês já estão em
+             Relatórios; o que faltava era por produto, onde a decisão
+             de preço acontece. E quando falta o preço de compra a
+             linha DIZ que falta, em vez de calar: produto sem preço
+             de compra é o que faz o lucro do relatório sair por cima
+             do real. */
+          lucroDoProduto(p, preco) +
           '<p class="prod__marca">' + situacao(p) + '</p>' +
         '</div>' +
         /* AS TRÊS BOLINHAS ABREM A EDIÇÃO AQUI MESMO.
@@ -278,12 +315,27 @@
             '<input type="number" id="ed-preco" min="0" step="0.01" inputmode="decimal">' +
             '<p class="campo__erro" data-erro hidden></p>' +
           '</div>' +
+          /* "PREÇO DE COMPRA", E NÃO "CUSTO".
+             O campo existia desde o começo, com o rótulo "Custo (R$)" —
+             e o Brian pediu "uma opção pra colocar o preço de compra,
+             atualmente só tem o preço de venda". Ele não achou o campo
+             que estava na tela. Rótulo que o dono não reconhece é campo
+             que não existe. */
           '<div class="campo" data-campo="custo">' +
-            '<label class="campo__rotulo" for="ed-custo">Custo (R$)</label>' +
-            '<input type="number" id="ed-custo" min="0" step="0.01" inputmode="decimal">' +
+            '<label class="campo__rotulo" for="ed-custo">Preço de compra (R$)</label>' +
+            '<input type="number" id="ed-custo" min="0" step="0.01" inputmode="decimal" ' +
+              'placeholder="quanto você paga">' +
             '<p class="campo__erro" data-erro hidden></p>' +
           '</div>' +
         '</div>' +
+
+        /* O LUCRO APARECE ENQUANTO ELE DIGITA.
+           O número que interessa não é nenhum dos dois campos, é a
+           diferença — e obrigar o dono a fazer a conta de cabeça a cada
+           produto é o painel devolvendo trabalho para ele. Some da tela
+           quando falta um dos dois: linha de lucro com metade da conta
+           mentiria. */
+        '<p class="folha__conta" data-lucro hidden></p>' +
 
         '<div class="folha__linha">' +
           '<div class="campo" data-campo="antes">' +
@@ -333,6 +385,9 @@
     var desc = folha.querySelector('#ed-descricao');
     var conta = folha.querySelector('[data-conta-descricao]');
     desc.addEventListener('input', function () { conta.textContent = desc.value.length; });
+
+    folha.querySelector('#ed-preco').addEventListener('input', pintarLucro);
+    folha.querySelector('#ed-custo').addEventListener('input', pintarLucro);
 
     var arquivo = folha.querySelector('[data-arquivo-foto]');
     folha.querySelector('[data-escolher-foto]').addEventListener('click', function () {
@@ -480,6 +535,53 @@
     return isNaN(n) ? NaN : n;
   }
 
+  /* ---------------------------------------------------------
+     O LUCRO DESTE PRODUTO, ENQUANTO ELE DIGITA
+
+     Venda menos compra, em reais e em porcento, embaixo dos dois
+     campos. Não é enfeite: é a pergunta que o dono faz ao digitar
+     o preço, e sem isto ele faz a conta de cabeça produto por
+     produto — ou não faz, e vende no prejuízo sem perceber.
+
+     Ela SOME quando falta um dos dois números, em vez de mostrar
+     "lucro R$ 1.099,00" para quem ainda não pôs o preço de compra.
+     E fala claro quando o lucro é negativo, que é o caso que
+     custa dinheiro.
+     --------------------------------------------------------- */
+
+  function pintarLucro() {
+    if (!folha) return;
+    var alvo = folha.querySelector('[data-lucro]');
+    if (!alvo) return;
+
+    var venda = numero(folha.querySelector('#ed-preco'));
+    var compra = numero(folha.querySelector('#ed-custo'));
+
+    if (venda === null || compra === null || isNaN(venda) || isNaN(compra) ||
+        venda <= 0 || compra <= 0) {
+      alvo.hidden = true;
+      alvo.className = 'folha__conta';
+      return;
+    }
+
+    var lucro = venda - compra;
+    var porcento = Math.round((lucro / venda) * 100);
+
+    alvo.hidden = false;
+    if (lucro < 0) {
+      alvo.className = 'folha__conta folha__conta--ruim';
+      alvo.textContent = 'Atenção: vendendo a ' + moeda(venda) + ' e comprando a ' +
+        moeda(compra) + ', cada unidade dá PREJUÍZO de ' + moeda(Math.abs(lucro)) + '.';
+    } else if (lucro === 0) {
+      alvo.className = 'folha__conta folha__conta--ruim';
+      alvo.textContent = 'Vendendo pelo mesmo preço da compra: lucro zero por unidade.';
+    } else {
+      alvo.className = 'folha__conta folha__conta--bom';
+      alvo.textContent = 'Lucro de ' + moeda(lucro) + ' por unidade (' + porcento +
+        '% do preço de venda).';
+    }
+  }
+
   async function salvar() {
     limparErros();
     calar();
@@ -588,6 +690,7 @@
     desc.value = p.descricao || '';
     folha.querySelector('[data-conta-descricao]').textContent = desc.value.length;
     folha.querySelector('[data-ativo]').checked = p.ativo !== false;
+    pintarLucro();
 
     /* As categorias que já existem, mais a do produto, para a lista não
        inventar categoria nem perder a que ele tem. */

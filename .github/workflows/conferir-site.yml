@@ -129,6 +129,20 @@ jobs:
       - name: Conferir que nenhuma tabela ficou fora do backup
         run: node conferir-listas.mjs
 
+      # O preço de compra de cada produto é número de dono. Medido em
+      # 17/09/2026: ele estava escrito no código do site (doze linhas em
+      # assets/js/catalogo.js) E vinha do banco na leitura da vitrine, porque
+      # a regra de leitura liberava a linha inteira. Com a chave do visitante
+      # — a que está dentro do código, pública por natureza — dava para ler
+      # a margem dos 11 produtos.
+      #
+      # Este passo fecha os dois caminhos pela forma: nenhum `custo: <número>`
+      # em arquivo que o site serve, e nenhuma leitura das tabelas que trazem
+      # custo (para isso existem as vistas sem a coluna). Gravar pedido
+      # continua liberado, que é a compra acontecendo.
+      - name: Conferir que o preço de compra não está no código do site
+        run: node conferir-custo-no-site.mjs
+
       # ---------- a loja nova, que mora em /loja/ ----------
       #
       # Este repositório publica a branch como ela está, e a loja é React: ela

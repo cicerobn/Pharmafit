@@ -735,6 +735,20 @@ a{color:inherit;text-decoration:none}
   font-size:19px;
   margin:7px 0 0;
 }
+
+/* O lucro por unidade, embaixo do preço. Discreto de propósito: o preço
+   é o que a equipe procura na lista, o lucro é a conferência. Quando
+   falta o preço de compra, a linha fica âmbar — não é erro, é uma
+   pendência, e cor de erro para pendência ensina a ignorar erro. */
+.prod__lucro{
+  margin:3px 0 0;
+  font-size:12px;
+  font-weight:600;
+  color:var(--st-pago);
+}
+.prod__lucro--falta{color:var(--st-pendente);font-weight:500}
+.prod__lucro--ruim{color:var(--st-cancelado)}
+
 .prod__marca{margin:8px 0 0}
 
 .prod__editar{
@@ -1332,6 +1346,31 @@ body.travado{overflow:hidden}
 .folha__linha{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
 @container (min-width:330px){
   .folha__linha{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* A conta que a folha faz sozinha: o lucro por unidade, embaixo do
+   preço de venda e do preço de compra. Verde quando há lucro, vermelho
+   quando não há — e a cor NÃO é a única marca da diferença, porque o
+   texto já diz "Lucro de" ou "PREJUÍZO de": quem não distingue as duas
+   cores continua lendo a mesma informação. */
+.folha__conta{
+  margin:-4px 0 0;
+  padding:10px 12px;
+  border-radius:11px;
+  font-size:13px;
+  line-height:1.45;
+  background:var(--line-2);
+  color:var(--ink-2);
+}
+.folha__conta--bom{
+  background:var(--st-pago-bg);
+  color:var(--st-pago);
+  font-weight:600;
+}
+.folha__conta--ruim{
+  background:var(--st-cancelado-bg);
+  color:var(--st-cancelado);
+  font-weight:600;
 }
 
 .campo--liga{

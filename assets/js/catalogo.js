@@ -1,10 +1,21 @@
 /* =========================================================
    PHARMA FIT — catálogo (fonte única de produtos e preços)
 
-   Este arquivo alimenta a loja e o painel de gestão.
-   Para mudar preço, custo ou promoção, mexa só aqui.
+   Este arquivo alimenta a loja. Para mudar preço ou promoção do
+   catálogo de partida, mexa só aqui — mas o que vale no ar é o que
+   estiver no painel: o banco sobrescreve isto ao carregar a página.
 
-     custo   -> quanto o produto custa para vocês (nunca aparece no site)
+   O PREÇO DE COMPRA NÃO MORA MAIS AQUI
+
+   Ele morava: doze linhas com o preço de compra de cada produto, uma
+   por uma. O comentário antigo dizia
+   "nunca aparece no site", e isso era verdade para a TELA e mentira
+   para o ARQUIVO — este arquivo é servido ao visitante, e abrir
+   /assets/js/catalogo.js num navegador mostrava a margem de cada
+   produto. O preço de compra agora existe num lugar só: a coluna
+   `custo` de `pf_produtos`, que só a equipe logada lê. Você digita
+   nela pelo painel, em Produtos → três bolinhas → Preço de compra.
+
      venda   -> preço para o cliente
      antes   -> preço "de" riscado; 0 = sem promoção
      estoque -> null = sem controle de estoque; número = controla e
@@ -21,7 +32,7 @@
 
      {
        nome: 'Tirzec Pen 15 mg',
-       custo: 520, venda: 1099, antes: 0,
+       venda: 1099, antes: 0,
        atacado: [
          { nome: 'Varejo',    de: 1,  ate: 4, preco: 1099 },
          { nome: 'Atacado',   de: 5,  ate: 9, preco: 1050 },
@@ -56,7 +67,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Tirzec Pen 15 mg',
     categoria: 'Tirzepatida',
     descricao: 'Caneta aplicadora de tirzepatida 15 mg, pronta para uso.',
-    custo: 520, venda: 1099, antes: 0,
+    venda: 1099, antes: 0,
     /* As faixas que o Brian passou (16/09/2026, "vá fazendo").
        `venda` fica em 1099 de propósito: é o preço de uma unidade, e a
        primeira faixa repete o mesmo número. Se os dois discordassem, o
@@ -74,7 +85,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'TG 15 mg — 4 ampolas',
     categoria: 'Tirzepatida',
     descricao: 'Tirzepatida 15 mg, caixa com 4 ampolas.',
-    custo: 450, venda: 999, antes: 1300,
+    venda: 999, antes: 1300,
     imagem: 'assets/img/prod-ampolas.svg',
     estoque: null
   },
@@ -82,7 +93,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Tirzedral 15 mg — 4 ampolas',
     categoria: 'Tirzepatida',
     descricao: 'Tirzepatida 15 mg, caixa com 4 ampolas.',
-    custo: 0, venda: 999, antes: 1300,
+    venda: 999, antes: 1300,
     imagem: 'assets/img/prod-ampolas.svg',
     estoque: null
   },
@@ -90,7 +101,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Lipoless 15 mg — 4 ampolas',
     categoria: 'Tirzepatida',
     descricao: 'Tirzepatida 15 mg, caixa com 4 ampolas.',
-    custo: 435, venda: 999, antes: 1300,
+    venda: 999, antes: 1300,
     imagem: 'assets/img/prod-ampolas.svg',
     estoque: null
   },
@@ -98,7 +109,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Tirzec 15 mg — 4 ampolas',
     categoria: 'Tirzepatida',
     descricao: 'Tirzepatida 15 mg, caixa com 4 ampolas.',
-    custo: 450, venda: 999, antes: 1300,
+    venda: 999, antes: 1300,
     imagem: 'assets/img/prod-ampolas.svg',
     estoque: null
   },
@@ -106,7 +117,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Gluconex 15 mg — 4 ampolas',
     categoria: 'Tirzepatida',
     descricao: 'Tirzepatida 15 mg, caixa com 4 ampolas.',
-    custo: 450, venda: 999, antes: 1300,
+    venda: 999, antes: 1300,
     imagem: 'assets/img/prod-ampolas.svg',
     estoque: null
   },
@@ -114,7 +125,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Lipoland 15 mg — 4 ampolas',
     categoria: 'Tirzepatida',
     descricao: 'Tirzepatida 15 mg, caixa com 4 ampolas.',
-    custo: 440, venda: 999, antes: 1300,
+    venda: 999, antes: 1300,
     imagem: 'assets/img/prod-ampolas.svg',
     estoque: null
   },
@@ -124,7 +135,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Retatrutide ZPHC 120 mg',
     categoria: 'Retatrutida',
     descricao: 'Retatrutida 120 mg, linha ZPHC.',
-    custo: 2060, venda: 3249, antes: 0,
+    venda: 3249, antes: 0,
     imagem: 'assets/img/prod-frasco.svg',
     destaque: 'LINHA PREMIUM',
     estoque: null
@@ -135,7 +146,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Glow GHK-Cu Alluvi',
     categoria: 'Peptídeos',
     descricao: 'Peptídeo de cobre GHK-Cu, linha Alluvi.',
-    custo: 620, venda: 1099, antes: 0,
+    venda: 1099, antes: 0,
     imagem: 'assets/img/prod-frasco.svg',
     estoque: null
   },
@@ -143,7 +154,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'GHK-Cu 100 mg',
     categoria: 'Peptídeos',
     descricao: 'Peptídeo de cobre GHK-Cu, frasco de 100 mg.',
-    custo: 200, venda: 799, antes: 0,
+    venda: 799, antes: 0,
     imagem: 'assets/img/prod-frasco.svg',
     estoque: null
   },
@@ -151,7 +162,7 @@ window.PHARMAFIT_CATALOGO = [
     nome: 'Klow 70 mg',
     categoria: 'Peptídeos',
     descricao: 'Blend de peptídeos Klow, frasco de 70 mg.',
-    custo: 300, venda: 870, antes: 0,
+    venda: 870, antes: 0,
     imagem: 'assets/img/prod-frasco.svg',
     estoque: null
   }

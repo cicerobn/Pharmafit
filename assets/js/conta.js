@@ -4,18 +4,17 @@
    Usa o Supabase Auth pelo cliente que o nuvem.js já criou. NÃO
    cria um segundo cliente nem repete a chave em lugar nenhum.
 
-   O QUE ESTA CONTA É, E O QUE ELA AINDA NÃO É
+   O QUE ESTA CONTA FAZ
 
-   Entrar e criar conta funcionam hoje. Ver os pedidos DA CONTA (os
-   mesmos em qualquer aparelho) depende de uma coluna nova em
-   pf_pedidos, que é mudança de estrutura no banco de produção — está
-   escrita e pronta em gestao/supabase/migracao-03-conta-do-cliente.sql,
-   e não foi aplicada, porque essa decisão é do Brian.
+   Entrar, criar conta e ver os pedidos DA CONTA, os mesmos em qualquer
+   aparelho. A coluna que liga pedido e pessoa (`cliente_id`) entrou no
+   banco em 16/09/2026 (migracao-03-conta-do-cliente.sql), e desde
+   17/09/2026 a lista vem de `pf_pedidos_meus` — uma vista que já filtra
+   pela conta e não tem a coluna de custo dentro.
 
-   Enquanto ela não for aplicada, a lista de pedidos é a deste
-   aparelho, como já era antes desta tela existir. O código já tenta a
-   conta primeiro e cai para o aparelho — no dia em que a migração
-   entrar, ele passa a mostrar a conta sem eu mexer em nada.
+   A lista deste APARELHO fica como reserva, de propósito: pedido feito
+   antes de a pessoa ter conta, ou feito sem login, só existe ali. Quem
+   comprou nunca deve ver uma lista vazia.
 
    O FURO QUE EU NÃO FIZ
 
@@ -221,9 +220,19 @@
       if (!sb) return { lista: doAparelho, de: 'aparelho' };
 
       try {
-        var r = await sb.from('pf_pedidos')
+        /* A VISTA, E NÃO A TABELA.
+         *
+         * Esta consulta já pedia colunas nomeadas, sem custo. Mas quem
+         * manda é a REGRA do banco, e ela entregava a LINHA INTEIRA ao
+         * dono do pedido: bastava pedir `custo` na mão para saber quanto
+         * aquele pedido custou para a Pharma Fit.
+         *
+         * `pf_pedidos_meus` não tem a coluna, e o filtro por conta mora
+         * DENTRO dela. Por isso o `.eq('cliente_id', …)` saiu: a vista
+         * não expõe essa coluna, e pedir o id de outra pessoa não traria
+         * nada de todo modo. */
+        var r = await sb.from('pf_pedidos_meus')
           .select('id,produto,quantidade,valor,status,criado_em,confirmado_em')
-          .eq('cliente_id', u.id)
           .order('criado_em', { ascending: false });
 
         if (!r.error && r.data && r.data.length) {
