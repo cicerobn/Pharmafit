@@ -398,6 +398,23 @@
 
   window.PharmaFitIdioma = {
     atual: function () { return atual; },
+
+    /** O CÓDIGO DO IDIOMA, para datas e números: "pt-BR" ou "es-PY".
+     *
+     * Existe porque o `lang` do documento NÃO serve para isso, e eu
+     * descobri medindo. Quem escreve texto na hora costuma ler
+     * `document.documentElement.lang` — e na abertura da página esse
+     * atributo ainda está em `pt-BR`: os avisos de DOMContentLoaded
+     * rodam um por um, e as promessas de cada um são resolvidas ANTES
+     * do aviso seguinte. Quem desenha a tela lendo o banco chega na
+     * frente de quem traduz.
+     *
+     * O resultado era "Cliente desde setembro de 2026" no meio de uma
+     * tela inteira em espanhol, e o dicionário não tem como consertar:
+     * a frase muda de mês em mês. Aqui a resposta vem da escolha
+     * guardada, que já existe antes de qualquer tela ser desenhada. */
+    local: function () { return (IDIOMAS[atual] || IDIOMAS[PADRAO]).lang; },
+
     trocar: trocar,
     /** Traduz uma frase solta — para o JavaScript que monta texto. */
     diz: function (pt) {

@@ -5,7 +5,7 @@
    pedidos. Os pedidos vêm da CONTA quando há conta, e do aparelho
    como reserva — quem comprou nunca deve ver uma lista vazia.
 
-   precisa: minha-area, conta
+   precisa: minha-area, conta, idioma
    ========================================================= */
 (function () {
   'use strict';
@@ -57,7 +57,12 @@
 
   function dataCurta(v) {
     var d = new Date(v);
-    return isNaN(d) ? '' : d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    if (isNaN(d)) return '';
+    try {
+      return d.toLocaleDateString(idiomaLocal(), { day: '2-digit', month: '2-digit' });
+    } catch (e) {
+      return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
   }
 
   /** "sexta-feira" -> "Sexta-feira" (só a primeira letra) */
@@ -269,43 +274,214 @@
       '</div>';
   }
 
-  function pintarResumo(lista) {
-    var caixa = document.querySelector('[data-resumo-cliente]');
-    if (!caixa) return;
+  /* =========================================================
+     A PÁGINA DE CONTA
 
-    var quantos = (lista || Area.pedidos()).length;
-    var favoritos = window.PharmaFitFavoritos ? window.PharmaFitFavoritos.ler().length : 0;
+     "Faça uma parte de conta bem feita, isso aqui tá horrível" —
+     17/09/2026, com a foto da tela depois de ele criar a conta dele.
 
-    /* O TERCEIRO CARTÃO, "aplicações", SAIU em 17/09/2026.
-     *
-     * Ele apontava para `#protocolo`, e essa seção saiu da Conta a
-     * pedido do Brian. Sobrou na tela um cartão escrito "— aplicações"
-     * que não levava a lugar nenhum: clicar não fazia nada. É
-     * exatamente o que ele proibiu — ou funciona, ou não aparece na
-     * tela. O controle de aplicações continua escrito no código, agora
-     * sem tela nenhuma, e o que fazer com ele é decisão dele. */
-    var itens = [
-      { valor: quantos, rotulo: quantos === 1 ? 'pedido' : 'pedidos', href: 'pedidos.html' },
-      { valor: favoritos, rotulo: favoritos === 1 ? 'favorito' : 'favoritos', href: 'favoritos.html' }
-    ];
+     Ele estava certo, e a culpa é da forma como eu trabalhei: ele
+     mandou tirar três coisas daqui (o formulário "Meus dados", os dois
+     atalhos e o rodapé), eu tirei, e não pus nada no lugar. Sobraram
+     dois números soltos, uma lista vazia e um botão de sair flutuando
+     num vazio de meia tela.
 
-    caixa.innerHTML = itens.map(function (i) {
-      return '<a class="resumo-item" href="' + i.href + '"><b>' + i.valor + '</b><span>' +
-        esc(i.rotulo) + '</span></a>';
-    }).join('');
+     E havia um caso pior, que a foto dele não mostra porque ele estava
+     logado: SEM CONTA, esta página dizia "0 pedidos · 0 favoritos" e
+     "Você ainda não fez pedidos por aqui", sem uma palavra sobre
+     entrar. A aba "Conta" na barra de baixo leva todo mundo para cá,
+     inclusive quem nunca criou conta.
+
+     São três estados, e os três são desenhados aqui:
+
+       1. com conta  -> quem você é, seus números, seus pedidos, a
+                        troca de senha e o sair;
+       2. sem conta  -> um convite com Entrar e Criar conta — e, se
+                        houver pedidos NESTE aparelho, eles continuam
+                        aparecendo, porque quem comprou sem conta
+                        comprou de verdade;
+       3. carregando -> a ficha do aparelho na hora, corrigida quando
+                        a conta responde. Nada espera a rede.
+     ========================================================= */
+
+  /* O MÊS SAI NO IDIOMA DA PÁGINA, e não em português fixo.
+     Com `'pt-BR'` cravado aqui, quem abrisse o site em espanhol leria
+     "Cliente desde setembro de 2026" no meio de uma tela inteira em
+     espanhol — e o dicionário não teria como consertar, porque a frase
+     muda de mês em mês. O `lang` do documento é o que o motor de
+     idioma escreve quando traduz a página. */
+  function idiomaLocal() {
+    var I = window.PharmaFitIdioma;
+    if (I && I.local) return I.local();
+    /* reserva: o atributo do documento. Ele chega tarde na abertura
+       (medido), mas é melhor que cravar português. */
+    return document.documentElement.getAttribute('lang') || 'pt-BR';
   }
 
-  function pintarUltimosPedidos(lista) {
-    var caixa = document.getElementById('ultimos-pedidos');
+  function mes(v) {
+    var d = new Date(v);
+    if (isNaN(d)) return '';
+    try {
+      return d.toLocaleDateString(idiomaLocal(), { month: 'long', year: 'numeric' });
+    } catch (e) {
+      return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    }
+  }
+
+  function desenhaFicha(dados) {
+    var caixa = document.querySelector('[data-ficha-conta]');
     if (!caixa) return;
 
-    var pedidos = (lista || Area.pedidos()).slice(0, 2);
+    var favoritos = window.PharmaFitFavoritos ? window.PharmaFitFavoritos.ler().length : 0;
+    var pedidos = dados.pedidos;
 
-    if (!pedidos.length) {
-      caixa.innerHTML = '<p class="empty">Você ainda não fez pedidos por aqui.</p>';
+    /* OS NÚMEROS MORAM DENTRO DA FICHA, e não soltos.
+       Antes eram dois cartões brancos no meio do nada; ali em cima
+       eles viram o pé da ficha de quem você é, que é o lugar deles.
+       Continuam sendo LINKS: número que não leva a nada é enfeite. */
+    var numeros =
+      '<div class="ficha-conta__numeros">' +
+        '<a class="ficha-conta__num" href="pedidos.html">' +
+          '<b>' + pedidos + '</b><span>' + (pedidos === 1 ? 'pedido' : 'pedidos') + '</span>' +
+        '</a>' +
+        '<a class="ficha-conta__num" href="favoritos.html">' +
+          '<b>' + favoritos + '</b><span>' + (favoritos === 1 ? 'favorito' : 'favoritos') + '</span>' +
+        '</a>' +
+      '</div>';
+
+    if (!dados.usuario) {
+      /* SEM CONTA: um convite, não uma tela vazia. */
+      caixa.innerHTML =
+        '<div class="ficha-conta ficha-conta--convite">' +
+          '<span class="ficha-conta__inicial ficha-conta__inicial--vazia" aria-hidden="true">' +
+            '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+              'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M16 20v-1.5a4 4 0 0 0-8 0V20"/><circle cx="12" cy="8" r="3.4"/></svg>' +
+          '</span>' +
+          '<p class="ficha-conta__chamada">Entre na sua conta</p>' +
+          '<p class="ficha-conta__ajuda">Seus pedidos e seus dados de entrega ficam guardados e ' +
+            'aparecem em qualquer aparelho — no celular e no computador.</p>' +
+          '<div class="ficha-conta__botoes">' +
+            '<a class="btn btn--primary" href="entrar.html">Entrar</a>' +
+            '<a class="btn btn--outline" href="criar-conta.html">Criar minha conta</a>' +
+          '</div>' +
+          /* E QUEM NÃO QUER CONTA TAMBÉM TEM SAÍDA.
+             Comprar sem conta funciona e vai continuar funcionando;
+             uma tela que só oferece "entrar" e "criar conta" parece
+             exigir cadastro para comprar, e isso faz a pessoa fechar. */
+          '<a class="linkish ficha-conta__semconta" href="produtos.html">' +
+            'Só quero ver os produtos</a>' +
+        '</div>' +
+        (pedidos || favoritos ? numeros.replace('ficha-conta__numeros',
+          'ficha-conta__numeros ficha-conta__numeros--solto') : '');
       return;
     }
 
+    var u = dados.usuario;
+    var nome = (u.user_metadata && u.user_metadata.nome) || Area.dados().nome || '';
+    nome = String(nome).trim();
+    var inicial = (nome || u.email || '?').charAt(0).toUpperCase();
+    var desde = mes(u.created_at);
+
+    caixa.innerHTML =
+      '<div class="ficha-conta">' +
+        '<div class="ficha-conta__topo">' +
+          '<span class="ficha-conta__inicial" aria-hidden="true">' + esc(inicial) + '</span>' +
+          '<span class="ficha-conta__quem">' +
+            (nome ? '<b class="ficha-conta__nome">' + esc(nome) + '</b>' : '') +
+            '<span class="ficha-conta__email">' + esc(u.email || '') + '</span>' +
+            (desde ? '<span class="ficha-conta__desde">Cliente desde ' + esc(desde) + '</span>' : '') +
+          '</span>' +
+        '</div>' +
+        numeros +
+      '</div>';
+  }
+
+  function desenhaAcoes(dados) {
+    var caixa = document.querySelector('[data-acoes-conta]');
+    if (!caixa) return;
+
+    /* SÓ O QUE FUNCIONA ENTRA AQUI.
+       A troca de senha só existe para quem tem conta com e-mail — sem
+       conta não há senha para trocar, e um botão desses na tela de
+       visitante seria exatamente o que ele proibiu. */
+    var linhas = [];
+
+    if (dados.usuario && dados.usuario.email) {
+      linhas.push(
+        '<button class="linha-conta" type="button" data-trocar-senha>' +
+          '<span class="linha-conta__ico">' +
+            '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+              'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+              '<rect x="4" y="10.5" width="16" height="10" rx="2.4"/>' +
+              '<path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg>' +
+          '</span>' +
+          '<span class="linha-conta__txt">' +
+            '<b>Trocar minha senha</b>' +
+            '<span>Enviamos um link para ' + esc(dados.usuario.email) + '</span>' +
+          '</span>' +
+          '<svg class="linha-conta__seta" width="18" height="18" viewBox="0 0 24 24" fill="none" ' +
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="m9 5 7 7-7 7"/></svg>' +
+        '</button>'
+      );
+    }
+
+    caixa.innerHTML = linhas.length ? '<div class="acoes-conta">' + linhas.join('') + '</div>' : '';
+  }
+
+  function pintarUltimosPedidos(lista, temConta) {
+    var caixa = document.getElementById('ultimos-pedidos');
+    if (!caixa) return;
+
+    var todos = lista || Area.pedidos();
+    var pedidos = todos.slice(0, 2);
+    var titulo = document.querySelector('[data-titulo-pedidos]');
+    var bloco = caixa.closest('.bloco-cliente');
+
+    /* SEM CONTA E SEM PEDIDO, ESTE BLOCO NÃO TEM O QUE DIZER.
+       Quem chega aqui pela aba "Conta" sem nunca ter comprado nem
+       criado conta lia duas coisas: o convite para entrar e, embaixo,
+       um cartão avisando que não havia pedido. O segundo não informa
+       nada que o primeiro já não resolva — e o convite já tem o
+       caminho para a loja. Com conta ele fica, porque ali a frase é
+       útil: explica ONDE o pedido vai aparecer. */
+    if (!pedidos.length && !temConta) {
+      if (titulo) titulo.hidden = true;
+      caixa.innerHTML = '';
+      if (bloco) bloco.hidden = true;
+      return;
+    }
+    if (bloco) bloco.hidden = false;
+
+    if (!pedidos.length) {
+      /* O VAZIO PASSOU A TER SAÍDA.
+         Antes: "Você ainda não fez pedidos por aqui." e mais nada. A
+         conta recém-criada é justamente a de quem tem zero pedidos —
+         era o pior caso que eu estava entregando, e é o que ele viu.
+         O título também sai: "Meus pedidos" em cima de um bloco que
+         diz que não há pedido nenhum é repetição. */
+      if (titulo) titulo.hidden = true;
+      caixa.innerHTML =
+        '<div class="vazio-conta">' +
+          '<span class="vazio-conta__ico" aria-hidden="true">' +
+            '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+              'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+              '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
+              '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/></svg>' +
+          '</span>' +
+          '<p class="vazio-conta__titulo">Você ainda não fez nenhum pedido</p>' +
+          '<p class="vazio-conta__texto">' +
+            (temConta
+              ? 'Quando fizer, ele aparece aqui com o andamento — e em qualquer aparelho onde você entrar.'
+              : 'Escolha um produto e a equipe fecha com você pelo WhatsApp.') +
+          '</p>' +
+          '<a class="btn btn--primary" href="produtos.html">Ver os produtos</a>' +
+        '</div>';
+      return;
+    }
+
+    if (titulo) titulo.hidden = false;
     caixa.innerHTML = pedidos.map(function (p) {
       /* `quando` é o nome no aparelho; `criado_em` é o nome no banco.
          Sem os dois, o pedido que vem da conta apareceria sem data. */
@@ -320,41 +496,107 @@
           '" data-quantidade="' + Number(p.quantidade || 1) + '">Pedir de novo</button>' +
       '</div>';
     }).join('') +
-    '<a class="linkish" href="pedidos.html">Ver todos os pedidos</a>';
+    (todos.length > 2
+      ? '<a class="linkish" href="pedidos.html">Ver todos os ' + todos.length + ' pedidos</a>'
+      : '<a class="linkish" href="pedidos.html">Ver todos os pedidos</a>');
   }
 
-  /* OS PEDIDOS DA CONTA, E NÃO SÓ OS DESTE APARELHO.
+  /* MONTA A PÁGINA. DUAS VEZES, E DE PROPÓSITO.
    *
-   * As duas funções acima liam `Area.pedidos()`, que é a lista guardada
-   * NESTE navegador. Enquanto "Meus pedidos" tinha aba própria na barra
-   * de baixo isso passava. Desde 17/09/2026 a Conta é a ÚNICA porta
-   * para os pedidos — e uma porta escrita "0 pedidos" para quem tem
-   * três é uma porta que ninguém abre. Quem comprou no celular e abrisse
-   * no computador leria "Você ainda não fez pedidos por aqui", que é
-   * mentira, e concluiria que o pedido sumiu.
+   * A primeira passada usa só o que já está no aparelho: desenha na
+   * hora, sem esperar a rede. A segunda chega quando a conta responde
+   * e corrige o que era do aparelho.
    *
-   * A tela desenha PRIMEIRO com o que o aparelho tem e corrige quando a
-   * conta responde: nada espera a rede para aparecer. É a mesma ordem da
-   * tela de pedidos, para as duas nunca dizerem números diferentes. Se a
-   * conta não responder, fica valendo o do aparelho — como era antes. */
-  function corrigirComAConta() {
-    var Conta = window.PharmaFitConta;
-    if (!Conta || !Conta.pedidos) return;
-    if (!document.querySelector('[data-resumo-cliente]') &&
-        !document.getElementById('ultimos-pedidos')) return;
+   * Por que corrigir: `Area.pedidos()` é a lista guardada NESTE
+   * navegador. Enquanto "Meus pedidos" tinha aba própria na barra de
+   * baixo isso passava. Desde 17/09/2026 a Conta é a ÚNICA porta para
+   * os pedidos — e uma porta escrita "0 pedidos" para quem tem três é
+   * uma porta que ninguém abre. Quem comprou no celular e abrisse no
+   * computador leria "você ainda não fez nenhum pedido", que é mentira,
+   * e concluiria que o pedido sumiu.
+   *
+   * Se a conta não responder, fica valendo o do aparelho — como era
+   * antes. O `catch` vazio é de propósito: esta página pode falhar em
+   * ficar bonita, não em abrir. */
+  function montarConta() {
+    if (!document.querySelector('[data-ficha-conta]')) return;
 
-    Conta.pedidos().then(function (r) {
-      if (!r || r.de !== 'conta' || !r.lista) return;
-      pintarResumo(r.lista);
-      pintarUltimosPedidos(r.lista);
+    var doAparelho = [];
+    try { doAparelho = Area.pedidos() || []; } catch (e) { doAparelho = []; }
+
+    /* primeira passada: o que o aparelho sabe, agora */
+    desenhaFicha({ usuario: null, pedidos: doAparelho.length });
+    desenhaAcoes({ usuario: null });
+    pintarUltimosPedidos(doAparelho, false);
+
+    var Conta = window.PharmaFitConta;
+    if (!Conta) return;
+
+    Conta.usuario().then(function (u) {
+      if (!u) return;                      /* sem conta, o convite fica */
+
+      desenhaFicha({ usuario: u, pedidos: doAparelho.length });
+      desenhaAcoes({ usuario: u });
+      saudacao(u);
+
+      if (!Conta.pedidos) return;
+      return Conta.pedidos().then(function (r) {
+        var lista = (r && r.de === 'conta' && r.lista) ? r.lista : doAparelho;
+        desenhaFicha({ usuario: u, pedidos: lista.length });
+        pintarUltimosPedidos(lista, true);
+      });
     }).catch(function () {});
   }
 
-  function saudacao() {
+  /* TROCAR A SENHA.
+   *
+   * O Supabase manda o link de troca para o e-mail DA CONTA — ninguém
+   * digita endereço nenhum aqui, então não há como pedir a troca da
+   * senha de outra pessoa. A mesma função que a tela de login usa.
+   *
+   * Ele pergunta antes. Sem a pergunta, um toque sem querer manda um
+   * e-mail de "sua senha" para o cliente, e isso assusta. */
+  async function pedirTrocaDeSenha(botao) {
+    var Conta = window.PharmaFitConta;
+    if (!Conta || !Conta.esqueciSenha) return;
+
+    var u = await Conta.usuario();
+    if (!u || !u.email) return;
+
+    var certeza = await window.PharmaFitConfirmar({
+      titulo: 'Trocar a senha?',
+      texto: 'Vamos enviar um link para ' + u.email + '. É por ele que você escolhe a senha ' +
+             'nova. A senha de agora continua valendo até você trocar.',
+      confirmar: 'Enviar o link',
+      cancelar: 'Deixar como está'
+    });
+    if (!certeza) return;
+
+    botao.disabled = true;
+    var r = await Conta.esqueciSenha(u.email);
+    botao.disabled = false;
+
+    toast(r && r.ok
+      ? 'Link enviado para ' + u.email + '. Procure na caixa de entrada.'
+      : ((r && r.erro) || 'Não deu certo agora. Tente de novo em alguns segundos.'));
+  }
+
+  /* A SAUDAÇÃO ACEITA O NOME DA CONTA, e não só o do aparelho.
+     Ela lia apenas `Area.dados().nome`. Quem entra num aparelho novo
+     tem o nome na CONTA e ainda não no navegador: a página dizia
+     "Conta" seca para uma pessoa cujo nome o site sabe. */
+  function saudacao(usuario) {
     var el = document.getElementById('saudacao');
     if (!el) return;
 
-    var nome = (Area.dados().nome || '').trim().split(' ')[0];
+    var nome = '';
+    if (usuario && usuario.user_metadata && usuario.user_metadata.nome) {
+      nome = String(usuario.user_metadata.nome);
+    } else {
+      try { nome = String(Area.dados().nome || ''); } catch (e) { nome = ''; }
+    }
+    nome = nome.trim().split(/\s+/)[0];
+
     var hora = new Date().getHours();
     var parte = hora < 12 ? 'Bom dia' : (hora < 18 ? 'Boa tarde' : 'Boa noite');
 
@@ -364,10 +606,15 @@
   /* ---------- eventos ---------- */
 
   document.addEventListener('click', function (e) {
+    var senha = e.target.closest('[data-trocar-senha]');
+    if (senha) {
+      pedirTrocaDeSenha(senha).catch(function () {});
+      return;
+    }
+
     if (e.target.closest('[data-aplicar]')) {
       Protocolo.registrar();
       pintarProtocolo();
-      pintarResumo();
       toast('Aplicação registrada. Próxima em ' + Protocolo.situacao().intervalo + ' dias.');
       return;
     }
@@ -380,7 +627,6 @@
     if (e.target.closest('[data-desfazer]')) {
       Protocolo.desfazerUltima();
       pintarProtocolo();
-      pintarResumo();
       toast('Última aplicação desfeita.');
     }
   });
@@ -408,10 +654,8 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     saudacao();
-    pintarResumo();
     pintarProtocolo();
-    pintarUltimosPedidos();
-    corrigirComAConta();
+    montarConta();
   });
 
   window.PharmaFitProtocolo = Protocolo;

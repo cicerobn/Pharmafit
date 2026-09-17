@@ -201,8 +201,13 @@
     if (!u) return;
 
     bloco.hidden = false;
-    var onde = bloco.querySelector('[data-sair-email]');
-    if (onde) onde.textContent = u.email || '';
+
+    /* O E-MAIL NÃO É ESCRITO AQUI DESDE 17/09/2026.
+       Ele ficava na letra miúda acima deste botão, e era o único lugar
+       da página que dizia em que conta a pessoa estava. Com a Conta
+       refeita ele subiu para a ficha, no alto, junto do nome e da
+       inicial (assets/js/cliente.js). Escrever nos dois seria manter
+       a mesma verdade em dois lugares — e um dia um deles mente. */
 
     bloco.querySelector('[data-sair-conta]').addEventListener('click', async function () {
       var certeza = await window.PharmaFitConfirmar({

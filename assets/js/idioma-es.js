@@ -375,6 +375,35 @@ window.PHARMAFIT_ES ={
   "especializado para transformar seu corpo, sua mente e seu bem-estar. Atendimento em Manaus · AM 🇧🇷": "especializado para transformar su cuerpo, su mente y su bienestar. Atención en Manaos · AM 🇧🇷",
   "favorito": "favorito",
   "favoritos": "favoritos",
+
+  /* ---- A PÁGINA DE CONTA, REFEITA EM 17/09/2026 ----
+     "Faça uma parte de conta bem feita, isso aqui tá horrível." Os
+     blocos novos são escritos pelo JavaScript, e texto escrito na hora
+     é o que mais escapa da tradução: nenhuma leitura de arquivo HTML
+     acha. Quem achou estas quatro primeiras foi a medição que abre as
+     16 páginas em espanhol e procura português na tela. */
+  "Entre na sua conta": "Entre en su cuenta",
+  "Seus pedidos e seus dados de entrega ficam guardados e aparecem em qualquer aparelho — no celular e no computador.": "Sus pedidos y sus datos de entrega quedan guardados y aparecen en cualquier dispositivo — en el celular y en la computadora.",
+  "Criar minha conta": "Crear mi cuenta",
+  "Só quero ver os produtos": "Solo quiero ver los productos",
+  "Você ainda não fez nenhum pedido": "Todavía no hizo ningún pedido",
+  "Quando fizer, ele aparece aqui com o andamento — e em qualquer aparelho onde você entrar.": "Cuando lo haga, aparece aquí con el seguimiento — y en cualquier dispositivo donde entre.",
+  "Escolha um produto e a equipe fecha com você pelo WhatsApp.": "Elija un producto y el equipo cierra con usted por WhatsApp.",
+  "Ver os produtos": "Ver los productos",
+  "Trocar minha senha": "Cambiar mi contraseña",
+  "Trocar a senha?": "¿Cambiar la contraseña?",
+  "Enviar o link": "Enviar el enlace",
+  "Deixar como está": "Dejar como está",
+  "Não deu certo agora. Tente de novo em alguns segundos.": "No funcionó ahora. Intente de nuevo en unos segundos.",
+
+  /* E TRÊS QUE JÁ FALTAVAM ANTES DE EU MEXER.
+     A lista de pedidos existe desde o começo e estas frases nunca
+     entraram no dicionário. Elas não apareciam na medição porque ela
+     abre a Conta SEM pedido nenhum — e sem pedido a lista não é
+     desenhada. Buraco que só aparece para quem comprou. */
+  "Pedir de novo": "Pedir de nuevo",
+  "Ver todos os pedidos": "Ver todos los pedidos",
+  "pedido": "pedido",
   "materiais e orientação": "materiales y orientación",
   "na tabela": "en la lista",
   "neste aparelho": "en este dispositivo",
@@ -451,5 +480,18 @@ window.PHARMAFIT_ES_PADROES = [
   { pt: /^Quantidade de (.+)$/, es: "Cantidad de $1" },
   { pt: /^Tirar (.+) dos favoritos$/, es: "Quitar $1 de favoritos" },
   { pt: /^Salvar (.+) nos favoritos$/, es: "Guardar $1 en favoritos" },
-  { pt: /^(\d+) em estoque$/, es: "$1 en stock" }
+  { pt: /^(\d+) em estoque$/, es: "$1 en stock" },
+
+  /* A PÁGINA DE CONTA: o que tem número, e-mail ou data dentro.
+     O nome do mês já sai em espanhol — `cliente.js` formata a data com
+     o idioma da página em vez de fixar pt-BR, senão "Cliente desde
+     septiembre" viria "setembro" no meio do espanhol. */
+  { pt: /^Cliente desde (.+)$/, es: "Cliente desde $1" },
+  { pt: /^Enviamos um link para (.+)$/, es: "Enviamos un enlace a $1" },
+  { pt: /^Ver todos os (\d+) pedidos$/, es: "Ver todos los $1 pedidos" },
+  { pt: /^Vamos enviar um link para (.+)\. É por ele que você escolhe a senha nova\. A senha de agora continua valendo até você trocar\.$/,
+    es: "Vamos a enviar un enlace a $1. Por ahí usted elige la contraseña nueva. La contraseña de ahora sigue valiendo hasta que la cambie." },
+  { pt: /^Link enviado para (.+)\. Procure na caixa de entrada\.$/,
+    es: "Enlace enviado a $1. Busque en la bandeja de entrada." },
+  { pt: /^Enviado em (.+)$/, es: "Enviado el $1" }
 ];

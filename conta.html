@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=c5429498">
+<link rel="stylesheet" href="assets/css/styles.css?v=2df51ff9">
 </head>
 <body>
 
@@ -68,33 +68,56 @@
   <section class="page-head">
     <h1 class="page-title" id="saudacao">Conta</h1>
     <div class="rule"></div>
-    <!-- Este texto dizia "tudo neste aparelho, sem cadastro". Era
-         verdade quando a conta não existia; desde 17/09/2026 os pedidos
-         e os dados ficam na CONTA e acompanham a pessoa em qualquer
-         aparelho. Texto que descreve o site de ontem faz a pessoa não
-         confiar no de hoje. -->
-    <p class="page-lead">Seus pedidos e seus dados, guardados na sua conta e disponíveis em qualquer aparelho. Sem conta, eles ficam só neste aparelho.</p>
+    <!-- O TEXTO DE APRESENTAÇÃO SAIU DAQUI, e não é economia de
+         palavra: ele dizia exatamente o que os blocos de baixo já
+         dizem. Para quem tem conta, a ficha mostra o nome e o e-mail;
+         para quem não tem, o convite diz com as mesmas palavras que os
+         pedidos ficam guardados e aparecem em qualquer aparelho. O
+         mesmo recado duas vezes na mesma tela empurra para baixo o que
+         a pessoa veio ver. -->
   </section>
 
   <section class="wrap">
-    <div class="resumo-conta" data-resumo-cliente></div>
 
-    <section class="bloco-cliente" aria-label="Últimos pedidos">
-      <h2 class="secao-titulo secao-titulo--enxuto">Últimos pedidos</h2>
+    <!-- QUEM VOCÊ É.
+         "Faça uma parte de conta bem feita, isso aqui tá horrível" —
+         17/09/2026, com a foto da tela depois de ele criar a conta.
+         Ele estava certo: eu tirei coisas daqui e não pus nada no
+         lugar. Sobraram dois números soltos, uma lista vazia e um
+         botão de sair no meio de um vazio.
+
+         Esta ficha é a primeira coisa que faltava. Uma página de conta
+         tem de dizer, antes de tudo, EM QUE CONTA a pessoa está: a
+         inicial, o nome, o e-mail e desde quando. O e-mail só aparecia
+         lá embaixo, na letra miúda do botão de sair.
+
+         Ela é desenhada PELO JAVASCRIPT, e por um motivo: o conteúdo
+         muda conforme haver conta ou não, e as duas versões têm de ser
+         boas. Sem conta, esta página mostrava "0 pedidos, 0 favoritos"
+         e uma lista vazia, sem nem dizer que bastava entrar. -->
+    <div data-ficha-conta></div>
+
+    <!-- OS PEDIDOS.
+         Antes: um título "Últimos pedidos" e, para quem nunca comprou,
+         a frase "Você ainda não fez pedidos por aqui" — sem nada para
+         fazer em seguida. Página de conta nova é justamente a de quem
+         tem zero pedidos, e era o pior caso que eu estava entregando.
+         Agora o vazio tem um caminho para a loja. -->
+    <section class="bloco-cliente" aria-label="Meus pedidos">
+      <h2 class="secao-titulo secao-titulo--enxuto" data-titulo-pedidos hidden>Meus pedidos</h2>
       <div id="ultimos-pedidos"></div>
     </section>
 
-    <!-- "MEUS DADOS" SAIU DESTA PÁGINA — pedido do Brian em 17/09/2026.
-         Aqui havia um formulário com nome, WhatsApp e endereço, e ele
-         repetia o que a pessoa já preenche na hora do pedido. Agora o
-         cadastro entra UMA vez, no pedido, e de lá vai para a conta:
-         quem muda o endereço na compra tem a conta atualizada junto
-         (assets/js/pedido.js), então tirar a tela não tira o dado. -->
+    <!-- AS AÇÕES DA CONTA.
+         Nasce vazio e o JavaScript põe só o que EXISTE de verdade:
+         favoritos (quando há), a troca de senha (quando há conta). A
+         regra dele é dura e está certa — ou funciona, ou não aparece
+         na tela — então nada aqui é escrito à mão. -->
+    <div data-acoes-conta></div>
 
-    <!-- OS DOIS ATALHOS ("Falar com a equipe" e "Privacidade") também
-         saíram por pedido dele. Nenhum caminho se fechou: Atendimento
-         está na barra de baixo desta mesma página, e a Privacidade
-         continua no pé das outras nove páginas. -->
+    <!-- "MEUS DADOS" continua fora, como ele pediu. O cadastro entra
+         UMA vez, na hora do pedido, e de lá vai para a conta
+         (assets/js/pedido.js): tirar a tela não tirou o dado. -->
 
     <!-- SAIR DA CONTA.
          A função de sair existia no código desde o começo e NENHUM botão
@@ -103,7 +126,6 @@
          aparece para quem está logado — sem conta não há de onde sair,
          e botão que não serve para nada não fica na tela. -->
     <div class="sair-conta" data-sair-bloco hidden>
-      <p class="sair-conta__quem">Você está na conta <b data-sair-email></b></p>
       <button class="btn btn--ghost btn--block" type="button" data-sair-conta>Sair da conta</button>
     </div>
   </section>
@@ -195,12 +217,12 @@
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/minha-area.js?v=101981a3"></script>
 <script src="assets/js/favoritos.js?v=0fcdae81"></script>
-<script src="assets/js/paginas.js?v=03777f78"></script>
+<script src="assets/js/paginas.js?v=80872818"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>
-<script src="assets/js/cliente.js?v=c49a51f4"></script>
+<script src="assets/js/idioma-es.js?v=e73cecba"></script>
+<script src="assets/js/idioma.js?v=e43d6aac"></script>
+<script src="assets/js/cliente.js?v=b3a9ed20"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=041da53c"></script>
-<script src="assets/js/idioma.js?v=d9ca8fa2"></script>
 <script src="assets/js/app.js?v=895b3a28"></script>
 <script src="assets/js/pedido.js?v=a1f4494d"></script>
 </body>

@@ -3451,20 +3451,251 @@ textarea:focus-visible{
    --------------------------------------------------------- */
 
 .sair-conta{
-  margin-top:22px;
-  padding-top:18px;
+  margin-top:24px;
+  padding-top:20px;
   border-top:1px solid var(--line);
   text-align:center;
 }
-.sair-conta__quem{
-  margin:0 0 10px;
-  font-size:13px;
+
+/* ---------------------------------------------------------
+   A PÁGINA DE CONTA
+
+   "Faça uma parte de conta bem feita, isso aqui tá horrível" —
+   17/09/2026, com a foto da tela.
+
+   Ele estava certo, e o defeito vem de como eu trabalhei: ele
+   mandou tirar três coisas daqui e eu tirei sem pôr nada no
+   lugar. A tela ficou com dois números brancos soltos, uma
+   frase dizendo que não havia pedido nenhum e um botão de sair
+   no meio de meia tela vazia.
+
+   O que entra aqui são os blocos que faltavam. Nenhum deles é
+   enfeite: a ficha diz em que conta a pessoa está (o e-mail só
+   aparecia na letra miúda do botão de sair), o vazio dos
+   pedidos ganhou um caminho para a loja, e as linhas de ação
+   só aparecem quando existe a ação.
+   --------------------------------------------------------- */
+
+.ficha-conta{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  padding:18px 18px 6px;
+  margin-bottom:22px;
+}
+.ficha-conta__topo{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  /* min-width:0 no filho é o que permite o e-mail longo quebrar
+     em vez de esticar a ficha para fora da tela */
+  min-width:0;
+}
+.ficha-conta__inicial{
+  width:54px;height:54px;flex:none;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,#9a7739);
+  color:#fff;
+  font-family:var(--serif);
+  font-size:25px;
+  line-height:1;
+  display:grid;place-items:center;
+  box-shadow:0 8px 20px rgba(176,140,74,.28);
+}
+.ficha-conta__quem{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+.ficha-conta__nome{
+  font-size:17px;
+  font-weight:600;
+  color:var(--ink);
+  line-height:1.2;
+}
+.ficha-conta__email{
+  font-size:13.5px;
+  color:var(--muted);
+  /* e-mail é uma palavra só e comprida: sem isto ele empurra a
+     ficha e a página passa a rolar para o lado */
+  overflow-wrap:anywhere;
+}
+.ficha-conta__desde{
+  font-size:12px;
+  color:var(--muted-2);
+  margin-top:2px;
+}
+
+/* os dois números, agora como pé da ficha e não soltos na página */
+.ficha-conta__numeros{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  margin-top:16px;
+  border-top:1px solid var(--line);
+}
+.ficha-conta__numeros--solto{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  border-top:0;
+  margin:0 0 22px;
+}
+.ficha-conta__num{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1px;
+  padding:13px 6px;
+  border-radius:12px;
+  transition:background .18s ease;
+}
+.ficha-conta__num + .ficha-conta__num{border-left:1px solid var(--line)}
+.ficha-conta__num:hover{background:var(--cream-2)}
+.ficha-conta__num b{
+  font-family:var(--serif);
+  font-size:23px;
+  font-weight:500;
+  color:var(--gold);
+  line-height:1.1;
+}
+.ficha-conta__num span{
+  font-size:12px;
   color:var(--muted);
 }
-.sair-conta__quem b{
+
+/* ---- sem conta: o convite ---- */
+
+.ficha-conta--convite{
+  text-align:center;
+  padding:26px 20px 24px;
+}
+.ficha-conta__inicial--vazia{
+  background:var(--cream);
+  color:var(--gold);
+  box-shadow:none;
+  margin:0 auto 14px;
+}
+.ficha-conta__chamada{
+  margin:0 0 6px;
+  font-family:var(--serif);
+  font-size:22px;
+  font-weight:500;
   color:var(--ink);
+}
+.ficha-conta__ajuda{
+  margin:0 0 18px;
+  font-size:14px;
+  line-height:1.55;
+  color:var(--muted);
+}
+.ficha-conta__botoes{
+  display:grid;
+  gap:10px;
+}
+.ficha-conta__botoes .btn{
+  min-width:0;
+  justify-content:center;
+  padding:13px 18px;
+  font-size:16px;
+}
+.ficha-conta__semconta{
+  display:inline-block;
+  margin-top:14px;
+  font-size:13.5px;
+}
+
+/* ---- o vazio dos pedidos, com saída ---- */
+
+.vazio-conta{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);
+  padding:30px 22px 26px;
+  text-align:center;
+}
+.vazio-conta__ico{
+  width:58px;height:58px;
+  border-radius:50%;
+  background:var(--cream);
+  color:var(--gold);
+  display:grid;place-items:center;
+  margin:0 auto 14px;
+}
+.vazio-conta__titulo{
+  margin:0 0 6px;
+  font-family:var(--serif);
+  font-size:19px;
+  font-weight:500;
+  color:var(--ink);
+}
+.vazio-conta__texto{
+  margin:0 auto 18px;
+  max-width:34ch;
+  font-size:14px;
+  line-height:1.55;
+  color:var(--muted);
+}
+.vazio-conta .btn{
+  min-width:0;
+  justify-content:center;
+  padding:13px 22px;
+  font-size:16px;
+}
+
+/* ---- as linhas de ação da conta ---- */
+
+.acoes-conta{
+  display:grid;
+  gap:10px;
+  margin-top:22px;
+}
+.linha-conta{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  width:100%;
+  min-height:62px;
+  padding:12px 14px;
+  background:var(--card);
+  border:0;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  text-align:left;
+  color:var(--ink);
+  cursor:pointer;
+  transition:box-shadow .18s ease,transform .18s ease;
+}
+.linha-conta:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.linha-conta:active{transform:translateY(1px)}
+.linha-conta[disabled]{opacity:.55;cursor:progress}
+.linha-conta__ico{
+  width:40px;height:40px;flex:none;
+  border-radius:12px;
+  background:var(--cream);
+  color:var(--gold);
+  display:grid;place-items:center;
+}
+.linha-conta__txt{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  flex:1;
+  min-width:0;
+}
+.linha-conta__txt b{
+  font-size:15px;
   font-weight:600;
+}
+.linha-conta__txt span{
+  font-size:12.5px;
+  color:var(--muted);
   overflow-wrap:anywhere;
+}
+.linha-conta__seta{
+  flex:none;
+  color:var(--muted-2);
 }
 
 /* ---------------------------------------------------------
