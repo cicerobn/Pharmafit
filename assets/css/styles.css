@@ -2561,6 +2561,13 @@ textarea:focus-visible{
      no olho parecia só apertado). Em 9,5px ela mede 52px e cabe.
      É o preço de ter cinco abas em vez de quatro, e o desenho dele
      pede cinco. */
+  /* O SELO NUMA TELA DE 320px.
+     A coluna preta tem 110px aqui, e em 8px o selo ainda precisava de
+     105px com a estrela e o respiro — quebrava em duas linhas de novo.
+     Em 7px ele mede 85px e fica na linha, que é como está na foto. */
+  .badge{font-size:7px;letter-spacing:.02em;padding:4px 7px}
+  .badge svg{width:8px;height:8px}
+
   .tab{font-size:9.5px;gap:4px}
 
   /* A foto NÃO muda de proporção em tela estreita: ela vale 75,2% da
@@ -3498,6 +3505,22 @@ textarea:focus-visible{
      o CONTEÚDO (que é o que eu queria) e o preto vai até embaixo. A
      imagem dentro é `object-fit:contain`, então nada distorce. */
   .protocol__media{padding:10px 6px}
+  /* O SELO EM UMA LINHA, COMO NA FOTO DELE.
+     Em 9px com 0,12em de espaçamento, "MAIS PROCURADO" mede 90px, e
+     com a estrela e o respiro passa de 120px — mais que a coluna preta
+     tem. Ele quebrava em duas linhas e virava um bloco dourado enorme
+     em cima da foto. Na tela dele é uma linha fina.
+     `nowrap` garante a linha única; a fonte e o espaçamento apertam
+     para ela caber de verdade, em vez de vazar. */
+  .badge{
+    white-space:nowrap;
+    font-size:8px;
+    letter-spacing:.06em;
+    gap:4px;
+    padding:5px 8px;
+    top:8px;left:8px;
+  }
+  .badge svg{width:9px;height:9px}
   /* TEXTO CENTRADO NA ALTURA.
      Num carrossel todos os cartões ficam com a altura do mais alto — e
      o mais alto aqui é um cujo nome ocupa duas linhas. No cartão de nome
@@ -3526,7 +3549,52 @@ textarea:focus-visible{
   .protocol__preco{margin:0}
   .protocol__preco .product__price{font-size:18px}
   .protocol__preco .product__installment{font-size:10.5px;line-height:1.35}
-  .protocol .mini-list{display:none}
+  /* OS TRÊS BENEFÍCIOS VOLTAM AO CARTÃO — ELES ESTÃO NA FOTO DELE.
+     Aqui estava `display:none`, e o meu comentário lá em cima explica
+     por quê: eles não cabiam junto com o preço, e a informação está na
+     página do produto, a um toque daqui. Era uma escolha defensável.
+     Só que a tela que ele mandou em 17/09/2026 TEM os três, e o pedido
+     foi "tudo 100% igual".
+
+     O desenho dele não mostra preço no cartão; o nosso mostra. Em vez
+     de eu decidir tirar preço da vitrine — que é decisão de venda, não
+     de desenho — o cartão passa a caber os DOIS: os três benefícios
+     entram e a altura cresce uns 60px. Perguntei a ele se quer o preço
+     fora; enquanto ele não disser, ninguém perde informação.
+
+     As medidas são apertadas de propósito: 18px de ícone e 9,5px de
+     letra, que é o que cabe em 64px de coluna num celular de 390. */
+  .protocol .mini-list{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:4px;
+    margin-top:11px;
+    padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  /* `min-width:0` É O QUE FAZ A PALAVRA QUEBRAR.
+     Sem ele o item não pode encolher abaixo do próprio conteúdo, então
+     "Acompanhamento" mantinha a caixa maior que a coluna e VAZAVA para
+     fora do cartão — o `overflow-wrap` nem entrava em ação, porque a
+     linha "cabia" numa caixa que tinha esticado. É o mesmo alfinete de
+     sempre em grid e flex, e a medição pegou a 320px. */
+  .protocol .mini{gap:5px;min-width:0}
+  .protocol .mini svg{width:18px;height:18px}
+  .protocol .mini span{
+    font-size:9px;
+    line-height:1.24;
+    /* "Acompanhamento" é uma palavra de 14 letras e a coluna tem 40px
+       numa tela de 320: sem isto ela VAZA para fora do cartão em vez
+       de quebrar.
+       E `max-width:100%` é o que faz o `break-word` funcionar. Medido:
+       o rótulo tinha 73px dentro de uma coluna de 40px e passava 3px
+       da borda do cartão. A culpa é do `align-items:center` do bloco
+       de cima — em coluna flex ele deixa o filho crescer além do pai,
+       então a linha "cabia" numa caixa que havia esticado e nada
+       quebrava. O limite devolve a caixa ao tamanho da coluna. */
+    overflow-wrap:break-word;
+    max-width:100%;
+  }
 }
 
 /* ---------------------------------------------------------
