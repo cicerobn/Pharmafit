@@ -219,6 +219,54 @@
       });
     },
 
+    /* -------------------------------------------------------
+       QUEM ESTÁ OLHANDO: dono ou atendente
+
+       `pf_equipe.papel` diz isso, e `pf_papel()` responde no
+       banco. Duas respostas possíveis hoje:
+
+         ceo       → vê preço de compra, lucro e margem
+         atendente → vê o pedido; não vê dinheiro de dono
+
+       O PADRÃO QUANDO NÃO DÁ PARA SABER É `ceo`, e isso é
+       escolha, não descuido: se a resposta falhar por rede ou
+       por o banco ainda não ter a coluna, quem paga o preço de
+       "esconder por precaução" é o dono, que abre o painel e
+       não acha os números dele. A proteção que vale contra
+       curiosidade técnica é a do BANCO; esta aqui é a tela.
+
+       Lido uma vez por carregamento de página e guardado: são
+       várias telas perguntando a mesma coisa.
+       ------------------------------------------------------- */
+    papel: async function () {
+      if (papelLido) return papelLido;
+      if (papelPedido) return papelPedido;
+
+      papelPedido = (async function () {
+        var sb = Auth && Auth.cliente ? Auth.cliente() : null;
+        if (!sb) {
+          /* sem banco é modo demonstração: mostra tudo, senão o painel
+             de demonstração esconderia justamente o que ele demonstra */
+          papelLido = 'ceo';
+          return papelLido;
+        }
+        try {
+          var r = await sb.rpc('pf_papel');
+          papelLido = (r && !r.error && r.data) ? String(r.data) : 'ceo';
+        } catch (e) {
+          papelLido = 'ceo';
+        }
+        return papelLido;
+      })();
+
+      return papelPedido;
+    },
+
+    /** Atalho: este login pode ver preço de compra, lucro e margem? */
+    podeVerCusto: async function () {
+      return (await Moldura.papel()) !== 'atendente';
+    },
+
     /** Carrega pedidos e produtos, já cuidando do sino. */
     dados: async function () {
       var r = await Dados.listarPainel();
@@ -326,6 +374,12 @@
                  'select:not([disabled]), textarea:not([disabled]), ' +
                  '[tabindex]:not([tabindex="-1"])';
   var quemAbriu = null;
+
+  /* o papel de quem entrou, e a promessa em voo enquanto ele é lido —
+     sem ela, três telas perguntando ao mesmo tempo fariam três
+     consultas iguais */
+  var papelLido = null;
+  var papelPedido = null;
 
   function janelaDeCima() {
     var lista = document.querySelectorAll('.folha.is-aberta, .gaveta.is-aberta');

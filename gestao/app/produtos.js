@@ -15,6 +15,14 @@
   var moeda = U.moeda;
   var esc = U.esc;
 
+  /* DOIS NÍVEIS DE ACESSO, no que esta tela mostra.
+     `ceo` vê preço de compra e lucro; `atendente` vê nome, preço de
+     venda, estoque e foto — o que ele precisa para atender — e não vê
+     dinheiro de dono. Começa `true` para o painel de demonstração (sem
+     banco) continuar mostrando tudo; o valor de verdade chega em
+     `carregar()`, antes do primeiro desenho. */
+  var verCusto = true;
+
   var estado = { produtos: [], ordem: 'ordem', busca: '', categoria: 'todos' };
 
   function chave(s) {
@@ -200,7 +208,7 @@
              linha DIZ que falta, em vez de calar: produto sem preço
              de compra é o que faz o lucro do relatório sair por cima
              do real. */
-          lucroDoProduto(p, preco) +
+          (verCusto ? lucroDoProduto(p, preco) : '') +
           '<p class="prod__marca">' + situacao(p) + '</p>' +
         '</div>' +
         /* AS TRÊS BOLINHAS ABREM A EDIÇÃO AQUI MESMO.
@@ -554,6 +562,8 @@
     var alvo = folha.querySelector('[data-lucro]');
     if (!alvo) return;
 
+    if (!verCusto) { alvo.hidden = true; return; }
+
     var venda = numero(folha.querySelector('#ed-preco'));
     var compra = numero(folha.querySelector('#ed-custo'));
 
@@ -690,6 +700,14 @@
     desc.value = p.descricao || '';
     folha.querySelector('[data-conta-descricao]').textContent = desc.value.length;
     folha.querySelector('[data-ativo]').checked = p.ativo !== false;
+
+    /* Atendente não vê o preço de compra: o campo sai da folha, e a
+       linha de lucro com ele. Campo escondido também não é enviado no
+       salvar — o `numero()` de um campo escondido devolve o que estiver
+       nele, e ele continua com o valor que veio do banco, então o custo
+       é gravado igual ao que já era. Atendente não apaga o custo do
+       dono por descuido. */
+    folha.querySelector('[data-campo="custo"]').hidden = !verCusto;
     pintarLucro();
 
     /* As categorias que já existem, mais a do produto, para a lista não
@@ -742,6 +760,10 @@
 
   async function carregar() {
     try {
+      /* Antes de desenhar, saber quem está olhando: atendente não vê
+         preço de compra nem lucro, e é mais honesto não desenhar do que
+         desenhar e apagar depois. */
+      verCusto = await Moldura.podeVerCusto();
       var r = await Moldura.dados();
       estado.produtos = r.produtos || [];
       montarCategorias();

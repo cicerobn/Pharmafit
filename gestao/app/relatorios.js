@@ -200,6 +200,22 @@
     var dados = await Moldura.dados();
     var meses = Analise.meses();
 
+    /* DOIS NÍVEIS DE ACESSO.
+       Faturamento fica para os dois: é a soma dos valores de pedido que
+       o atendente já vê um por um, e esconder não protegeria nada.
+       LUCRO é outra coisa — ele nasce do preço de compra, que é número
+       de dono. Para o atendente o cartão inteiro sai da tela, junto do
+       aviso de "venda sem custo", que fala do mesmo assunto.
+       Sai da tela, e não fica em branco: cartão vazio com rótulo
+       "Lucro líquido" é pior, porque parece defeito. */
+    var verCusto = await Moldura.podeVerCusto();
+    if (!verCusto) {
+      var cartaoLucro = achar('lucro') && achar('lucro').closest('.numero');
+      if (cartaoLucro) cartaoLucro.hidden = true;
+      var avisoCusto = achar('sem-custo');
+      if (avisoCusto) avisoCusto.hidden = true;
+    }
+
     var seletor = achar('mes');
     seletor.innerHTML = meses.map(function (m, i) {
       return '<option value="' + m.chave + '">' +
@@ -214,14 +230,20 @@
         : null;
 
       achar('faturamento').textContent = moeda(r.faturamento);
-      achar('lucro').textContent = moeda(r.lucro);
       pintarVariacao(achar('faturamento-delta'), r.faturamento, anterior && anterior.faturamento);
-      pintarVariacao(achar('lucro-delta'), r.lucro, anterior && anterior.lucro);
+
+      /* O mês muda e esta função roda de novo: sem esta guarda ela
+         reacenderia o lucro que o papel do atendente acabou de
+         esconder. Esconder uma vez não basta quando a tela redesenha. */
+      if (verCusto) {
+        achar('lucro').textContent = moeda(r.lucro);
+        pintarVariacao(achar('lucro-delta'), r.lucro, anterior && anterior.lucro);
+      }
 
       /* O aviso de lucro por cima. Mesma conta da tela de relatórios
          antiga, para as duas dizerem a mesma coisa. */
       var aviso = achar('sem-custo');
-      if (r.semCusto) {
+      if (r.semCusto && verCusto) {
         aviso.hidden = false;
         aviso.textContent = r.semCusto === 1
           ? 'Uma venda deste mês (' + moeda(r.semCustoValor) + ') está sem custo ' +
