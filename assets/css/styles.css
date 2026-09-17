@@ -107,6 +107,22 @@ ul{margin:0;padding:0;list-style:none}
   -webkit-backdrop-filter:blur(12px);
 }
 
+/* NA PÁGINA DA FOTO, A BARRA DE CIMA É BRANCA.
+ *
+ * O topo dessa página é branco (é o fundo da foto virando fundo da
+ * página), e a barra é creme a 86%: dava uma faixa de outra cor
+ * exatamente na emenda, e no desenho dele a barra e a foto são a mesma
+ * superfície. A foto entra por TRÁS da barra, então a barra tem de
+ * desaparecer nela.
+ *
+ * Amarrado à presença da foto, e não a uma lista de páginas: quem
+ * tiver a foto do topo ganha a barra branca, quem não tiver continua
+ * com o creme das outras quinze. Lista de páginas escrita à mão é o que
+ * já me custou o menu e os scripts. */
+body:has(.hero__art--foto) .topbar{
+  background:rgba(255,255,255,.88);
+}
+
 /* `min-width:0` NAO e enfeite aqui.
    Sem ele, a marca e um item de flex que nao encolhe abaixo do proprio
    conteudo, e o texto dela invadia os icones do topo — medido: 85px de
@@ -270,18 +286,49 @@ ul{margin:0;padding:0;list-style:none}
 
 /* ---------- hero ---------- */
 
-.hero{padding:6px 20px 8px;position:relative}
+/* O TOPO É BRANCO, E DEPOIS VIRA CREME.
+ *
+ * Não é enfeite: é o que faz a foto não ter borda. O fundo dela é
+ * branco, então a página fica branca onde ela está e as duas viram a
+ * mesma superfície. O creme do site volta embaixo, antes dos cartões.
+ *
+ * `overflow:hidden` porque a foto encosta na direita e, se um dia
+ * passar dela, tem de ser cortada e não virar rolagem lateral — que é
+ * o defeito mais chato de celular. */
+.hero{
+  padding:6px 20px 8px;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg,#fff 0%,#fff 62%,var(--cream) 100%);
+}
 
 .hero__grid{display:block}
 
 .hero__title{
   font-family:var(--serif);
   font-weight:500;
-  font-size:clamp(33px,9.2vw,42px);
-  line-height:1.08;
+  /* O PISO DO CLAMP ERA 24px E ISSO ESTOURAVA A CAIXA A 320px.
+     "performance" é uma palavra que não parte, e em 24px ela mede
+     137px — mais que os 128px da coluna. O navegador não reclama:
+     ele deixa a palavra VAZAR, e ela ia por cima do arco dourado do
+     anel. Medido nos pixels: o fundo atrás daquelas duas linhas caía
+     de 254 para 189. Com 21px ela mede 120px e cabe. */
+  font-size:clamp(21px,6.6vw,28px);
+  line-height:1.14;
   letter-spacing:-.01em;
   margin:6px 0 0;
-  max-width:256px;
+  /* ESTREITO, E ISSO NÃO É GOSTO: É ONDE A SERINGA COMEÇA.
+     A foto ocupa a direita, e a ponta da agulha entra a 40% da
+     largura da tela. Título mais largo que isso passa POR CIMA dela —
+     é o que estava acontecendo, com o título indo até 57%. No desenho
+     dele o título termina a 42% e a agulha começa a 45%: ele deixou a
+     folga de propósito.
+     Por isso a fonte encolheu junto: em 30px "performance" não cabe em
+     38% de largura e o título viraria seis linhas. No desenho dele são
+     quatro. */
+  max-width:min(40%,158px);
+  position:relative;
+  z-index:1;
 }
 .hero__title em{font-style:normal;color:var(--gold)}
 
@@ -293,11 +340,21 @@ ul{margin:0;padding:0;list-style:none}
 }
 
 .hero__text{
-  font-size:16px;
-  line-height:1.62;
+  font-size:15px;
+  line-height:1.58;
   color:var(--ink-2);
-  max-width:30ch;
+  /* MAIS LARGO QUE O TÍTULO, e isso está no desenho dele.
+     Eu havia medido 40% olhando a primeira linha e apertei o texto
+     nisso: virou oito linhas, e o topo cresceu tanto que o botão
+     desceu para 70% da tela. No desenho dele são CINCO linhas, e a
+     linha mais longa ("e acompanhamento especializado") chega a 56%.
+     Ele deixa o texto cruzar a agulha de propósito — a agulha é fina
+     e clara ali, e o texto continua legível por cima dela. O que não
+     pode cruzar é o frasco, que começa a 71%. */
+  max-width:min(50%,196px);
   margin:0;
+  position:relative;
+  z-index:1;
 }
 .hero__text b{font-weight:500;color:var(--gold)}
 
@@ -314,6 +371,25 @@ ul{margin:0;padding:0;list-style:none}
 .hero__copy{position:relative;z-index:1}
 
 .hero__cta{margin:26px 0 4px;position:relative;z-index:1}
+
+/* O BOTÃO DO TOPO NÃO ATRAVESSA A TELA.
+   `.btn--primary` tem `min-width:min(100%,300px)`, que é o certo no
+   carrinho e nos formulários — botão de confirmar deve ser largo. No
+   topo isso o fazia chegar a 75% da tela e passar por cima da ponta
+   dourada da seringa, que entra a 74%. No desenho dele o botão termina
+   pouco depois do texto.
+
+   O `min-width:0` sozinho não resolveu: 75% ERA a largura natural do
+   botão, com a fonte de 17,5px e a bolinha da flecha de 38px. Então
+   aqui os dois encolhem — o botão passa a ter o tamanho do que está
+   escrito nele, e o que está escrito ocupa menos. */
+.hero__cta .btn--primary{
+  min-width:0;
+  font-size:15px;
+  padding:11px 11px 11px 20px;
+  gap:12px;
+}
+.hero__cta .btn__arrow{width:32px;height:32px}
 
 /* ---------- botões ---------- */
 
@@ -846,8 +922,23 @@ ul{margin:0;padding:0;list-style:none}
   margin:0;
   background:#111;
   border-radius:26px;
+  /* AS COLUNAS SEGUEM AS ABAS, E NÃO UM NÚMERO ESCRITO AQUI.
+   *
+   * Aqui estava `grid-template-columns:repeat(5,1fr)`. Eram 5 abas
+   * quando isso foi escrito. Em 17/09/2026 a aba "Pedidos" saiu, a
+   * pedido do Brian, e este 5 ficou: quatro abas em cinco colunas, com
+   * a quinta VAZIA. As abas ficaram todas empurradas para a esquerda e
+   * sobrou um buraco preto de 77px à direita no celular, 108px no
+   * computador. Nada de errado acontecia — a barra simplesmente ficava
+   * torta, e foi o Brian que viu na tela.
+   *
+   * Contar as abas na mão é a mesma doença dos menus escritos em 16
+   * páginas: um dia alguém mexe num lado e esquece o outro. Com
+   * `auto-flow:column` + `auto-columns:1fr` o número de colunas é o
+   * número de abas, sempre, e tirar ou pôr uma aba não deixa buraco. */
   display:grid;
-  grid-template-columns:repeat(5,1fr);
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
   padding:9px 6px 8px;
   box-shadow:0 18px 40px rgba(0,0,0,.3);
 }
@@ -2370,8 +2461,22 @@ textarea:focus-visible{
   .feature{padding:18px 12px}
   .feature__label{font-size:13px}
 
-  .hero__title{font-size:34px}
-  .hero__art{width:70%;right:-24px}
+  /* AQUI HAVIA `.hero__title{font-size:30px}` E ELE MANDAVA EM TUDO.
+     Esta faixa é `max-width:430px`, então ela vale em QUALQUER celular
+     — e um número fixo aqui apagava o `clamp()` lá de cima sem
+     aparecer. Eu passei a fonte do título para 26px no clamp e ela
+     continuou saindo 30px; medi, e era esta linha.
+     Ela sai: o `clamp(24px,6.6vw,28px)` já encolhe sozinho conforme a
+     tela, e é ele que mantém o título em quatro linhas ao lado da
+     foto. Regra fixa dentro de faixa de celular é o jeito mais fácil
+     de ter uma medida que não obedece a ninguém. */
+
+  /* A foto NÃO muda de proporção em tela estreita: ela vale 75,2% da
+     largura, e 75,2% de 320px é menor em pixel mas igual em desenho.
+     Mexer só aqui faria a tela estreita ficar com outra composição, e
+     o pedido dele é uma só. Esta linha era do desenho de vetor antigo;
+     a regra `.hero__art--foto` vem depois no arquivo e manda. */
+  .hero__art{right:0}
 
   .section-title{font-size:24px}
   .page-title{font-size:38px}
@@ -3372,29 +3477,86 @@ textarea:focus-visible{
    mesmo lugar, ela viraria uma caixa branca em cima do creme,
    com o título escrito por cima do frasco.
 
-   Então ela ocupa o lugar dela — bloco próprio, cantos
-   arredondados, sombra fraca — e o título volta a ter o
-   espaço inteiro. Foto de estúdio se apresenta como foto.
+   EU ESTAVA ERRADO, E ELE MOSTROU A IMAGEM DO QUE QUERIA.
+   "A parte inicial com aquela foto lá tem que ficar exatamente
+   assim, e está muito muito diferente" — 17/09/2026, com o
+   desenho da tela em anexo.
+
+   Nele a foto NÃO é um cartão embaixo do texto: ela é o FUNDO do
+   topo. Entra por trás da barra de cima, vai até a borda direita
+   da tela, e o título e o texto ficam POR CIMA dela, na metade
+   esquerda — que na foto é branco limpo. Foi para isso que a
+   composição foi feita: o branco da esquerda existe para o texto
+   morar nele.
+
+   O que eu achava impossível (o recorte do fundo) não era
+   necessário: ninguém precisa recortar nada. O fundo da foto é
+   branco, então a PÁGINA fica branca onde a foto está, e as duas
+   viram a mesma coisa sem emenda. O creme volta mais abaixo.
+
+   AS MEDIDAS SAÍRAM DA IMAGEM DELE, não do meu gosto. Medindo
+   pontos que dão para reconhecer nas duas (o arco do anel, a
+   borda do frasco, a folha cortada na direita, a base de
+   mármore), a foto está em 75,2% da largura da tela, encostada
+   na direita, começando 3,8% da largura ACIMA do começo do
+   bloco — isto é, atrás da barra de cima.
+
+   Tudo aqui é proporção, não pixel: o `translate` em
+   porcentagem se mede pela ALTURA da própria foto, que é
+   proporcional à largura dela. Então a mesma regra serve para
+   320px e para 520px sem eu escrever um número para cada tela.
    --------------------------------------------------------- */
 
 .hero__art--foto{
-  position:static;
-  top:auto;right:auto;
-  display:block;
-  width:100%;
+  position:absolute;
+  z-index:0;
+  right:0;
+  top:0;
+  width:75.2%;
   max-width:none;
   height:auto;
-  margin:18px 0 0;
-  border-radius:20px;
-  /* a sombra é fraca de propósito: a foto já tem fundo claro, e
-     sombra forte em fundo claro parece adesivo colado na tela */
-  box-shadow:0 14px 34px rgba(40,30,10,.10);
-  pointer-events:auto;
+  margin:0;
+  border-radius:0;
+  box-shadow:none;
+  /* A foto sobe para trás da barra de cima.
+     No desenho dele o topo da foto está a 11,8% da largura da tela,
+     medido do alto da página. A barra de cima termina a 17,9%, e é
+     daí que este bloco começa — então a foto tem de subir 6,1% da
+     largura. A altura dela é 65,1% da largura (1348x1167), logo
+     6,1/65,1 = 9,4% da própria altura. Em porcentagem porque assim a
+     mesma linha vale de 320px a 520px sem eu escrever um número para
+     cada tela. */
+  transform:translateY(-9.4%);
+  /* a foto é cenário: o dedo tem de chegar no que está por cima */
+  pointer-events:none;
 }
 
 @media (min-width:900px){
+  /* NO COMPUTADOR A COMPOSIÇÃO É OUTRA, e tem de ser.
+     O desenho do Brian é de celular: lá a foto é o fundo e o texto vem
+     por cima. No computador o topo já é de duas colunas — texto à
+     esquerda, foto à direita — e a foto volta a ser um bloco com
+     moldura. Sem os cantos e a sombra ela fica um retângulo cortado no
+     meio do branco, que foi o que eu deixei acontecer ao mexer só na
+     regra de cima.
+
+     E as larguras de texto voltam ao normal: os 158px e 196px de lá
+     existem para o texto não encostar na seringa. Aqui a seringa está
+     na outra coluna, e aquele limite deixava um parágrafo de 196px ao
+     lado de um título de 60px — apertado sem motivo. */
   .hero__art--foto{
-    margin:0;
+    position:static;
+    width:100%;
     max-width:520px;
+    transform:none;
+    border-radius:20px;
+    box-shadow:var(--shadow-md);
   }
+  .hero__text{max-width:38ch}
+  .hero__cta .btn--primary{
+    font-size:17.5px;
+    padding:12px 12px 12px 26px;
+    gap:16px;
+  }
+  .hero__cta .btn__arrow{width:38px;height:38px}
 }
