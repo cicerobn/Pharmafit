@@ -8,6 +8,19 @@
 
    Com Supabase configurado grava no banco; sem ele, guarda no
    navegador (modo demonstração) — o painel lê do mesmo lugar.
+
+   precisa: nuvem, validacao
+   enche: data-colecao
+
+   `precisa` importa mais aqui do que na maioria: a linha
+   `var Nuvem = window.PharmaFitNuvem` roda NA HORA em que o arquivo
+   carrega, não quando a pessoa clica. Se `nuvem.js` vier depois,
+   `Nuvem` fica `undefined` para sempre e todo envio da página morre
+   no clique, sem nada na tela.
+
+   `enche: data-colecao` cobra o contrário: página que tem
+   `<form data-colecao="…">` no HTML e não carrega este arquivo é uma
+   página com botão Enviar que não faz absolutamente nada.
    ========================================================= */
 (function () {
   'use strict';
@@ -38,6 +51,15 @@
     el._t = setTimeout(function () { el.classList.remove('is-visible'); }, 4500);
   }
 
+  /* `data-sucesso`, no <p>, marca A CAIXA onde a mensagem aparece.
+   * `data-recado-ok`, no <form>, é O TEXTO da mensagem.
+   *
+   * Os dois já se chamaram `data-sucesso`, um dentro do outro, e
+   * funcionava só por um detalhe fino: `form.querySelector` não
+   * enxerga o próprio form. Quem lesse o HTML via o mesmo nome
+   * querendo dizer duas coisas — e foi exatamente o que me enganou
+   * quando fui medir esta tela: o meu teste pegou o form, achou que
+   * era a caixa de sucesso, e me acusou o site de mentir. */
   function sucesso(form, mensagem) {
     var caixa = form.querySelector('[data-sucesso]');
     if (!caixa) { toast(mensagem); return; }
@@ -78,7 +100,7 @@
           return;
         }
 
-        sucesso(form, form.getAttribute('data-sucesso') ||
+        sucesso(form, form.getAttribute('data-recado-ok') ||
           'Recebemos seus dados! Nossa equipe entra em contato em breve.');
       });
     });
