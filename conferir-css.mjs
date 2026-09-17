@@ -37,6 +37,12 @@
 
    COMO RODAR:  node conferir-css.mjs
    Sai com 1 se achou problema, para travar a publicação.
+
+   6. `var(--nome, reserva)` de variável que não existe em lugar
+      nenhum. A reserva faz a página renderizar, então a conferência 5
+      ignora — de propósito. Mas a cor CONGELA ali: mudar o token
+      depois não mexe nela. Eu escrevi `var(--dourado, …)` no painel
+      onde a variável se chama `--gold`, e nada reclamou.
    =========================================================================== */
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -267,6 +273,56 @@ for (const caminho of arquivos) {
     console.log(`  ACHEI ${curto}`);
     problemas.forEach((p) => console.log(`          · ${p}`));
   }
+}
+
+/* ---------------------------------------------------------
+   VARIÁVEL INVENTADA QUE SE ESCONDE ATRÁS DO VALOR DE RESERVA
+
+   A conferência acima ignora `var(--x, #fff)` de propósito, e o
+   motivo está escrito lá: com reserva a página RENDERIZA, então não é
+   erro de escrita.
+
+   Só que existe um caso em que é sempre erro, e eu caí nele hoje
+   (17/09/2026): escrevi `var(--dourado, #b08c4a)` no painel, onde a
+   variável se chama `--gold`. A página ficou dourada — pela reserva.
+   E o estrago é silencioso: aquela cor CONGELOU. Mudar `--gold`
+   depois não mexe nela, e nada avisa; é o tipo de coisa que aparece
+   seis meses depois como "uma bolinha que não acompanhou a paleta".
+
+   A regra aqui é estreita de propósito, para não dar alarme falso:
+   reserva é técnica legítima quando a variável existe em algum lugar
+   (outra folha, o HTML, o JavaScript) e pode não estar definida
+   naquele momento. O que não tem defesa é a variável que não existe
+   em NENHUM lugar do projeto — essa é nome errado.
+   --------------------------------------------------------- */
+function conferirReservasInventadas(arquivosCss) {
+  const existeEmAlgumLugar = new Set();
+  for (const caminho of [...arquivosCss,
+                         ...acharPorExtensao(RAIZ, ['.html', '.js'])]) {
+    const txt = readFileSync(caminho, 'utf8');
+    for (const m of txt.matchAll(/(--[\w-]+)\s*:/g)) existeEmAlgumLugar.add(m[1]);
+  }
+
+  const achados = [];
+  for (const caminho of arquivosCss) {
+    const txt = readFileSync(caminho, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
+    for (const m of txt.matchAll(/var\(\s*(--[\w-]+)\s*,[^)]*\)/g)) {
+      if (!existeEmAlgumLugar.has(m[1])) {
+        achados.push(`${caminho}: \`${m[0].trim()}\` — \`${m[1]}\` não existe em ` +
+                     `lugar nenhum do projeto, então essa cor ficou CONGELADA na reserva`);
+      }
+    }
+  }
+  return [...new Set(achados)];
+}
+
+const reservas = conferirReservasInventadas(arquivos);
+if (!reservas.length) {
+  console.log(`  ok    nenhuma reserva escondendo variável inventada`);
+} else {
+  ruim += reservas.length;
+  console.log(`  ACHEI reserva escondendo variável que não existe`);
+  reservas.forEach((r) => console.log(`          · ${r}`));
 }
 
 const orfas = conferirVariaveis(arquivos);

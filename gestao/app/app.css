@@ -664,6 +664,24 @@ a{color:inherit;text-decoration:none}
   color:var(--muted-2);
   letter-spacing:.02em;
 }
+/* O NÚMERO DE QUEM ESTÁ ESPERANDO RESPOSTA, na tela "Mais".
+   Dourado e redondo, do tamanho do número do carrinho no site: é um
+   aviso, não uma informação a mais. Nasce escondido — só aparece
+   quando há alguém esperando. */
+.item__aviso{
+  flex:none;
+  min-width:22px;
+  height:22px;
+  padding:0 7px;
+  border-radius:999px;
+  background:var(--gold);
+  color:#fff;
+  font-size:11.5px;
+  font-weight:700;
+  display:grid;
+  place-items:center;
+}
+
 .item__lado{
   flex:none;
   display:flex;
