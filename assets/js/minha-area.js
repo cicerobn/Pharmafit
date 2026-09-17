@@ -3,8 +3,16 @@
 
    Guarda no próprio aparelho os dados de quem compra (nome,
    WhatsApp e endereço) e o histórico dos pedidos feitos por
-   aqui. Nada disso vai para servidor nenhum além do pedido em
-   si — e o cliente pode apagar quando quiser.
+   aqui. O cliente pode apagar quando quiser.
+
+   QUEM TEM CONTA GUARDA TAMBÉM NA CONTA, desde 17/09/2026: o
+   conta.js copia o cadastro da conta para cá quando a página
+   abre, e manda para lá quando a pessoa salva. Este arquivo
+   continua sendo a fonte IMEDIATA que as dez telas leem — é por
+   isso que ele não virou assíncrono.
+
+   Quem NÃO tem conta continua exatamente como antes: os dados
+   ficam só aqui, e nada além do pedido em si vai para servidor.
    ========================================================= */
 (function () {
   'use strict';
@@ -39,6 +47,15 @@
         telefone: String(dados.telefone || '').trim(),
         endereco: String(dados.endereco || '').trim()
       });
+      /* AVISA A TELA QUE O DADO MUDOU.
+         O cadastro da conta desce para cá quando a página abre, e isso
+         acontece DEPOIS de o formulário de "Meus dados" já ter sido
+         preenchido com o que havia no aparelho. Sem este aviso, quem
+         abrisse num aparelho novo veria o formulário vazio mesmo tendo
+         cadastro na conta — e concluiria que a conta não guarda nada. */
+      try {
+        document.dispatchEvent(new CustomEvent('pharmafit-meus-dados'));
+      } catch (e) {}
     },
 
     limparDados: function () {

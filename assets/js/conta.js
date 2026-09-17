@@ -133,6 +133,11 @@
             endereco: atual.endereco || ''
           });
         }
+        /* E o cadastro da conta desce agora, não na próxima página:
+           quem acabou de entrar vai direto comprar, e o formulário do
+           pedido lê o aparelho. */
+        try { await Conta.sincronizarCadastro(); } catch (e) {}
+
         return { ok: true, user: r.data.user };
       } catch (e) {
         return { ok: false, erro: traduzir(e && e.message) };
@@ -159,12 +164,21 @@
         });
         if (r.error) return { ok: false, erro: traduzir(r.error.message) };
 
-        if (Area) {
-          Area.salvarDados({
-            nome: String(dados.nome || '').trim(),
-            telefone: String(dados.telefone || '').trim(),
-            endereco: Area.dados().endereco || ''
-          });
+        var cadastro = {
+          nome: String(dados.nome || '').trim(),
+          telefone: String(dados.telefone || '').trim(),
+          endereco: (Area && Area.dados().endereco) || ''
+        };
+        if (Area) Area.salvarDados(cadastro);
+
+        /* O cadastro já nasce NA CONTA, e não só no aparelho: é o que
+           faz o nome e o WhatsApp aparecerem quando a pessoa abrir o
+           site no computador depois de criar a conta no celular.
+           Só quando a criação já devolveu sessão — sem sessão não há
+           permissão para gravar, e aí quem sobe é a sincronização do
+           primeiro login. */
+        if (r.data && r.data.session) {
+          await Conta.salvarCadastro(cadastro);
         }
 
         /* Sem sessão de volta, o projeto pede confirmação por e-mail. É
@@ -175,6 +189,112 @@
       } catch (e) {
         return { ok: false, erro: traduzir(e && e.message) };
       }
+    },
+
+    /* =========================================================
+       O CADASTRO DA PESSOA FICA NA CONTA
+
+       "Meus dados" — nome, WhatsApp e endereço — era guardado só
+       no navegador. Quem criava conta no celular, preenchia e
+       comprava, ao abrir no computador achava o formulário vazio
+       de novo; e limpar o navegador apagava tudo. A conta existia
+       e não carregava nada.
+
+       Agora o cadastro mora em `pf_clientes`, ligado à conta, com
+       a regra "cada um só o seu" provada no banco.
+
+       O APARELHO CONTINUA SENDO USADO, como ESPELHO.
+       `Area.dados()` é chamado em dez lugares do site, todos de
+       forma imediata (a tela desenha com o dado na mão). Tornar
+       tudo isso assíncrono para ir ao servidor seria mexer em dez
+       telas para resolver uma. Então a conta é a fonte: ao abrir,
+       o que está na conta é copiado para o aparelho, e o resto do
+       site continua lendo do aparelho como sempre.
+
+       E quem não tem conta continua comprando igual, com os dados
+       no aparelho — que é como era antes desta tela existir.
+       ========================================================= */
+
+    /** O cadastro que está na conta, ou null. */
+    cadastro: async function () {
+      var u = await Conta.usuario();
+      if (!u) return null;
+      var sb = await cliente();
+      if (!sb) return null;
+      try {
+        var r = await sb.from('pf_clientes')
+          .select('nome,telefone,endereco')
+          .eq('user_id', u.id)
+          .maybeSingle();
+        if (r.error || !r.data) return null;
+        return r.data;
+      } catch (e) {
+        return null;
+      }
+    },
+
+    /** Grava o cadastro na conta. Sem conta, não faz nada — e diz. */
+    salvarCadastro: async function (dados) {
+      var u = await Conta.usuario();
+      if (!u) return { ok: false, semConta: true };
+      var sb = await cliente();
+      if (!sb) return { ok: false, semConta: true };
+      try {
+        var r = await sb.from('pf_clientes').upsert({
+          user_id: u.id,
+          nome: String(dados.nome || '').trim(),
+          telefone: String(dados.telefone || '').trim(),
+          endereco: String(dados.endereco || '').trim(),
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'user_id' });
+        if (r.error) return { ok: false, erro: r.error.message };
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: String((e && e.message) || e) };
+      }
+    },
+
+    /**
+     * Põe conta e aparelho de acordo, na abertura da página.
+     *
+     * Três casos, e nenhum deles perde o que a pessoa já digitou:
+     *
+     *   1. a conta TEM cadastro  -> ele desce para o aparelho. É o
+     *      caso de abrir num aparelho novo.
+     *   2. a conta NÃO tem, e o aparelho tem -> sobe. É o caso de
+     *      quem já usava o site antes desta tabela existir: os
+     *      dados dele entram na conta na primeira abertura.
+     *   3. nenhum dos dois tem -> usa o nome e o telefone que a
+     *      pessoa digitou ao criar a conta, que já estavam
+     *      guardados na conta dela.
+     */
+    sincronizarCadastro: async function () {
+      var u = await Conta.usuario();
+      if (!u || !Area) return false;
+
+      var noAparelho = Area.dados();
+      var naConta = await Conta.cadastro();
+
+      if (naConta && (naConta.nome || naConta.telefone || naConta.endereco)) {
+        Area.salvarDados({
+          nome: naConta.nome || noAparelho.nome || '',
+          telefone: naConta.telefone || noAparelho.telefone || '',
+          endereco: naConta.endereco || noAparelho.endereco || ''
+        });
+        return true;
+      }
+
+      var meta = u.user_metadata || {};
+      var subir = {
+        nome: noAparelho.nome || meta.nome || '',
+        telefone: noAparelho.telefone || meta.telefone || '',
+        endereco: noAparelho.endereco || ''
+      };
+      if (!subir.nome && !subir.telefone && !subir.endereco) return false;
+
+      Area.salvarDados(subir);
+      await Conta.salvarCadastro(subir);
+      return true;
     },
 
     sair: async function () {
@@ -245,4 +365,13 @@
   };
 
   window.PharmaFitConta = Conta;
+
+  /* PÕE CONTA E APARELHO DE ACORDO NA ABERTURA.
+     Sem esperar ninguém e sem barrar nada: se der erro, a tela continua
+     com o que está no aparelho, que é como era antes. O `catch` vazio é
+     de propósito — esta é a única coisa na página que pode falhar sem
+     consequência para quem está comprando. */
+  document.addEventListener('DOMContentLoaded', function () {
+    Conta.sincronizarCadastro().catch(function () {});
+  });
 })();

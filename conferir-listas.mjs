@@ -75,16 +75,46 @@ function arquivosJs(dir, achados = []) {
 }
 
 const usadas = new Map();   /* nome -> onde apareceu */
+
+/* Uma VISTA não é tabela e não entra em cópia de segurança: ela é uma
+   janela para uma tabela que já está lá. Neste projeto a vista sempre
+   tem o nome da tabela mais um sufixo (`_publico`, `_meus`), então dá
+   para reconhecer pela FORMA, sem lista escrita à mão. */
+const eVista = (n) => /_(publico|meus)$/.test(n);
+
+function anotar(nome, onde) {
+  if (eVista(nome)) return;
+  if (!usadas.has(nome)) usadas.set(nome, onde);
+}
+
+/* o painel */
 for (const caminho of arquivosJs(join(RAIZ, 'gestao'))) {
   const txt = readFileSync(caminho, 'utf8');
   const curto = relative(RAIZ, caminho);
   for (const re of [/\.listar\(\s*'([a-z_]+)'/g, /\bT\(\s*'([a-z_]+)'/g,
                     /\.atualizar\(\s*'([a-z_]+)'/g, /\.excluir\(\s*'([a-z_]+)'/g,
                     /\.inserir\(\s*'([a-z_]+)'/g]) {
-    for (const m of txt.matchAll(re)) {
-      if (!usadas.has(m[1])) usadas.set(m[1], curto);
-    }
+    for (const m of txt.matchAll(re)) anotar(m[1], curto);
   }
+}
+
+/* E O SITE TAMBÉM, desde 17/09/2026.
+ *
+ * Antes eu só olhava `gestao/`, e isso deixou um furo que eu mesmo abri
+ * no mesmo dia: o cadastro do cliente (`pf_clientes`) é escrito pelo
+ * SITE, não pelo painel. Ele nasceu fora da cópia de segurança e nenhum
+ * conferidor reclamou — o backup passaria a sair incompleto sem avisar,
+ * e isso só apareceria no dia de precisar dele.
+ *
+ * Tabela é tabela, não importa quem escreve nela. */
+for (const caminho of arquivosJs(join(RAIZ, 'assets', 'js'))) {
+  const txt = readFileSync(caminho, 'utf8');
+  const curto = relative(RAIZ, caminho);
+  for (const re of [/\.buscar\(\s*'([a-z_]+)'/g, /\.inserir\(\s*'([a-z_]+)'/g]) {
+    for (const m of txt.matchAll(re)) anotar(m[1], curto);
+  }
+  /* o site também fala direto com a tabela, com o prefixo escrito */
+  for (const m of txt.matchAll(/\.from\(\s*'pf_([a-z_]+)'/g)) anotar(m[1], curto);
 }
 
 /* `pessoal` e companhia podem aparecer por outros caminhos; o que
@@ -105,7 +135,7 @@ for (const n of COLECOES) {
 }
 for (const [n, onde] of usadas) {
   if (!TABELAS.has(n) || !COLECOES.has(n)) {
-    problemas.push(`o painel lê "${n}" (${onde}) e essa tabela não está ` +
+    problemas.push(`a tabela "${n}" é usada em ${onde} e essa tabela não está ` +
                    `nas duas listas de ${FONTE}`);
   }
 }
@@ -113,7 +143,7 @@ for (const [n, onde] of usadas) {
 /* ---------- recado ---------- */
 
 console.log(`  ${TABELAS.size} em TABELAS · ${COLECOES.size} em COLECOES · ` +
-            `${usadas.size} coleções lidas pelo painel`);
+            `${usadas.size} coleções usadas pelo painel e pelo site`);
 
 if (!problemas.length) {
   console.log('  ok    toda tabela que o painel usa está no teste de conexão e no backup');

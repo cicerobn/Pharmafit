@@ -145,18 +145,45 @@
     var form = document.getElementById('form-conta');
     if (!form) return;
 
-    var meus = Area.dados();
-    document.getElementById('c-nome').value = meus.nome;
-    document.getElementById('c-zap').value = meus.telefone;
-    document.getElementById('c-endereco').value = meus.endereco;
+    function preencher() {
+      var meus = Area.dados();
+      document.getElementById('c-nome').value = meus.nome;
+      document.getElementById('c-zap').value = meus.telefone;
+      document.getElementById('c-endereco').value = meus.endereco;
+    }
+    preencher();
 
-    form.addEventListener('submit', function (e) {
+    /* O CADASTRO DA CONTA CHEGA DEPOIS, e o formulário precisa saber.
+       A tela desenha na hora com o que está no aparelho; a leitura da
+       conta é uma ida ao servidor e termina depois. Sem isto, quem
+       abrisse num aparelho novo veria os campos vazios mesmo tendo
+       cadastro guardado na conta, e concluiria que a conta não guarda
+       nada. O aviso não sobrescreve o que a pessoa já estiver
+       digitando: se algum campo está com o foco, ele fica como está. */
+    document.addEventListener('pharmafit-meus-dados', function () {
+      var focado = document.activeElement;
+      if (focado && form.contains(focado)) return;
+      preencher();
+    });
+
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
-      Area.salvarDados({
+      var dados = {
         nome: document.getElementById('c-nome').value,
         telefone: document.getElementById('c-zap').value,
         endereco: document.getElementById('c-endereco').value
-      });
+      };
+      Area.salvarDados(dados);
+
+      /* Com conta, sobe para a conta e o recado diz isso — "salvo neste
+         aparelho" para quem tem conta seria mentira pela metade, e é
+         justamente a dúvida que faz a pessoa digitar tudo de novo no
+         outro aparelho. */
+      var Conta = window.PharmaFitConta;
+      if (Conta) {
+        var r = await Conta.salvarCadastro(dados);
+        if (r && r.ok) { toast('Dados salvos na sua conta.'); return; }
+      }
       toast('Dados salvos neste aparelho.');
     });
 

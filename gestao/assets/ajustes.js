@@ -38,7 +38,12 @@
     { nome: 'atendimentos',   para: 'quem pediu atendimento pelo site' },
     { nome: 'pessoal',        para: 'seu painel pessoal' },
     { nome: 'notas',          para: 'observações da ficha do cliente' },
-    { nome: 'configuracoes',  para: 'meta do mês' }
+    { nome: 'configuracoes',  para: 'meta do mês' },
+    /* Escrita pelo SITE, não pelo painel: é o cadastro que o cliente
+       preenche em "Meus dados" e que passou a morar na conta dele em
+       17/09/2026. Entra aqui porque é dado de cliente — perder isto é
+       perder o endereço de entrega de todo mundo. */
+    { nome: 'clientes',       para: 'cadastro de contato dos clientes' }
   ];
 
   var conexaoTestada = null; /* { url, chave } que passou no teste */
@@ -210,7 +215,8 @@
      nomes — tabela que fique fora daqui não entra na cópia de segurança,
      e o arquivo sai incompleto sem dizer que saiu. */
   var COLECOES = ['pedidos', 'produtos', 'despesas', 'representantes', 'orcamentos',
-                  'espera', 'atendimentos', 'pessoal', 'notas', 'configuracoes'];
+                  'espera', 'atendimentos', 'pessoal', 'notas', 'configuracoes',
+                  'clientes'];
 
   var CHAVE_BACKUP = 'pharmafit_ultimo_backup';
 
