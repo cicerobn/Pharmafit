@@ -68,7 +68,12 @@
   <section class="page-head">
     <h1 class="page-title">Meus pedidos</h1>
     <div class="rule"></div>
-    <p class="page-lead">O que você pediu pelo site, guardado neste aparelho.</p>
+    <!-- O TEXTO DE APRESENTAÇÃO SAIU, e não por gosto: ele MENTIA.
+         Dizia "guardado neste aparelho", e desde 16/09/2026 a lista
+         vem da CONTA quando há conta — o aviso logo abaixo já diz isso
+         com as palavras certas, e ele se ajusta conforme o caso. Eram
+         duas frases na mesma tela dizendo coisas diferentes sobre a
+         mesma lista, e uma delas era falsa. Uma frase só, e certa. -->
   </section>
 
   <section class="wrap">
@@ -90,7 +95,22 @@
       <a class="btn btn--primary btn--block" href="produtos.html">Ver produtos</a>
     </div>
 
-    <p class="acao-discreta"><button class="linkish" type="button" data-limpar-pedidos>Apagar histórico deste aparelho</button></p>
+    <!-- APAGAR O HISTÓRICO: nasce ESCONDIDO.
+         Ele aparecia sempre, e isso dava dois defeitos medidos em
+         17/09/2026:
+
+           · com conta, a lista na tela vem da conta. Apagar o aparelho
+             não mudava NADA na tela — e a tela dizia "Histórico
+             apagado". Botão que diz "pronto" e não faz nada é
+             exatamente o que ele proibiu. E pior: apagava a cópia do
+             aparelho de verdade, calado, então quem depois saísse da
+             conta perdia o histórico sem nunca ter pedido isso.
+           · sem pedido nenhum, ele oferecia apagar o que não existe.
+
+         Agora quem manda é o que está NA TELA: ele só aparece quando a
+         lista mostrada é a do aparelho e tem pelo menos um pedido.
+         Assim o que ele apaga é o que a pessoa está vendo. -->
+    <p class="acao-discreta" data-bloco-limpar hidden><button class="linkish" type="button" data-limpar-pedidos>Apagar histórico deste aparelho</button></p>
   </section>
 
   <p class="footnote">
@@ -181,7 +201,7 @@
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/minha-area.js?v=101981a3"></script>
 <script src="assets/js/favoritos.js?v=0fcdae81"></script>
-<script src="assets/js/paginas.js?v=80872818"></script>
+<script src="assets/js/paginas.js?v=3cbf8a54"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
 <script src="assets/js/idioma-es.js?v=475650ec"></script>
 <script src="assets/js/idioma.js?v=e43d6aac"></script>

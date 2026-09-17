@@ -87,6 +87,16 @@
     document.querySelector('[data-pedidos-vazio]').hidden = pedidos.length > 0;
     lista.hidden = !pedidos.length;
 
+    /* O BOTÃO DE APAGAR SÓ APARECE QUANDO TEM O QUE APAGAR — E QUANDO
+       O QUE ELE APAGA É O QUE ESTÁ NA TELA.
+       Medido em 17/09/2026: com conta, a lista vem da conta, e apagar
+       o aparelho não mudava nada na tela — que ainda por cima dizia
+       "Histórico apagado". Sem pedido nenhum, ele oferecia apagar o
+       vazio. As duas coisas são a mesma: botão que promete e não
+       entrega. */
+    var blocoLimpar = document.querySelector('[data-bloco-limpar]');
+    if (blocoLimpar) blocoLimpar.hidden = !(de === 'aparelho' && pedidos.length > 0);
+
     lista.innerHTML = pedidos.map(function (p) {
       var texto = 'Olá! Queria saber do meu pedido de ' + p.produto +
         (p.quantidade > 1 ? ' (' + p.quantidade + ' unidades)' : '') + '.';
