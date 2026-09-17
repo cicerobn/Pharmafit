@@ -122,7 +122,13 @@
   var PROIBIDO = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEXTAREA: 1, CODE: 1, PRE: 1 };
 
   function frase(texto) {
-    var limpo = texto.replace(/\s+/g, ' ').trim();
+    /* O `­` é o hífen suave: invisível, só vira tracinho se a
+       palavra precisar quebrar ali. O cartão de protocolo usa um em
+       "Acompanha­mento" para não parecer erro de escrita. Se ele
+       entrasse na busca, "Acompanhamento médico" não casaria com a
+       chave do dicionário e o rótulo ficaria em português no site em
+       espanhol — um hífen que ninguém vê derrubando a tradução. */
+    var limpo = texto.replace(/­/g, '').replace(/\s+/g, ' ').trim();
     if (!limpo) return null;
     var achou = dicionario[limpo];
 

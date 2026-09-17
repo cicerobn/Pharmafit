@@ -205,9 +205,32 @@
 
   /* ---------- carrossel da página inicial ---------- */
 
+  /* ONDE A PALAVRA PODE QUEBRAR, E COM TRACINHO.
+   *
+   * "Acompanhamento" tem 14 letras e a coluna do cartão tem 53px: ela
+   * não cabe de jeito nenhum. Sem dizer nada, o navegador partia onde
+   * dava e o cartão mostrava "Acompanha" numa linha e "mento" na
+   * outra, sem tracinho — quem lê acha que está escrito errado.
+   *
+   * `hyphens:auto` no CSS resolveria, mas depende do dicionário de
+   * hifenização do navegador: no Chromium daqui ele simplesmente não
+   * faz nada, e eu não deixo no código uma linha que não consigo
+   * mostrar funcionando.
+   *
+   * Este caractere (U+00AD, "hífen suave") é invisível e funciona em
+   * qualquer aparelho: ele não aparece quando a palavra cabe, e vira
+   * um tracinho no exato ponto em que ela precisa quebrar. Fica
+   * escrito assim, somado, e não colado dentro do texto — caractere
+   * invisível escondido num literal é armadilha para quem vier depois.
+   *
+   * O tradutor de espanhol ignora este caractere ao procurar a frase
+   * no dicionário (ver `idioma.js`), senão o rótulo ficaria em
+   * português só por causa de um hífen que ninguém vê. */
+  var HIFEN = '­';
+
   var BENEFICIOS = {
-    'Tirzepatida': ['Redução de peso', 'Controle do apetite', 'Acompanhamento médico'],
-    'Retatrutida': ['Protocolo avançado', 'Controle do apetite', 'Acompanhamento médico'],
+    'Tirzepatida': ['Redução de peso', 'Controle do apetite', 'Acompanha' + HIFEN + 'mento médico'],
+    'Retatrutida': ['Protocolo avançado', 'Controle do apetite', 'Acompanha' + HIFEN + 'mento médico'],
     'Peptídeos': ['Pele e cabelo', 'Recuperação', 'Bem-estar']
   };
 
@@ -221,7 +244,9 @@
     var trilho = document.querySelector('[data-carousel]');
     if (!trilho) return;
 
-    var destaques = visiveis().slice(0, 5);
+    /* Três, e não cinco: a página inicial mostra só o destaque. Quem
+       quer a lista toda vai em Produtos, na barra de baixo. */
+    var destaques = visiveis().slice(0, 3);
 
     trilho.innerHTML = destaques.map(function (p, i) {
       var beneficios = BENEFICIOS[p.categoria] || BENEFICIOS['Tirzepatida'];

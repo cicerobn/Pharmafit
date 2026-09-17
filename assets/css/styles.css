@@ -3605,6 +3605,14 @@ textarea:focus-visible{
        quebrava. O limite devolve a caixa ao tamanho da coluna. */
     overflow-wrap:break-word;
     max-width:100%;
+    /* O TRACINHO VEM DO TEXTO, NÃO DAQUI.
+       `hyphens:auto` seria o caminho natural, mas depende do
+       dicionário de hifenização do navegador e no Chromium daqui não
+       faz absolutamente nada — a palavra continuava quebrando sem
+       tracinho. Quem põe o ponto de quebra é o hífen suave dentro do
+       próprio rótulo, em `loja.js`, que funciona em qualquer aparelho.
+       Este `break-word` fica como rede de segurança para qualquer
+       palavra longa que apareça sem hífen suave. */
   }
 }
 
