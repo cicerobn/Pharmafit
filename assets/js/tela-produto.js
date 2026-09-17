@@ -10,6 +10,8 @@
    lado e a faixa da quantidade escolhida fica marcada. Quando não
    tem, a tela mostra o preço normal e nenhuma faixa — faixa vazia não
    aparece. Hoje só o Tirzec Pen tem faixa.
+
+   precisa: carrinho, favoritos, loja
    ========================================================= */
 (function () {
   'use strict';
@@ -83,6 +85,18 @@
     achar('desc').textContent = produto.descricao || '';
     document.title = produto.nome + ' — Pharma Fit';
 
+    /* Os três benefícios da categoria, desenhados pela MESMA função que
+       desenha a faixa do cartão na vitrine (`catalogo.js`). Se a
+       categoria não tiver benefício, a faixa não aparece — melhor sem
+       ela que com um buraco na página. */
+    var bene = achar('beneficios');
+    var Beneficios = window.PharmaFitBeneficios;
+    var htmlBene = (bene && Beneficios) ? Beneficios.html(produto.categoria) : '';
+    if (bene) {
+      bene.innerHTML = htmlBene;
+      bene.hidden = !htmlBene;
+    }
+
     var foto = achar('foto');
     foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
     foto.alt = produto.nome + ' — Pharma Fit';
@@ -144,7 +158,29 @@
 
   /* ---------- a conta da quantidade ---------- */
 
-  async function pintarConta() {
+  /* O PREÇO NÃO ESPERA A COTAÇÃO DO DÓLAR.
+   *
+   * Esta função era `async` e a ÚLTIMA coisa que ela fazia era
+   * `pintarFaixas()` — que é quem põe o preço na tela. Antes disso
+   * havia um `await` buscando a cotação das outras moedas no banco.
+   *
+   * Resultado: se aquela busca demorasse, travasse ou nem respondesse,
+   * `pintarFaixas()` nunca rodava e A PÁGINA DO PRODUTO FICAVA SEM
+   * PREÇO. Os dois blocos de preço nascem `hidden` no HTML, então não
+   * aparecia nem um valor errado: aparecia nada, com um buraco entre a
+   * descrição e a quantidade. Sem erro no console, sem rastro.
+   *
+   * Medido em 17/09/2026, com o banco fora do ar: os dois blocos
+   * escondidos, o preço só existindo na linha da conta lá embaixo.
+   * Num celular com internet ruim é o mesmo efeito.
+   *
+   * Agora a ordem é a da importância: preço, parcelas, WhatsApp e
+   * faixas primeiro, tudo sem esperar ninguém. A cotação das outras
+   * moedas é um extra, roda depois e sozinha — se falhar, falha só
+   * ela. Por isso a função deixou de ser `async`: não havia quem
+   * esperasse por ela (nenhuma das quatro chamadas usava `await`), e
+   * ser `async` só servia para esconder esta ordem errada. */
+  function pintarConta() {
     var r = C.precoPara(produto, quantidade);
     var total = r.preco * quantidade;
 
@@ -171,23 +207,33 @@
       prox.hidden = true;
     }
 
-    /* As outras moedas, só com cotação. */
-    var caixaMoedas = achar('moedas');
-    caixaMoedas.hidden = true;
-    if (Moedas) {
-      try {
-        var outras = await Moedas.converter(total);
-        if (outras.length) {
-          caixaMoedas.hidden = false;
-          caixaMoedas.innerHTML = outras.map(function (m) {
-            return '≈ <b>' + esc(m.texto) + '</b>';
-          }).join('<span class="ficha__sep">·</span>');
-        }
-      } catch (e) {}
-    }
-
+    /* O QUE IMPORTA VAI PARA A TELA AGORA. */
     montarZap(r.preco, total);
     pintarFaixas();
+
+    /* E o extra vai atrás, sem ninguém esperando por ele. */
+    pintarMoedas(total);
+  }
+
+  /* As outras moedas, só com cotação — e só depois que o preço já está
+     na tela. Esconde antes de pedir: sem isto, trocar a quantidade
+     deixaria na tela a conversão da quantidade anterior enquanto a
+     nova não chega. */
+  async function pintarMoedas(total) {
+    var caixa = achar('moedas');
+    caixa.hidden = true;
+    if (!Moedas) return;
+    try {
+      var outras = await Moedas.converter(total);
+      if (!outras.length) return;
+      caixa.innerHTML = outras.map(function (m) {
+        return '≈ <b>' + esc(m.texto) + '</b>';
+      }).join('<span class="ficha__sep">·</span>');
+      caixa.hidden = false;
+    } catch (e) {
+      /* sem cotação a página fica completa do mesmo jeito: o preço em
+         real, que é o que se paga, já está lá */
+    }
   }
 
   /* ---------- WhatsApp ---------- */
@@ -262,6 +308,15 @@
   /* compartilhar — usa o do aparelho quando existe; quando não, copia o
      endereço. Nunca fica sem fazer nada. */
   var botaoShare = achar('compartilhar');
+
+  /* O RECADO VAI NO <span>, NÃO NO BOTÃO.
+     O botão agora tem um desenho dentro dele, e `botaoShare.textContent
+     = '...'` APAGA o desenho junto com o texto — o ícone sumiria no
+     primeiro toque e não voltaria mais. Escrevo só no pedaço de texto. */
+  function dizerNoShare(texto) {
+    var alvo = botaoShare.querySelector('[data-share-texto]') || botaoShare;
+    alvo.textContent = texto;
+  }
   botaoShare.addEventListener('click', async function () {
     var dados = {
       title: produto.nome + ' — Pharma Fit',
@@ -271,14 +326,59 @@
     try {
       if (navigator.share) { await navigator.share(dados); return; }
       await navigator.clipboard.writeText(location.href);
-      botaoShare.textContent = 'Endereço copiado';
-      setTimeout(function () { botaoShare.textContent = 'Compartilhar'; }, 1600);
+      dizerNoShare('Endereço copiado');
+      setTimeout(function () { dizerNoShare('Compartilhar'); }, 1600);
     } catch (e) {
       /* recusou o compartilhamento, ou o navegador não deixa copiar */
-      botaoShare.textContent = 'Copie o endereço da barra acima';
-      setTimeout(function () { botaoShare.textContent = 'Compartilhar'; }, 2600);
+      dizerNoShare('Copie o endereço da barra acima');
+      setTimeout(function () { dizerNoShare('Compartilhar'); }, 2600);
     }
   });
+
+  /* ---------- produtos da mesma linha ----------
+
+     A referência que o Brian mandou termina com "Produtos
+     relacionados / Ver todos", e faz sentido: quem abriu um produto e
+     não quis aquele não deveria ter de voltar e procurar de novo.
+
+     O CARTÃO É O MESMO DA VITRINE, não uma cópia. `PharmaFitCartao`
+     mora em `loja.js` e é a função que desenha a lista de produtos —
+     por isso `loja.js` passou a ser carregado nesta página. Assim o
+     coração, o "Adicionar" e o "Ver detalhes" funcionam aqui pelos
+     mesmos ouvintes de sempre (eles ficam no `document`, não em cada
+     botão), e no dia em que o cartão mudar, muda aqui também.
+
+     Nasce escondida e só aparece se houver o que mostrar: categoria
+     com um produto só não deve deixar um título com um vazio embaixo. */
+
+  function pintarRelacionados() {
+    var secao = achar('relacionados');
+    var grade = achar('relacionados-grade');
+    var Cartao = window.PharmaFitCartao;
+    if (!secao || !grade || !Cartao) return;
+
+    var iguais = (window.PHARMAFIT_CATALOGO || []).filter(function (o) {
+      if (o.foraDoSite) return false;
+      if (String(o.nome) === String(produto.nome)) return false;
+      return String(o.categoria || '') === String(produto.categoria || '');
+    }).slice(0, 4);
+
+    if (!iguais.length) {
+      secao.hidden = true;
+      return;
+    }
+
+    grade.innerHTML = iguais.map(function (o) { return Cartao(o); }).join('');
+    secao.hidden = false;
+
+    /* Os corações recém-desenhados precisam nascer já marcados para
+       quem já favoritou — o desenho é novo, o gosto da pessoa não. */
+    if (Favoritos && Favoritos.pintar) {
+      try { Favoritos.pintar(); } catch (e) {}
+    }
+  }
+
+  pintarRelacionados();
 
   pintarConta();
 
@@ -290,5 +390,6 @@
     aplicarProduto();
     pintarFaixas();
     pintarConta();
+    pintarRelacionados();
   });
 })();

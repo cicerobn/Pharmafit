@@ -624,6 +624,9 @@ body:has(.hero__art--foto) .topbar{
 .protocol{
   flex:0 0 92%;
   scroll-snap-align:center;
+  /* é uma âncora: o cartão inteiro leva à página do produto */
+  color:inherit;
+  text-decoration:none;
   display:grid;
   grid-template-columns:44% 1fr;
   grid-template-areas:
@@ -923,6 +926,34 @@ body:has(.hero__art--foto) .topbar{
   line-height:1.15;
   margin:0;
 }
+
+/* O CARTÃO INTEIRO CLICA, E OS BOTÕES CONTINUAM BOTÕES.
+   Brian, 17/09/2026: "Tem que dar pra clicar no produto e ver tudo
+   sobre ele". Aqui já havia link, mas só em duas coisinhas: no NOME
+   (as letras, nada mais) e no "Ver detalhes". A foto — que é onde a
+   pessoa toca primeiro — não fazia nada, e nem a descrição, nem o
+   preço.
+
+   O jeito de resolver isto NÃO é envolver o cartão num `<a>`: dentro
+   dele há botões (carrinho, coração, avise-me), e link com botão
+   dentro é HTML inválido, o navegador desmonta e o leitor de tela
+   anuncia uma confusão.
+
+   Então o link do nome ganha uma sombra que cobre o cartão todo
+   (`::after` esticado). Continua sendo UM link, anunciado uma vez,
+   com o texto certo — e a área de toque passa a ser o cartão.
+   Os botões sobem para cima dessa sombra com `z-index`, senão ela os
+   engoliria e "Adicionar" viraria "ir para a página". */
+.product__name a{color:inherit;text-decoration:none}
+.product__name a::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+/* o coração já é `position:absolute` com z-index 2, então está acima */
+.product__acoes,
+.product .btn--espera{position:relative;z-index:2}
 .product__desc{
   font-size:12.5px;
   line-height:1.45;
@@ -3404,6 +3435,19 @@ textarea:focus-visible{
   margin:12px 0 0;
 }
 
+/* A FAIXA DOS TRÊS BENEFÍCIOS NA PÁGINA DO PRODUTO.
+   Mesma faixa do cartão da vitrine, com mais ar: aqui a coluna tem o
+   dobro da largura, então nada aperta e a letra pode ser a do resto da
+   página. As duas linhas finas separam o "o que é" do "quanto custa",
+   que é a ordem em que a pessoa lê. */
+.ficha__beneficios{
+  margin:16px 0 4px;
+  padding:15px 0;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.ficha__beneficios .mini span{font-size:11.5px;line-height:1.35}
+
 /* ---- as faixas de preço, lado a lado ---- */
 
 .faixas{
@@ -3972,4 +4016,175 @@ textarea:focus-visible{
     gap:16px;
   }
   .hero__cta .btn__arrow{width:38px;height:38px}
+}
+
+/* =========================================================
+   A PÁGINA DO PRODUTO — AVISO, AÇÕES, TARJAS E SANFONAS
+
+   Brian mandou a página de produto de outro site como referência:
+   "faca igual mas nao copie tudo e faca a mesma coisa, tente pegar a
+   referencia e fazer uma coisa melhor".
+
+   O que eu peguei de lá: o aviso de como o pedido é confirmado em cima
+   dos botões, os botões do mesmo tamanho em duas linhas, a fileira de
+   tarjas curtas e as sanfonas de texto. O que eu NÃO peguei: as cores
+   e as palavras deles, e as duas sanfonas cujo conteúdo eu não tenho
+   (o porquê está escrito no HTML, ao lado de cada uma).
+   ========================================================= */
+
+/* ---- o aviso de como o pedido anda ---- */
+.ficha__aviso{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin:14px 0 0;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--cream);
+}
+.ficha__aviso > svg{flex:none;margin-top:1px;color:var(--gold)}
+.ficha__aviso > span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ficha__aviso b{font-size:13px;font-weight:600;color:var(--ink)}
+.ficha__aviso span span{font-size:11.5px;line-height:1.45;color:var(--ink-2)}
+
+/* ---- os botões, dois por linha ----
+   Dois por linha e do mesmo tamanho, como na referência. Era um botão
+   largo, dois médios e um link de texto solto no fim — o
+   "Compartilhar" parecia rodapé e não ação.
+   `min-width:0` porque "Pedir no WhatsApp" é comprido e, sem ele, o
+   item da grade não encolhe abaixo do conteúdo e empurra a coluna
+   vizinha (o mesmo alfinete de sempre em grid). */
+.ficha__acoes{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  margin-top:13px;
+}
+.ficha__acoes .btn{
+  min-width:0;
+  justify-content:center;
+  gap:7px;
+  padding-inline:10px;
+}
+.ficha__acoes .btn > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* sem estoque: o aviso ocupa a linha inteira, no lugar do carrinho */
+.ficha__acoes .btn--espera{grid-column:1 / -1}
+
+/* ---- as quatro tarjas ---- */
+/* DUAS COLUNAS NO CELULAR, QUATRO NO GRANDE.
+   Na referência dele as quatro tarjas ficam numa fileira só, e eu
+   comecei assim. Mas a palavra mais comprida das nossas quatro é
+   "Acompanhamento", e ela mede 83px na letra da tarja: não cabe em
+   coluna de 62px (celular de 390) nem de 72px (de 430). Em quatro
+   colunas ela QUEBRAVA NO MEIO, que é o defeito que eu passei a tarde
+   consertando no cartão.
+   Duas colunas legíveis valem mais que quatro com palavra partida —
+   ele pediu para melhorar a referência, não para copiá-la. A partir de
+   520px a coluna passa de 110px e as quatro entram na mesma fileira,
+   como no desenho. Medido em `clicar-no-produto.mjs`, comparando a
+   coluna com a palavra desenhada na fonte real. */
+.ficha__tarjas{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  margin:18px 0 0;
+  padding:0 20px;
+  list-style:none;
+}
+.ficha__tarjas li{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  padding:11px 5px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--card);
+  text-align:center;
+}
+.ficha__tarjas svg{color:var(--gold);flex:none}
+.ficha__tarjas span{display:flex;flex-direction:column;gap:1px;min-width:0;max-width:100%}
+.ficha__tarjas b{
+  font-size:9.5px;
+  font-weight:600;
+  line-height:1.2;
+  color:var(--ink);
+  overflow-wrap:break-word;
+}
+.ficha__tarjas span span{
+  font-size:9px;
+  line-height:1.2;
+  color:var(--ink-2);
+  overflow-wrap:break-word;
+}
+
+/* ---- as sanfonas ----
+   `<details>`/`<summary>` do navegador: abre e fecha sem JavaScript,
+   responde ao teclado e o leitor de tela já sabe anunciar "expandido /
+   recolhido". Uma sanfona escrita à mão custaria código e entregaria
+   menos. */
+.sanfona{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  margin:18px 0 0;
+  padding:0 20px;
+}
+.sanfona__item{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--card);
+  overflow:hidden;
+}
+.sanfona__item > summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:52px;
+  padding:13px 14px;
+  font-size:13.5px;
+  font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+  list-style:none;
+}
+/* a setinha padrão do navegador sai, e entra uma que gira ao abrir */
+.sanfona__item > summary::-webkit-details-marker{display:none}
+.sanfona__item > summary svg:first-child{flex:none;color:var(--gold)}
+.sanfona__item > summary > span{flex:1;min-width:0}
+.sanfona__item > summary::after{
+  content:"";
+  flex:none;
+  width:8px;height:8px;
+  border-right:2px solid var(--muted);
+  border-bottom:2px solid var(--muted);
+  transform:rotate(45deg) translateY(-2px);
+  transition:transform .18s ease;
+}
+.sanfona__item[open] > summary::after{transform:rotate(-135deg) translateY(-2px)}
+.sanfona__corpo{
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  padding:0 14px 14px;
+  border-top:1px solid var(--line);
+  padding-top:12px;
+}
+.sanfona__corpo p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
+.sanfona__corpo b{font-weight:600;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){
+  .sanfona__item > summary::after{transition:none}
+}
+
+/* ---- produtos da mesma linha ---- */
+.relacionados{margin-top:8px}
+.relacionados .section-head{padding-bottom:12px}
+.relacionados .section-title{font-size:20px}
+
+/* Da tela grande para cima as quatro entram na mesma fileira: a coluna
+   passa de 110px e "Acompanhamento" (83px) cabe inteira. */
+@media (min-width:520px){
+  .ficha__tarjas{grid-template-columns:repeat(4,minmax(0,1fr))}
 }

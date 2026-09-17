@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=42886c02">
+<link rel="stylesheet" href="assets/css/styles.css?v=a84a1b4f">
 </head>
 <body>
 
@@ -98,6 +98,18 @@
         <h1 class="ficha__nome" data-nome>…</h1>
         <p class="ficha__desc" data-desc></p>
 
+        <!-- OS TRÊS BENEFÍCIOS, OS MESMOS DO CARTÃO.
+             Brian, 17/09/2026: "Tem que dar pra clicar no produto e ver
+             tudo sobre ele". O cartão da vitrine mostrava três coisas
+             que esta página — que é A página do produto — não mostrava:
+             quem clicava para ver MAIS via MENOS.
+             O texto e os desenhos vêm de `catalogo.js`, da mesma função
+             que desenha a faixa do cartão, para as duas telas não
+             desencontrarem. Nasce escondido: se um dia uma categoria
+             não tiver benefício, fica sem a faixa em vez de deixar um
+             buraco na página. -->
+        <div class="mini-list ficha__beneficios" data-beneficios hidden></div>
+
         <!-- as faixas de preço. Só aparece quando o produto tem faixas. -->
         <div class="faixas" data-faixas hidden></div>
 
@@ -135,35 +147,195 @@
           <p class="carrinho__faixa" data-proxima hidden></p>
         </div>
 
-        <!-- os botões -->
+        <!-- COMO O PEDIDO ANDA, DITO ANTES DE A PESSOA APERTAR.
+             Na referência que o Brian mandou há um aviso assim em cima
+             dos botões, e ele resolve a dúvida certa: quem põe no
+             carrinho quer saber se vai pagar ali na hora. No nosso
+             site não paga: o pedido vai para o WhatsApp da equipe, que
+             confirma e combina o pagamento. Estava verdade e não
+             estava escrito em lugar nenhum. -->
+        <p class="ficha__aviso">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2.8 4.8 5.9v5.4c0 4.3 2.9 7.9 7.2 9.9 4.3-2 7.2-5.6 7.2-9.9V5.9z"/>
+            <path d="m9.4 12.2 1.9 2 3.3-3.6"/>
+          </svg>
+          <span>
+            <b>Pedido confirmado no WhatsApp</b>
+            <span>A equipe confere o pedido e combina o pagamento e a entrega com você.</span>
+          </span>
+        </p>
+
+        <!-- OS BOTÕES, DOIS POR LINHA.
+             Era um botão largo, depois dois, depois um link de texto
+             solto embaixo — "Compartilhar" parecia rodapé, não ação. Na
+             referência dele são quatro botões do mesmo tamanho, em duas
+             linhas, com o de comprar destacado. Ficou melhor mesmo: o
+             mesmo alvo de dedo para todos e nada com cara de sobra.
+             "Avise-me quando chegar" ocupa as duas colunas e substitui
+             o de carrinho quando o produto está sem estoque — pôr no
+             carrinho o que não pode ser entregue só empurra a
+             decepção para o fim da compra. -->
         <div class="ficha__acoes">
-          <button class="btn btn--primary btn--block btn--carrinho" type="button" data-adicionar>
+          <button class="btn btn--primary btn--carrinho" type="button" data-adicionar>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
               <path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>
             </svg>
-            <span>Adicionar ao carrinho</span>
+            <span>Adicionar</span>
           </button>
 
-          <button class="btn btn--outline btn--block btn--espera" type="button" data-avisar hidden>
+          <button class="btn btn--outline btn--espera" type="button" data-avisar hidden>
             Avise-me quando chegar
           </button>
 
-          <div class="ficha__acoes-linha">
-            <a class="btn btn--outline" data-zap href="#" target="_blank" rel="noopener">
-              Pedir no WhatsApp
-            </a>
-            <button class="btn btn--outline" type="button" data-favoritar>
-              <span data-fav-texto>Favoritar</span>
-            </button>
-          </div>
+          <a class="btn btn--outline" data-zap href="#" target="_blank" rel="noopener">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3.5 20.5l1.6-5a8.4 8.4 0 1 1 15.9-4z"/>
+            </svg>
+            <span>Pedir no WhatsApp</span>
+          </a>
 
-          <button class="linkish" type="button" data-compartilhar>Compartilhar</button>
+          <button class="btn btn--outline" type="button" data-favoritar>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 1 1 19.4 13z"/>
+            </svg>
+            <span data-fav-texto>Favoritar</span>
+          </button>
+
+          <button class="btn btn--outline" type="button" data-compartilhar>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="18" cy="5.6" r="2.6"/><circle cx="6" cy="12" r="2.6"/>
+              <circle cx="18" cy="18.4" r="2.6"/>
+              <path d="m8.3 10.7 7.4-3.8m0 10.2-7.4-3.8"/>
+            </svg>
+            <span data-share-texto>Compartilhar</span>
+          </button>
         </div>
 
       </div>
     </div>
+
+    <!-- AS QUATRO TARJAS.
+         São as mesmas quatro da página inicial, palavra por palavra —
+         não inventei promessa nova para a página do produto. A
+         referência dele tem uma fileira assim logo depois dos botões, e
+         é um bom lugar: é a dúvida que vem depois de "quero", não
+         antes. -->
+    <ul class="ficha__tarjas">
+      <li>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="4.4" r="1.8"/>
+          <path d="M9.4 7.8h5.2c0 2.1-1.1 3-1.1 4.5s1.1 2.4 1.1 4.5v3H9.4v-3c0-2.1 1.1-3 1.1-4.5s-1.1-2.4-1.1-4.5z"/>
+        </svg>
+        <span><b>Controle</b><span>de peso</span></span>
+      </li>
+      <li>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="7.4" r="3.4"/>
+          <path d="M4.6 20.5c.6-4 3.6-6.4 7.4-6.4s6.8 2.4 7.4 6.4"/>
+        </svg>
+        <span><b>Acompanhamento</b><span>especializado</span></span>
+      </li>
+      <li>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2.8 4.8 5.9v5.4c0 4.3 2.9 7.9 7.2 9.9 4.3-2 7.2-5.6 7.2-9.9V5.9z"/>
+        </svg>
+        <span><b>Produtos</b><span>premium</span></span>
+      </li>
+      <li>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M2.8 7.4h11v9H2.8zM13.8 10.4h4l3.4 3v3h-7.4z"/>
+          <circle cx="6.4" cy="18.2" r="1.5"/><circle cx="17" cy="18.2" r="1.5"/>
+        </svg>
+        <span><b>Entrega</b><span>e suporte</span></span>
+      </li>
+    </ul>
+
+    <!-- AS SANFONAS.
+         A referência dele tem quatro: Descrição, Apresentação, Como
+         comprar e Entrega. Eu pus DUAS, e o motivo é que eu não
+         inventaria as outras: "Apresentação" pede um dado que o
+         catálogo não tem (nenhum produto tem esse campo), e a de
+         entrega precisa do texto dele — hoje o rodapé diz Manaus e o
+         topo da página inicial diz Paraguai, e essa decisão é do
+         Brian. Sanfona vazia é pior que sanfona nenhuma.
+         Estas duas dizem o que é verdade hoje, e o "Como comprar" é o
+         caminho real do site: carrinho, dados, WhatsApp da equipe.
+         `<details>` do próprio navegador: abre e fecha sem uma linha
+         de JavaScript, funciona com o teclado e o leitor de tela já
+         sabe anunciar. -->
+    <div class="sanfona">
+      <details class="sanfona__item">
+        <summary>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8.2h.01M11.4 11.4h1.2v4.4"/>
+          </svg>
+          <span>Como comprar</span>
+        </summary>
+        <!-- CADA FRASE INTEIRA NUM PEDAÇO SÓ.
+             Eu tinha escrito "toque em <b>Adicionar</b>. No carrinho…",
+             com o negrito no meio da frase. Isso parte o texto em três
+             pedaços, e o tradutor procura frase inteira no dicionário:
+             o espanhol viria remendado, com metade em português. O
+             conferidor de idioma apontou os pedaços um por um.
+             Então o negrito só envolve frase inteira. -->
+        <div class="sanfona__corpo">
+          <p>Escolha a quantidade e toque em Adicionar. No carrinho você preenche nome, WhatsApp e endereço e finaliza o pedido.</p>
+          <p>O pedido chega no WhatsApp da nossa equipe, que confere tudo e combina com você o pagamento e a entrega.</p>
+          <p><b>Nada é cobrado aqui no site.</b></p>
+          <p>Se preferir, toque em Pedir no WhatsApp e a conversa já abre com este produto e a quantidade dentro.</p>
+        </div>
+      </details>
+
+      <details class="sanfona__item">
+        <summary>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.8 7.4h11v9H2.8zM13.8 10.4h4l3.4 3v3h-7.4z"/>
+            <circle cx="6.4" cy="18.2" r="1.5"/><circle cx="17" cy="18.2" r="1.5"/>
+          </svg>
+          <span>Entrega e pagamento</span>
+        </summary>
+        <div class="sanfona__corpo">
+          <p>A forma de entrega e o pagamento são combinados no WhatsApp, junto com a confirmação do pedido.</p>
+          <p>Quanto maior a quantidade, melhor o preço por unidade: as faixas estão logo acima, e o valor do seu pedido aparece antes de finalizar.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- PRODUTOS DA MESMA LINHA.
+       A referência dele termina com "Produtos relacionados / Ver
+       todos", e faz sentido: quem abriu um produto e não quis aquele
+       não deveria ter de voltar e procurar de novo.
+       São da MESMA categoria e o cartão é o MESMO da vitrine — a
+       função que desenha é a de `loja.js`, não uma cópia — então o
+       coração e o botão de carrinho funcionam aqui igual. A seção
+       nasce escondida e só aparece se houver o que mostrar. -->
+  <section class="wrap relacionados" data-relacionados hidden>
+    <div class="section-head">
+      <div>
+        <h2 class="section-title" data-relacionados-titulo>Da mesma linha</h2>
+      </div>
+      <a class="link-more" data-relacionados-todos href="produtos.html">
+        Ver todos
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 5 7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+    <div class="grid-products" data-relacionados-grade></div>
   </section>
 
   <p class="footnote">
@@ -243,20 +415,27 @@
 </div>
 
 <script src="gestao/assets/config.js?v=55118931"></script>
-<script src="assets/js/catalogo.js?v=172c9e43"></script>
+<script src="assets/js/catalogo.js?v=7eccb7ad"></script>
 <script src="assets/js/nuvem.js?v=07de0bc1"></script>
 <script src="assets/js/catalogo-banco.js?v=8084c42d"></script>
 <script src="assets/js/modal.js?v=9146042c"></script>
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/minha-area.js?v=101981a3"></script>
-<script src="assets/js/favoritos.js?v=d84b635f"></script>
+<!-- `loja.js` entrou nesta página por causa dos "produtos da mesma
+     linha" no fim dela: é dele a função que desenha o cartão de
+     produto da vitrine, e eu prefiro carregar o arquivo a manter
+     uma segunda cópia do cartão aqui. Nesta página ele não desenha
+     mais nada: a grade, os filtros e o carrossel que ele monta não
+     existem aqui, e ele sai calado quando não acha. -->
+<script src="assets/js/loja.js?v=e7aaade6"></script>
+<script src="assets/js/favoritos.js?v=6564d23c"></script>
 <script src="assets/js/paginas.js?v=3cbf8a54"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=e282e767"></script>
+<script src="assets/js/idioma-es.js?v=b669e8c4"></script>
 <script src="assets/js/idioma.js?v=84149bbd"></script>
 <script src="assets/js/app.js?v=a7973cc8"></script>
 <script src="assets/js/moedas.js?v=ddbb4a9b"></script>
-<script src="assets/js/tela-produto.js?v=97094277"></script>
+<script src="assets/js/tela-produto.js?v=4b8d1208"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>
 <script src="assets/js/pedido.js?v=19f67c9c"></script>
 </body>

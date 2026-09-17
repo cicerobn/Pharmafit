@@ -204,3 +204,67 @@ window.PharmaFitPreco = {
     return Number(venda || 0) - Number(custo || 0);
   }
 };
+
+/* =========================================================
+   OS TRÊS BENEFÍCIOS DE CADA CATEGORIA
+
+   Eles moravam dentro de `loja.js`, que desenha o carrossel da página
+   inicial e a lista de produtos. Mas `loja.js` não é carregado na
+   página de UM produto — e foi ali que o Brian pediu para "ver tudo
+   sobre ele". Copiar a lista para o outro arquivo seria a mesma doença
+   dos menus: duas listas iguais que, no dia em que uma mudar, param de
+   ser iguais e ninguém percebe.
+
+   Então a lista mora aqui, junto do catálogo, e quem desenha é UMA
+   função, chamada pelas duas telas. Se o texto mudar, muda nas duas.
+
+   O `­` é o hífen suave: invisível, vira tracinho só se a palavra
+   precisar quebrar naquele ponto. "Acompanhamento" tem 14 letras e em
+   celular estreito não cabe na coluna do cartão; sem ele o navegador
+   partia a palavra em qualquer lugar e sem tracinho, parecendo erro de
+   escrita. O tradutor de espanhol ignora este caractere ao procurar a
+   frase no dicionário (ver `idioma.js`).
+   ========================================================= */
+window.PharmaFitBeneficios = (function () {
+  'use strict';
+
+  var HIFEN = '­';
+
+  var POR_CATEGORIA = {
+    'Tirzepatida': ['Redução de peso', 'Controle do apetite',
+                    'Acompanha' + HIFEN + 'mento médico'],
+    'Retatrutida': ['Protocolo avançado', 'Controle do apetite',
+                    'Acompanha' + HIFEN + 'mento médico'],
+    'Peptídeos':   ['Pele e cabelo', 'Recuperação', 'Bem-estar']
+  };
+
+  var DESENHOS = [
+    '<circle cx="12" cy="4.4" r="1.8"/><path d="M9.4 7.8h5.2c0 2.1-1.1 3-1.1 4.5s1.1 2.4 1.1 4.5v3H9.4v-3c0-2.1 1.1-3 1.1-4.5s-1.1-2.4-1.1-4.5z"/><path d="M3.4 12.4h2.6M18 12.4h2.6M5 11l-1.6 1.4L5 13.8M19 11l1.6 1.4-1.6 1.4"/>',
+    '<path d="M12 3 5.4 5.9v4.8c0 3.9 2.7 7.2 6.6 8.7 3.9-1.5 6.6-4.8 6.6-8.7V5.9z"/><path d="M12 8.4v5.4m0 0-2.1-2.1M12 13.8l2.1-2.1"/>',
+    '<circle cx="12" cy="7.4" r="3.2"/><path d="M5 20c.6-3.8 3.4-6 7-6s6.4 2.2 7 6"/>'
+  ];
+
+  function escapar(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /** Os três textos da categoria (cai na Tirzepatida se não conhecer). */
+  function lista(categoria) {
+    return POR_CATEGORIA[categoria] || POR_CATEGORIA['Tirzepatida'];
+  }
+
+  /** O HTML da faixa, igual no cartão e na página do produto. */
+  function html(categoria) {
+    return lista(categoria).map(function (texto, i) {
+      return '<div class="mini">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        DESENHOS[i] + '</svg>' +
+        '<span>' + escapar(texto) + '</span></div>';
+    }).join('');
+  }
+
+  return { lista: lista, html: html };
+})();

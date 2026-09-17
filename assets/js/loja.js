@@ -205,40 +205,11 @@
 
   /* ---------- carrossel da página inicial ---------- */
 
-  /* ONDE A PALAVRA PODE QUEBRAR, E COM TRACINHO.
-   *
-   * "Acompanhamento" tem 14 letras e a coluna do cartão tem 53px: ela
-   * não cabe de jeito nenhum. Sem dizer nada, o navegador partia onde
-   * dava e o cartão mostrava "Acompanha" numa linha e "mento" na
-   * outra, sem tracinho — quem lê acha que está escrito errado.
-   *
-   * `hyphens:auto` no CSS resolveria, mas depende do dicionário de
-   * hifenização do navegador: no Chromium daqui ele simplesmente não
-   * faz nada, e eu não deixo no código uma linha que não consigo
-   * mostrar funcionando.
-   *
-   * Este caractere (U+00AD, "hífen suave") é invisível e funciona em
-   * qualquer aparelho: ele não aparece quando a palavra cabe, e vira
-   * um tracinho no exato ponto em que ela precisa quebrar. Fica
-   * escrito assim, somado, e não colado dentro do texto — caractere
-   * invisível escondido num literal é armadilha para quem vier depois.
-   *
-   * O tradutor de espanhol ignora este caractere ao procurar a frase
-   * no dicionário (ver `idioma.js`), senão o rótulo ficaria em
-   * português só por causa de um hífen que ninguém vê. */
-  var HIFEN = '­';
-
-  var BENEFICIOS = {
-    'Tirzepatida': ['Redução de peso', 'Controle do apetite', 'Acompanha' + HIFEN + 'mento médico'],
-    'Retatrutida': ['Protocolo avançado', 'Controle do apetite', 'Acompanha' + HIFEN + 'mento médico'],
-    'Peptídeos': ['Pele e cabelo', 'Recuperação', 'Bem-estar']
-  };
-
-  var ICONES = [
-    '<circle cx="12" cy="4.4" r="1.8"/><path d="M9.4 7.8h5.2c0 2.1-1.1 3-1.1 4.5s1.1 2.4 1.1 4.5v3H9.4v-3c0-2.1 1.1-3 1.1-4.5s-1.1-2.4-1.1-4.5z"/><path d="M3.4 12.4h2.6M18 12.4h2.6M5 11l-1.6 1.4L5 13.8M19 11l1.6 1.4-1.6 1.4"/>',
-    '<path d="M12 3 5.4 5.9v4.8c0 3.9 2.7 7.2 6.6 8.7 3.9-1.5 6.6-4.8 6.6-8.7V5.9z"/><path d="M12 8.4v5.4m0 0-2.1-2.1M12 13.8l2.1-2.1"/>',
-    '<circle cx="12" cy="7.4" r="3.2"/><path d="M5 20c.6-3.8 3.4-6 7-6s6.4 2.2 7 6"/>'
-  ];
+  /* Os três benefícios e os desenhos deles vivem em `catalogo.js`,
+     numa função só, porque a PÁGINA DE UM PRODUTO mostra os mesmos
+     três e não carrega este arquivo. Duas listas iguais em dois
+     arquivos é a doença dos menus: no dia em que uma mudar, param de
+     ser iguais e ninguém vê. */
 
   function montarCarrossel() {
     var trilho = document.querySelector('[data-carousel]');
@@ -249,18 +220,22 @@
     var destaques = visiveis().slice(0, 3);
 
     trilho.innerHTML = destaques.map(function (p, i) {
-      var beneficios = BENEFICIOS[p.categoria] || BENEFICIOS['Tirzepatida'];
       var etiqueta = i === 0 ? 'MAIS PROCURADO' : (p.antes ? 'PROMOÇÃO' : '');
-
-      var minis = beneficios.map(function (b, k) {
-        return '<div class="mini">' +
-          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-          'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">' + ICONES[k] + '</svg>' +
-          '<span>' + esc(b) + '</span></div>';
-      }).join('');
+      var minis = window.PharmaFitBeneficios.html(p.categoria);
 
       return '' +
-        '<article class="protocol">' +
+        /* O CARTÃO INTEIRO É UM LINK PARA O PRODUTO.
+           Brian, 17/09/2026: "Tem que dar pra clicar no produto e ver
+           tudo sobre ele". Aqui não dava: o cartão do carrossel era um
+           `<article>` sem link nenhum. A pessoa via a foto, o nome, o
+           preço e os benefícios, tocava — e não acontecia nada. É a
+           regra 1 dele invertida: não era um botão que não funcionava,
+           era um cartão que parecia clicável e não era.
+           Como não há botão nenhum dentro deste cartão, o jeito certo
+           é o mais simples: o cartão é a âncora. Um link só, que o
+           leitor de tela anuncia de uma vez, e área de toque do
+           tamanho do cartão. */
+        '<a class="protocol" href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
           '<div class="protocol__media">' +
             (etiqueta
               ? '<span class="badge">' +
@@ -288,7 +263,7 @@
              embaixo da foto e do texto. A mesma fileira de três da foto
              dele, com 94px por coluna em vez de 45. */
           '<div class="mini-list">' + minis + '</div>' +
-        '</article>';
+        '</a>';
     }).join('');
   }
 

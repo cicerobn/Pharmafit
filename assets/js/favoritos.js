@@ -135,5 +135,15 @@
     atualizarTela();
   });
 
-  window.PharmaFitFavoritos = { ler: ler, tem: tem, alternar: alternar };
+  /* `pintar` é o `atualizarTela` de dentro, com nome de fora.
+     Quem desenha cartão novo DEPOIS que esta página carregou — a
+     página do produto, com os produtos da mesma linha — precisa pedir
+     para os corações nascerem marcados. Antes isso só funcionava por
+     acidente de ordem: este arquivo é carregado antes daquele, então o
+     `DOMContentLoaded` daqui corria depois e arrumava. Ordem de script
+     como garantia invisível é justamente o que eu passei a semana
+     consertando; melhor a tela pedir. */
+  window.PharmaFitFavoritos = {
+    ler: ler, tem: tem, alternar: alternar, pintar: atualizarTela
+  };
 })();
