@@ -412,11 +412,28 @@ body:has(.hero__art--foto) .topbar{
      parte clara de baixo dela. Isso está medido nos pixels atrás de
      cada linha (`foto-do-topo.mjs` + `fundo-do-texto.py`): nenhuma
      letra cai sobre o vidro do frasco nem sobre o corpo da seringa. */
-  /* 54% É O MAIOR QUE PASSA, e o número saiu da medição, não do
-     gosto. A 62% quatro linhas caíam sobre o corpo da seringa e sobre
-     o mármore; a 56%, duas. A 54% nenhuma letra encosta em nada —
-     medido nos pixels atrás de cada linha, em 320, 390 e 1280. */
-  max-width:min(52%,203px);
+  /* 176px, E O NÚMERO ANTERIOR (203px) ESTAVA ERRADO.
+     Brian, 17/09/2026: "a foto ali ta invadindo o texto e nao ta
+     legal". Ele está certo, e a medição que eu tinha aqui não pegava
+     isso: ela media se a letra fica LEGÍVEL sobre o fundo (contraste
+     de 4,5:1), e isso continuava passando — o mármore atrás é claro.
+     Só que legível não é a mesma coisa que bonito: o corpo da seringa
+     cruzava as linhas "acompanhamento especializado" e "para
+     transformar seu corpo", e a agulha passava por "começa aqui".
+     Dava para ler e ficava feio.
+
+     A medição nova pergunta outra coisa: ONDE O ASSUNTO DA FOTO
+     COMEÇA em cada altura de linha. Escondo o texto, fotografo o topo
+     e ando da esquerda para a direita dentro da foto até achar o
+     primeiro pixel que não é mármore claro. Aquele x é o limite; a
+     linha de texto tem de terminar antes dele, com 8px de folga.
+     (`invasao-da-foto.mjs` + `invasao.py`.)
+
+     E a geometria da foto é estável: o assunto começa sempre a 28,6%
+     da largura dela, em qualquer tela. Com a foto em 70% e o
+     parágrafo em 176px a pior folga, entre 320 e 480px, é de 16,7px.
+     Medi sete combinações; esta é a que mexe menos no desenho dele. */
+  max-width:min(48%,176px);
   margin:0;
   position:relative;
   z-index:2;
@@ -3881,7 +3898,14 @@ textarea:focus-visible{
   z-index:1;
   right:0;
   top:0;
-  width:75.2%;
+  /* 70%, E NÃO 75,2%. O 75,2% saiu do desenho dele, mas nesta medida
+     o corpo da seringa cruzava as linhas do parágrafo — "a foto ali
+     ta invadindo o texto", 17/09/2026. O assunto da foto começa
+     sempre a 28,6% da largura dela, então encolher a foto empurra a
+     seringa para a direita: a 70% ela sai de cima do texto e a foto
+     continua sendo o fundo do topo, do jeito que ele desenhou.
+     O porquê completo está no comentário do `.hero__text`. */
+  width:70%;
   max-width:none;
   height:auto;
   margin:0;
