@@ -1,6 +1,16 @@
 /* =========================================================
    PHARMA FIT — interações da interface
-   ========================================================= */
+   ========================================================= 
+   precisa: carrinho
+
+   O CONTADOR DO CARRINHO LÊ `window.PharmaFitCarrinho` NA HORA em que
+   este arquivo roda, e desiste em silêncio se ele não existir. Em
+   `carrinho.html` o `carrinho.js` vinha DEPOIS deste — então, na
+   própria página do carrinho, o contador nunca rodou. Ninguém notou
+   porque ali a lista está na tela; ficou visível em 17/09/2026, quando
+   o ícone do carrinho saiu da barra de cima e o número passou a ser o
+   único aviso. Defeito antigo, achado por uma medição nova.
+*/
 (function () {
   'use strict';
 
