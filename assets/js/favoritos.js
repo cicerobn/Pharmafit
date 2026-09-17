@@ -3,6 +3,16 @@
 
    O que a pessoa curte fica salvo no próprio navegador, sem
    cadastro e sem login. Vale entre as páginas do site.
+
+   enche: data-fav-contador
+
+   Esta linha é lida por `conferir-scripts.mjs`: toda página que tiver
+   esse gancho no HTML tem de carregar este arquivo. Ela existe porque
+   em 17/09/2026 o coração saiu da barra de cima e o contador passou a
+   viver dentro do menu — que é IGUAL nas 16 páginas. Quatro delas não
+   carregavam este script, então nelas o número simplesmente nunca
+   aparecia: o menu prometia uma coisa e entregava outra, sem erro
+   nenhum na tela.
    ========================================================= */
 (function () {
   'use strict';

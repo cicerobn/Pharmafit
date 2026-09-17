@@ -33,6 +33,14 @@
      2. que venha ANTES dele, porque um script que se anuncia em
         `window.…` só existe depois de rodar.
 
+   E EXIGE O CONTRÁRIO TAMBÉM, pela declaração `enche:`: se o HTML da
+   página tem um gancho (`data-fav-contador`, por exemplo), a página
+   tem de carregar o script que preenche aquele gancho. Isto entrou
+   depois, porque `precisa` não pegava o defeito: o problema não era um
+   script chamando outro, era um pedaço de HTML sem o script que lhe dá
+   vida. Aconteceu com o contador de favoritos em quatro páginas — o
+   menu prometia o número e nunca mostrava.
+
    COMO RODAR:  node conferir-scripts.mjs
    =========================================================================== */
 
@@ -41,9 +49,27 @@ import { join } from 'node:path';
 
 const PASTA = 'assets/js';
 
-/* ---------- o que cada script declara precisar ---------- */
+/* ---------- o que cada script declara ---------- */
+
+/* Duas declarações, e elas cobram coisas diferentes:
+ *
+ *   precisa: <scripts>   -> este arquivo depende deles; têm de estar
+ *                           na mesma página e ANTES dele.
+ *   enche: <data-gancho> -> este arquivo preenche esse gancho; toda
+ *                           página que tiver o gancho no HTML tem de
+ *                           carregar este arquivo.
+ *
+ * A segunda nasceu em 17/09/2026. O coração e o carrinho saíram da
+ * barra de cima, e os contadores deles passaram a viver dentro do
+ * MENU — que é igual nas 16 páginas. Quatro páginas não carregavam
+ * `favoritos.js`, então nelas o número nunca aparecia: o menu prometia
+ * uma coisa e entregava outra, sem erro nenhum na tela.
+ *
+ * `precisa` não pegaria isso: o problema não é um script chamando
+ * outro, é um pedaço de HTML sem o script que lhe dá vida. */
 
 const precisa = new Map();
+const enche = new Map();
 
 for (const arq of readdirSync(PASTA).filter((f) => f.endsWith('.js'))) {
   const texto = readFileSync(join(PASTA, arq), 'utf8');
@@ -59,9 +85,21 @@ for (const arq of readdirSync(PASTA).filter((f) => f.endsWith('.js'))) {
   if (lista.length) precisa.set(arq.replace(/\.js$/, ''), lista);
 }
 
-if (!precisa.size) {
-  console.error('Nenhum script declara "precisa:" — ou a declaração sumiu, ou o');
-  console.error('jeito de escrever mudou. Sem declaração esta conferência aprova');
+for (const arq of readdirSync(PASTA).filter((f) => f.endsWith('.js'))) {
+  const cabeca = readFileSync(join(PASTA, arq), 'utf8').slice(0, 4000);
+  const m = cabeca.match(/^[^\S\n]*(?:\/\*|\*|\/\/)?[^\S\n]*enche:[^\S\n]*(.+)$/m);
+  if (!m) continue;
+  const ganchos = m[1]
+    .replace(/\*\/\s*$/, '')
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter((s) => /^data-[a-z-]+$/.test(s));
+  if (ganchos.length) enche.set(arq.replace(/\.js$/, ''), ganchos);
+}
+
+if (!precisa.size && !enche.size) {
+  console.error('Nenhum script declara "precisa:" nem "enche:" — ou a declaração sumiu,');
+  console.error('ou o jeito de escrever mudou. Sem declaração esta conferência aprova');
   console.error('tudo, e conferência que aprova tudo é pior que conferência nenhuma.');
   process.exit(2);
 }
@@ -85,6 +123,19 @@ for (const pag of paginas) {
   }
   if (!ordem.length) continue;
 
+  /* quem tem o gancho tem de ter o script que o enche */
+  for (const [script, ganchos] of enche) {
+    for (const gancho of ganchos) {
+      if (!html.includes(gancho)) continue;
+      if (ordem.indexOf(script) === -1) {
+        problemas.push(
+          `${pag}: tem \`${gancho}\` no HTML e NÃO carrega ${script}.js, ` +
+          `que é quem preenche esse gancho — ele fica ali sem nunca aparecer`
+        );
+      }
+    }
+  }
+
   for (const [script, dependencias] of precisa) {
     const meu = ordem.indexOf(script);
     if (meu === -1) continue;                 /* a página não usa este */
@@ -105,11 +156,13 @@ for (const pag of paginas) {
   }
 }
 
-console.log(`  ${paginas.length} páginas, ${precisa.size} script(s) com dependência declarada:`);
+console.log(`  ${paginas.length} páginas · ${precisa.size} script(s) com dependência · ` +
+            `${enche.size} com gancho declarado:`);
 for (const [s, d] of precisa) console.log(`    ${s}.js precisa de ${d.join(', ')}`);
+for (const [s, g] of enche) console.log(`    ${s}.js enche ${g.join(', ')}`);
 
 if (!problemas.length) {
-  console.log('  ok    toda página carrega o que os scripts dela precisam');
+  console.log('  ok    toda página carrega o que os scripts e o HTML dela precisam');
   process.exit(0);
 }
 

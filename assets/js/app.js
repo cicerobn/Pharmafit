@@ -2,6 +2,7 @@
    PHARMA FIT — interações da interface
    ========================================================= 
    precisa: carrinho
+   enche: data-carrinho-contador
 
    O CONTADOR DO CARRINHO LÊ `window.PharmaFitCarrinho` NA HORA em que
    este arquivo roda, e desiste em silêncio se ele não existir. Em
