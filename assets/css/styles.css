@@ -120,7 +120,7 @@ ul{margin:0;padding:0;list-style:none}
  * com o creme das outras quinze. Lista de páginas escrita à mão é o que
  * já me custou o menu e os scripts. */
 body:has(.hero__art--foto) .topbar{
-  background:rgba(255,255,255,.88);
+  background:rgba(253,253,253,.9);
 }
 
 /* `min-width:0` NAO e enfeite aqui.
@@ -286,11 +286,29 @@ body:has(.hero__art--foto) .topbar{
 
 /* ---------- hero ---------- */
 
-/* O TOPO É BRANCO, E DEPOIS VIRA CREME.
+/* O BRANCO ATRÁS DA FOTO — E A MEDIDA DELE É A LARGURA.
  *
- * Não é enfeite: é o que faz a foto não ter borda. O fundo dela é
- * branco, então a página fica branca onde ela está e as duas viram a
- * mesma superfície. O creme do site volta embaixo, antes dos cartões.
+ * "Ainda não está igual a foto que eu te mostrei", 17/09/2026, com a
+ * tela do site no ar. E dava para ver o retângulo da foto: uma linha
+ * horizontal atravessando embaixo dela e o tom mudando ao lado.
+ *
+ * Medi as duas superfícies. A foto é branco 253 em TODAS as bordas
+ * dela, inclusive na última linha (248, e o mais escuro 237). O creme
+ * da página é 246,242,236. A diferença é pequena no vermelho e grande
+ * no azul — o suficiente para o olho desenhar a borda.
+ *
+ * Então não há recorte a fazer: basta a página ser branca onde a foto
+ * está. O que eu tinha errado foi a MEDIDA. Eu pintava um degradê na
+ * altura do bloco (`#fff 0%, #fff 62%, creme 100%`), e a altura do
+ * bloco depende do texto: com o título em quatro linhas, os 62% caíam
+ * exatamente no fim da foto, então o creme começava junto com a borda
+ * dela em vez de depois.
+ *
+ * A foto termina a 76,9% da LARGURA (11,8% de topo + 65,1% de altura
+ * própria). Esse número não depende de texto nenhum. O `padding-top`
+ * em porcentagem se mede pela largura do pai — é com ele que este
+ * bloco branco tem sempre a altura certa, em 320px ou em 520px, e o
+ * degradê começa a virar creme só depois da foto acabar.
  *
  * `overflow:hidden` porque a foto encosta na direita e, se um dia
  * passar dela, tem de ser cortada e não virar rolagem lateral — que é
@@ -299,7 +317,21 @@ body:has(.hero__art--foto) .topbar{
   padding:6px 20px 8px;
   position:relative;
   overflow:hidden;
-  background:linear-gradient(180deg,#fff 0%,#fff 62%,var(--cream) 100%);
+  background:var(--cream);
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  left:0;right:0;top:0;
+  /* 100% da LARGURA de altura; o branco firme vai até 77% dela, que é
+     onde a foto acaba, e desmancha nos 23% seguintes */
+  padding-top:100%;
+  background:linear-gradient(180deg,
+    #fdfdfd 0%,
+    #fdfdfd 77%,
+    rgba(253,253,253,0) 100%);
+  z-index:0;
+  pointer-events:none;
 }
 
 .hero__grid{display:block}
@@ -328,7 +360,7 @@ body:has(.hero__art--foto) .topbar{
      quatro. */
   max-width:min(40%,158px);
   position:relative;
-  z-index:1;
+  z-index:2;
 }
 .hero__title em{font-style:normal;color:var(--gold)}
 
@@ -343,18 +375,25 @@ body:has(.hero__art--foto) .topbar{
   font-size:15px;
   line-height:1.58;
   color:var(--ink-2);
-  /* MAIS LARGO QUE O TÍTULO, e isso está no desenho dele.
-     Eu havia medido 40% olhando a primeira linha e apertei o texto
-     nisso: virou oito linhas, e o topo cresceu tanto que o botão
-     desceu para 70% da tela. No desenho dele são CINCO linhas, e a
-     linha mais longa ("e acompanhamento especializado") chega a 56%.
-     Ele deixa o texto cruzar a agulha de propósito — a agulha é fina
-     e clara ali, e o texto continua legível por cima dela. O que não
-     pode cruzar é o frasco, que começa a 71%. */
-  max-width:min(50%,196px);
+  /* MAIS LARGO QUE O TÍTULO, e por uma razão de medida.
+     Eu havia apertado o texto em 40% da largura: virou OITO linhas, e
+     o bloco ficou muito mais alto que o desenho dele, que tem cinco.
+     Depois medi onde a foto acaba — 76,9% da largura, ou 300px num
+     celular de 390 — e o texto começa aos 244px. Quer dizer: só as
+     DUAS primeiras linhas ficam ao lado da foto; da terceira em
+     diante não há foto nenhuma para desviar.
+     Então a largura não precisa caber na sobra da foto inteira, só na
+     parte clara de baixo dela. Isso está medido nos pixels atrás de
+     cada linha (`foto-do-topo.mjs` + `fundo-do-texto.py`): nenhuma
+     letra cai sobre o vidro do frasco nem sobre o corpo da seringa. */
+  /* 54% É O MAIOR QUE PASSA, e o número saiu da medição, não do
+     gosto. A 62% quatro linhas caíam sobre o corpo da seringa e sobre
+     o mármore; a 56%, duas. A 54% nenhuma letra encosta em nada —
+     medido nos pixels atrás de cada linha, em 320, 390 e 1280. */
+  max-width:min(54%,211px);
   margin:0;
   position:relative;
-  z-index:1;
+  z-index:2;
 }
 .hero__text b{font-weight:500;color:var(--gold)}
 
@@ -368,9 +407,9 @@ body:has(.hero__art--foto) .topbar{
   z-index:0;
 }
 
-.hero__copy{position:relative;z-index:1}
+.hero__copy{position:relative;z-index:2}
 
-.hero__cta{margin:26px 0 4px;position:relative;z-index:1}
+.hero__cta{margin:18px 0 4px;position:relative;z-index:2}
 
 /* O BOTÃO DO TOPO NÃO ATRAVESSA A TELA.
    `.btn--primary` tem `min-width:min(100%,300px)`, que é o certo no
@@ -3601,8 +3640,15 @@ textarea:focus-visible{
   font-size:16px;
 }
 .ficha-conta__semconta{
+  /* ALVO DE DEDO, e não só texto sublinhado.
+     Ele nasceu com 152x20px — a medição de celular pegou. Vinte pixels
+     de altura num link que a pessoa toca com o polegar é o tipo de
+     coisa que "funciona" para quem clica com mouse e falha no
+     telefone. Com o `padding` ele passa de 20 para 44px, que é o
+     mínimo que uma mão acerta. */
   display:inline-block;
-  margin-top:14px;
+  margin-top:8px;
+  padding:12px 8px;
   font-size:13.5px;
 }
 
@@ -3644,59 +3690,10 @@ textarea:focus-visible{
   font-size:16px;
 }
 
-/* ---- as linhas de ação da conta ---- */
-
-.acoes-conta{
-  display:grid;
-  gap:10px;
-  margin-top:22px;
-}
-.linha-conta{
-  display:flex;
-  align-items:center;
-  gap:13px;
-  width:100%;
-  min-height:62px;
-  padding:12px 14px;
-  background:var(--card);
-  border:0;
-  border-radius:var(--radius);
-  box-shadow:var(--shadow-sm);
-  text-align:left;
-  color:var(--ink);
-  cursor:pointer;
-  transition:box-shadow .18s ease,transform .18s ease;
-}
-.linha-conta:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.linha-conta:active{transform:translateY(1px)}
-.linha-conta[disabled]{opacity:.55;cursor:progress}
-.linha-conta__ico{
-  width:40px;height:40px;flex:none;
-  border-radius:12px;
-  background:var(--cream);
-  color:var(--gold);
-  display:grid;place-items:center;
-}
-.linha-conta__txt{
-  display:flex;
-  flex-direction:column;
-  gap:2px;
-  flex:1;
-  min-width:0;
-}
-.linha-conta__txt b{
-  font-size:15px;
-  font-weight:600;
-}
-.linha-conta__txt span{
-  font-size:12.5px;
-  color:var(--muted);
-  overflow-wrap:anywhere;
-}
-.linha-conta__seta{
-  flex:none;
-  color:var(--muted-2);
-}
+/* AQUI FICAVA A LINHA "TROCAR MINHA SENHA" (`.acoes-conta`,
+   `.linha-conta*`). Ele mandou tirar a linha em 17/09/2026 e o estilo
+   foi com ela: regra de CSS para algo que não existe mais é lixo que o
+   próximo a mexer aqui vai tentar entender. */
 
 /* ---------------------------------------------------------
    A FOTO DO TOPO DA PÁGINA INICIAL
@@ -3740,7 +3737,8 @@ textarea:focus-visible{
 
 .hero__art--foto{
   position:absolute;
-  z-index:0;
+  /* acima do bloco branco do `.hero::before`, abaixo do texto */
+  z-index:1;
   right:0;
   top:0;
   width:75.2%;

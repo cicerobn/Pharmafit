@@ -397,38 +397,11 @@
       '</div>';
   }
 
-  function desenhaAcoes(dados) {
-    var caixa = document.querySelector('[data-acoes-conta]');
-    if (!caixa) return;
-
-    /* SÓ O QUE FUNCIONA ENTRA AQUI.
-       A troca de senha só existe para quem tem conta com e-mail — sem
-       conta não há senha para trocar, e um botão desses na tela de
-       visitante seria exatamente o que ele proibiu. */
-    var linhas = [];
-
-    if (dados.usuario && dados.usuario.email) {
-      linhas.push(
-        '<button class="linha-conta" type="button" data-trocar-senha>' +
-          '<span class="linha-conta__ico">' +
-            '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-              'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
-              '<rect x="4" y="10.5" width="16" height="10" rx="2.4"/>' +
-              '<path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg>' +
-          '</span>' +
-          '<span class="linha-conta__txt">' +
-            '<b>Trocar minha senha</b>' +
-            '<span>Enviamos um link para ' + esc(dados.usuario.email) + '</span>' +
-          '</span>' +
-          '<svg class="linha-conta__seta" width="18" height="18" viewBox="0 0 24 24" fill="none" ' +
-            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="m9 5 7 7-7 7"/></svg>' +
-        '</button>'
-      );
-    }
-
-    caixa.innerHTML = linhas.length ? '<div class="acoes-conta">' + linhas.join('') + '</div>' : '';
-  }
+  /* AQUI HAVIA `desenhaAcoes`, que desenhava a linha "Trocar minha
+     senha". Ele mandou tirar em 17/09/2026 e a função foi com ela:
+     função sem tela é código que parece feito e não faz nada.
+     `Conta.esqueciSenha()` continua onde estava e continua sendo usada
+     pela tela de entrar — é de lá que a troca de senha acontece. */
 
   function pintarUltimosPedidos(lista, temConta) {
     var caixa = document.getElementById('ultimos-pedidos');
@@ -526,7 +499,6 @@
 
     /* primeira passada: o que o aparelho sabe, agora */
     desenhaFicha({ usuario: null, pedidos: doAparelho.length });
-    desenhaAcoes({ usuario: null });
     pintarUltimosPedidos(doAparelho, false);
 
     var Conta = window.PharmaFitConta;
@@ -536,7 +508,6 @@
       if (!u) return;                      /* sem conta, o convite fica */
 
       desenhaFicha({ usuario: u, pedidos: doAparelho.length });
-      desenhaAcoes({ usuario: u });
       saudacao(u);
 
       if (!Conta.pedidos) return;
@@ -546,39 +517,6 @@
         pintarUltimosPedidos(lista, true);
       });
     }).catch(function () {});
-  }
-
-  /* TROCAR A SENHA.
-   *
-   * O Supabase manda o link de troca para o e-mail DA CONTA — ninguém
-   * digita endereço nenhum aqui, então não há como pedir a troca da
-   * senha de outra pessoa. A mesma função que a tela de login usa.
-   *
-   * Ele pergunta antes. Sem a pergunta, um toque sem querer manda um
-   * e-mail de "sua senha" para o cliente, e isso assusta. */
-  async function pedirTrocaDeSenha(botao) {
-    var Conta = window.PharmaFitConta;
-    if (!Conta || !Conta.esqueciSenha) return;
-
-    var u = await Conta.usuario();
-    if (!u || !u.email) return;
-
-    var certeza = await window.PharmaFitConfirmar({
-      titulo: 'Trocar a senha?',
-      texto: 'Vamos enviar um link para ' + u.email + '. É por ele que você escolhe a senha ' +
-             'nova. A senha de agora continua valendo até você trocar.',
-      confirmar: 'Enviar o link',
-      cancelar: 'Deixar como está'
-    });
-    if (!certeza) return;
-
-    botao.disabled = true;
-    var r = await Conta.esqueciSenha(u.email);
-    botao.disabled = false;
-
-    toast(r && r.ok
-      ? 'Link enviado para ' + u.email + '. Procure na caixa de entrada.'
-      : ((r && r.erro) || 'Não deu certo agora. Tente de novo em alguns segundos.'));
   }
 
   /* A SAUDAÇÃO ACEITA O NOME DA CONTA, e não só o do aparelho.
@@ -606,12 +544,6 @@
   /* ---------- eventos ---------- */
 
   document.addEventListener('click', function (e) {
-    var senha = e.target.closest('[data-trocar-senha]');
-    if (senha) {
-      pedirTrocaDeSenha(senha).catch(function () {});
-      return;
-    }
-
     if (e.target.closest('[data-aplicar]')) {
       Protocolo.registrar();
       pintarProtocolo();

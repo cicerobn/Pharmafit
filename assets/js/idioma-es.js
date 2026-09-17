@@ -390,11 +390,6 @@ window.PHARMAFIT_ES ={
   "Quando fizer, ele aparece aqui com o andamento — e em qualquer aparelho onde você entrar.": "Cuando lo haga, aparece aquí con el seguimiento — y en cualquier dispositivo donde entre.",
   "Escolha um produto e a equipe fecha com você pelo WhatsApp.": "Elija un producto y el equipo cierra con usted por WhatsApp.",
   "Ver os produtos": "Ver los productos",
-  "Trocar minha senha": "Cambiar mi contraseña",
-  "Trocar a senha?": "¿Cambiar la contraseña?",
-  "Enviar o link": "Enviar el enlace",
-  "Deixar como está": "Dejar como está",
-  "Não deu certo agora. Tente de novo em alguns segundos.": "No funcionó ahora. Intente de nuevo en unos segundos.",
 
   /* E TRÊS QUE JÁ FALTAVAM ANTES DE EU MEXER.
      A lista de pedidos existe desde o começo e estas frases nunca
@@ -487,11 +482,6 @@ window.PHARMAFIT_ES_PADROES = [
      o idioma da página em vez de fixar pt-BR, senão "Cliente desde
      septiembre" viria "setembro" no meio do espanhol. */
   { pt: /^Cliente desde (.+)$/, es: "Cliente desde $1" },
-  { pt: /^Enviamos um link para (.+)$/, es: "Enviamos un enlace a $1" },
   { pt: /^Ver todos os (\d+) pedidos$/, es: "Ver todos los $1 pedidos" },
-  { pt: /^Vamos enviar um link para (.+)\. É por ele que você escolhe a senha nova\. A senha de agora continua valendo até você trocar\.$/,
-    es: "Vamos a enviar un enlace a $1. Por ahí usted elige la contraseña nueva. La contraseña de ahora sigue valiendo hasta que la cambie." },
-  { pt: /^Link enviado para (.+)\. Procure na caixa de entrada\.$/,
-    es: "Enlace enviado a $1. Busque en la bandeja de entrada." },
   { pt: /^Enviado em (.+)$/, es: "Enviado el $1" }
 ];
