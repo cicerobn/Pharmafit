@@ -211,13 +211,16 @@
           (verCusto ? lucroDoProduto(p, preco) : '') +
           '<p class="prod__marca">' + situacao(p) + '</p>' +
         '</div>' +
-        /* AS TRÊS BOLINHAS ABREM A EDIÇÃO AQUI MESMO.
+        /* AS TRÊS BOLINHAS ABREM O MENU DO PRODUTO.
            Antes eram um link para `../index.html?produto=…`: saía do
            painel novo, caía no antigo (outro desenho) e, ao voltar, a
            lista de produtos recarregava do zero e perdia o filtro e a
-           busca. */
-        '<button class="prod__editar" type="button" data-editar="' + esc(p.id) + '" ' +
-          'aria-label="Editar ' + esc(p.nome) + '">' +
+           busca. Depois passaram a abrir a edição direto. Agora abrem
+           o menu — editar, arquivar e excluir —, porque arquivar
+           estava escondido numa caixinha no fim da folha de edição e
+           excluir não existia. */
+        '<button class="prod__editar" type="button" data-acoes="' + esc(p.id) + '" ' +
+          'aria-label="Opções de ' + esc(p.nome) + '">' +
           Moldura.svg('pontos', 19, 1.9) +
         '</button>' +
       '</article>';
@@ -758,6 +761,231 @@
     editando = null;
   }
 
+  /* =========================================================
+     AS TRÊS BOLINHAS: EDITAR, ARQUIVAR, EXCLUIR
+
+     Brian, 17/09/2026: "acho que nao da pra arquivar nem excluir
+     produtos, deixe essa opcao no painel de gestao".
+
+     Ele tinha razão na prática. Dava para tirar um produto do site —
+     havia uma caixinha "Aparecer no site" dentro da folha de edição —
+     mas para achar isso a pessoa tinha de abrir a edição, descer a
+     folha inteira e entender que desmarcar uma caixinha era o mesmo
+     que arquivar. E excluir não existia de jeito nenhum.
+
+     Agora as três bolinhas abrem um menu com as três coisas, cada uma
+     dizendo o que faz antes de ser tocada.
+
+     ARQUIVAR É `ativo = false`, e não uma coluna nova. É a mesma
+     chave que a caixinha "Aparecer no site" já mexia, com o nome que
+     o dono usa. Produto arquivado NÃO desaparece daqui: a lista do
+     painel lê a tabela inteira e ele continua na tela, marcado "Fora
+     do site", com a opção de voltar a vender. Desaparecer seria pior
+     que não arquivar — o dono acharia que tinha excluído sem querer.
+
+     EXCLUIR APAGA A LINHA MESMO, e isso é seguro para o histórico:
+     `pf_pedidos.produto` guarda o NOME do produto como texto e não há
+     chave estrangeira apontando para `pf_produtos` (conferido no
+     banco). Pedido antigo continua dizendo o que foi vendido depois
+     do produto sumir do catálogo.
+
+     E não precisou de nada no banco: a equipe já tem permissão de
+     apagar em `pf_produtos` (a política "equipe gerencia produtos"
+     vale para todos os comandos, e `authenticated` tem o DELETE).
+     Conferido antes de escrever a tela, para eu não entregar um botão
+     que o banco recusa.
+     ========================================================= */
+
+  var menu = null;
+  var menuVeu = null;
+  var noMenu = null;        /* produto que o menu está tratando */
+
+  var LAPIS = '<path d="M4 20h4l10-10-4-4L4 16z"/><path d="m14 6 4 4"/>';
+  var CAIXA_ARQ = '<path d="M3.5 6.5h17v3.5h-17z"/><path d="M5.2 10v8.5h13.6V10"/>' +
+                  '<path d="M10 13.2h4"/>';
+  var DESARQ = '<path d="M3.5 6.5h17v3.5h-17z"/><path d="M5.2 10v8.5h13.6V10"/>' +
+               '<path d="M12 16.6v-4.4m0 0-1.8 1.8M12 12.2l1.8 1.8"/>';
+  var LIXO = '<path d="M4.5 7h15"/><path d="M9.5 7V4.8h5V7"/>' +
+             '<path d="m6.6 7 .9 12.2h9l.9-12.2"/><path d="M10.4 10.6v6M13.6 10.6v6"/>';
+
+  function opcao(acao, icone, nome, pe, perigo) {
+    return '<button class="opcao' + (perigo ? ' opcao--perigo' : '') + '" type="button" ' +
+      'data-acao="' + acao + '">' +
+      '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      icone + '</svg>' +
+      '<span class="opcao__texto">' +
+        '<span class="opcao__nome">' + nome + '</span>' +
+        '<span class="opcao__pe">' + pe + '</span>' +
+      '</span>' +
+    '</button>';
+  }
+
+  function montarMenu() {
+    if (menu) return;
+
+    menuVeu = document.createElement('div');
+    menuVeu.className = 'veu';
+    document.body.appendChild(menuVeu);
+
+    menu = document.createElement('div');
+    menu.className = 'folha';
+    menu.setAttribute('role', 'dialog');
+    menu.setAttribute('aria-modal', 'true');
+    menu.innerHTML =
+      '<div class="folha__topo">' +
+        '<h2 class="folha__titulo" data-menu-titulo>Produto</h2>' +
+        '<button class="folha__fechar" type="button" data-fechar-menu aria-label="Fechar">' +
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="folha__corpo">' +
+        '<p class="folha__recado" data-menu-recado hidden></p>' +
+        '<div class="folha__opcoes" data-menu-opcoes></div>' +
+      '</div>';
+    document.body.appendChild(menu);
+
+    menu.querySelector('[data-fechar-menu]').addEventListener('click', function () {
+      fecharMenu(true);
+    });
+    menuVeu.addEventListener('click', function () { fecharMenu(true); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && menu.classList.contains('is-aberta')) fecharMenu(true);
+    });
+
+    /* Clique delegado: o conteúdo do menu é remontado a cada produto
+       (e a confirmação de excluir troca os botões no lugar). */
+    menu.querySelector('[data-menu-opcoes]').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-acao]');
+      if (!b) return;
+      var acao = b.getAttribute('data-acao');
+      if (acao === 'editar') return editarDoMenu();
+      if (acao === 'arquivar') return mudarAtivo(false);
+      if (acao === 'reativar') return mudarAtivo(true);
+      if (acao === 'excluir') return pedirConfirmacao();
+      if (acao === 'excluir-mesmo') return excluirDeVerdade();
+      if (acao === 'voltar') return pintarMenu();
+    });
+  }
+
+  function recadoMenu(msg, tipo) {
+    var el = menu.querySelector('[data-menu-recado]');
+    el.hidden = false;
+    el.textContent = msg;
+    el.className = 'folha__recado folha__recado--' + (tipo || 'bom');
+  }
+
+  function calarMenu() {
+    var el = menu.querySelector('[data-menu-recado]');
+    el.hidden = true;
+    el.textContent = '';
+  }
+
+  function pintarMenu() {
+    calarMenu();
+    var arquivado = noMenu.ativo === false;
+    menu.querySelector('[data-menu-opcoes]').innerHTML =
+      opcao('editar', LAPIS, 'Editar produto',
+            'Nome, preço, foto, estoque e descrição.') +
+      (arquivado
+        ? opcao('reativar', DESARQ, 'Voltar a vender',
+                'O produto aparece no site outra vez, na hora.')
+        : opcao('arquivar', CAIXA_ARQ, 'Arquivar',
+                'Sai do site e para de ser vendido, mas fica aqui e você ' +
+                'pode voltar a vender quando quiser.')) +
+      opcao('excluir', LIXO, 'Excluir',
+            'Apaga o produto do catálogo para sempre. Os pedidos antigos ' +
+            'continuam no lugar.', true);
+  }
+
+  function abrirMenu(p) {
+    Moldura.foco.guardar();
+    montarMenu();
+    noMenu = p;
+    menu.setAttribute('aria-label', 'Opções de ' + (p.nome || 'produto'));
+    menu.querySelector('[data-menu-titulo]').textContent = p.nome || 'Produto';
+    pintarMenu();
+    menuVeu.classList.add('is-aberto');
+    menu.classList.add('is-aberta');
+    document.body.style.overflow = 'hidden';
+    Moldura.foco.entrar(menu, menu.querySelector('[data-acao]'));
+  }
+
+  /* `devolver` é falso quando quem fecha o menu vai abrir a folha de
+     edição em seguida: ali o foco tem de ir para o campo do nome, e
+     não voltar para as três bolinhas. */
+  function fecharMenu(devolver) {
+    if (!menu) return;
+    menu.classList.remove('is-aberta');
+    menuVeu.classList.remove('is-aberto');
+    document.body.style.overflow = '';
+    if (devolver) Moldura.foco.devolver();
+    noMenu = null;
+  }
+
+  function editarDoMenu() {
+    var p = noMenu;
+    fecharMenu(false);
+    abrir(p);
+  }
+
+  async function mudarAtivo(ligar) {
+    var p = noMenu;
+    var botoes = menu.querySelectorAll('[data-acao]');
+    botoes.forEach(function (b) { b.disabled = true; });
+    recadoMenu(ligar ? 'Voltando a vender…' : 'Arquivando…', 'bom');
+    try {
+      var r = await window.PharmaFitDados.salvarProduto(p.id, { ativo: ligar });
+      if (r && r.ok === false) throw new Error(r.erro || 'não deu para salvar');
+      p.ativo = ligar;
+      pintar();
+      recadoMenu(ligar
+        ? 'Pronto. O produto já aparece no site.'
+        : 'Arquivado. Ele saiu do site e continua aqui, marcado "Fora do site".', 'bom');
+      setTimeout(function () { fecharMenu(true); }, 1100);
+    } catch (e) {
+      recadoMenu(String((e && e.message) || e), 'ruim');
+      botoes.forEach(function (b) { b.disabled = false; });
+    }
+  }
+
+  /* CONFIRMAR ANTES DE APAGAR, no lugar de um `confirm()` do
+     navegador: aquele não diz o nome do produto direito no celular e
+     não dá para explicar o que acontece com os pedidos antigos. */
+  function pedirConfirmacao() {
+    calarMenu();
+    menu.querySelector('[data-menu-opcoes]').innerHTML =
+      '<p class="folha__conta folha__conta--ruim">Excluir <b>' + esc(noMenu.nome) +
+        '</b> do catálogo? Isto não dá para desfazer. Os pedidos antigos deste ' +
+        'produto continuam onde estão — eles guardam o nome, não o cadastro.</p>' +
+      opcao('voltar', DESARQ, 'Não, voltar',
+            'Nada é apagado.') +
+      opcao('excluir-mesmo', LIXO, 'Sim, excluir para sempre',
+            'O produto sai do catálogo e do site agora.', true);
+  }
+
+  async function excluirDeVerdade() {
+    var p = noMenu;
+    var botoes = menu.querySelectorAll('[data-acao]');
+    botoes.forEach(function (b) { b.disabled = true; });
+    recadoMenu('Excluindo…', 'bom');
+    try {
+      var r = await window.PharmaFitDados.excluir('produtos', p.id);
+      if (r && r.ok === false) throw new Error(r.erro || 'não deu para excluir');
+      estado.produtos = estado.produtos.filter(function (o) {
+        return String(o.id) !== String(p.id);
+      });
+      montarCategorias();
+      pintar();
+      recadoMenu('Excluído.', 'bom');
+      setTimeout(function () { fecharMenu(true); }, 800);
+    } catch (e) {
+      recadoMenu(String((e && e.message) || e), 'ruim');
+      botoes.forEach(function (b) { b.disabled = false; });
+    }
+  }
+
   async function carregar() {
     try {
       /* Antes de desenhar, saber quem está olhando: atendente não vê
@@ -796,11 +1024,11 @@
        filtro e busca, e ouvinte posto em cada botão morreria no
        primeiro redesenho. */
     document.querySelector('[data-produtos]').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-editar]');
+      var b = e.target.closest('[data-acoes]');
       if (!b) return;
-      var id = b.getAttribute('data-editar');
+      var id = b.getAttribute('data-acoes');
       var p = estado.produtos.filter(function (o) { return String(o.id) === String(id); })[0];
-      if (p) abrir(p);
+      if (p) abrirMenu(p);
     });
 
     var campo = document.querySelector('[data-busca]');
