@@ -127,7 +127,21 @@
 
   /* ---------- bloco de preço, igual na grade e no carrossel ---------- */
 
-  function blocoPreco(p) {
+  /* O pé do cartão: o que custa e como levar.
+   *
+   * `botao` é o carrinho redondo, ou vazio quando não há estoque.
+   *
+   * QUEM FICA NA LINHA DO BOTÃO, E QUEM NÃO FICA. Só o preço divide a
+   * linha com ele. O preço antigo e as parcelas ficam em linhas
+   * inteiras, em cima e embaixo — e isso foi medido, não escolhido: o
+   * botão come 46px dos 146px do cartão, e "ou 3x sem juros de R$
+   * 366,33" já usava 140 desses 146 (está escrito no CSS, em
+   * `.product__installment`). Dentro da coluna estreita ele quebrava em
+   * duas linhas e desalinhava a fila inteira.
+   *
+   * O preço cabe porque é curto, e é justamente ele que a pessoa lê
+   * junto com o botão: quanto custa, e como levo. */
+  function blocoPe(p, botao) {
     var desconto = Preco.desconto(p.antes, p.venda);
 
     return (p.antes
@@ -136,7 +150,10 @@
             (desconto ? '<span class="selo-off">-' + desconto + '%</span>' : '') +
           '</p>'
         : '') +
-      '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
+      '<div class="product__pe">' +
+        '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
+        botao +
+      '</div>' +
       '<p class="product__installment">' + Preco.textoParcelas(p.venda) + '</p>';
   }
 
@@ -159,29 +176,39 @@
 
     /* Fora de estoque não ganha botão de carrinho: pôr no carrinho o que
        não pode ser entregue só empurra a decepção para o fim da compra. */
-    var acao = semEstoque(p)
+    /* Fora de estoque a ação continua sendo uma FRASE, e não podia ser
+       outra coisa: "avise-me quando chegar" não cabe num símbolo. O
+       botão redondo do carrinho só existe onde há o que pôr nele. */
+    var acaoEspera = semEstoque(p)
       ? '<button class="btn btn--outline btn--espera" type="button" data-avise="' + esc(p.nome) + '">' +
           'Avise-me quando chegar' + setaHtml + '</button>'
-      /* SÓ "ADICIONAR". O "VER DETALHES" SAIU.
-         Brian, 18/09/2026: "Aqui esta muito grande o cards, tire 'ver
-         detalhes' e deixe menor".
-         Ele já não fazia falta desde ontem: o cartão INTEIRO virou link
-         para a página do produto — foto, nome, descrição e preço. O
-         botão repetia com um toque a mais o que o cartão todo já faz, e
-         era ele que empurrava o cartão para baixo. Dois botões lado a
-         lado também disputavam o olho: um cartão de vitrine tem uma
-         ação principal, que é pôr no carrinho. */
-      : '<div class="product__acoes">' +
-          '<button class="btn btn--primary btn--carrinho" type="button" ' +
-            'data-por-no-carrinho="' + esc(p.nome) + '">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
-            '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
-            '</svg>' +
-            '<span>Adicionar</span>' +
-          '</button>' +
-        '</div>';
+      : '';
+
+    /* O CARRINHO VIROU SÍMBOLO, AO LADO DO PREÇO.
+       Brian, 18/09/2026, com a foto de um cartão de outra loja: "quero
+       que os produtos fiquem assim (...) em baixo o preco, e do lado o
+       simbolo de jogar pro carrinho".
+
+       Antes era um botão de largura inteira escrito "Adicionar", numa
+       linha só dele embaixo do preço. Como símbolo ao lado do preço ele
+       devolve essa linha ao cartão — e põe as duas coisas que decidem a
+       compra (quanto custa, como levar) no mesmo lugar do olho.
+
+       O RÓTULO NÃO SUMIU, mudou de lugar: `aria-label` diz "Adicionar
+       <produto> ao carrinho" para quem usa leitor de tela, e `title`
+       diz o mesmo no passar do mouse. Botão só de desenho sem rótulo é
+       um botão que só funciona para quem enxerga. */
+    var botaoCarrinho =
+      '<button class="product__carrinho" type="button" ' +
+        'data-por-no-carrinho="' + esc(p.nome) + '" ' +
+        'title="Adicionar ao carrinho" ' +
+        'aria-label="Adicionar ' + esc(p.nome) + ' ao carrinho">' +
+        '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
+        '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
+        '</svg>' +
+      '</button>';
 
     return '' +
       '<article class="product' + (semEstoque(p) ? ' is-indisponivel' : '') +
@@ -201,8 +228,8 @@
             '<a href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
               esc(p.nome) + '</a></h2>' +
           '<p class="product__desc">' + esc(p.descricao) + '</p>' +
-          blocoPreco(p) +
-          acao +
+          blocoPe(p, semEstoque(p) ? '' : botaoCarrinho) +
+          acaoEspera +
         '</div>' +
       '</article>';
   }
