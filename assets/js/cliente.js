@@ -6,6 +6,7 @@
    como reserva — quem comprou nunca deve ver uma lista vazia.
 
    precisa: minha-area, conta, idioma
+   enche: data-painel-equipe
    ========================================================= */
 (function () {
   'use strict';
@@ -491,6 +492,38 @@
    * Se a conta não responder, fica valendo o do aparelho — como era
    * antes. O `catch` vazio é de propósito: esta página pode falhar em
    * ficar bonita, não em abrir. */
+  /* É DA EQUIPE? A pergunta vai para o BANCO, e ele responde só sobre
+   * quem está perguntando (`pf_e_equipe()` é `security definer` e olha
+   * `auth.uid()`). Nenhum cliente consegue descobrir com isso quem é da
+   * equipe — nem a lista, nem o tamanho dela.
+   *
+   * O PADRÃO É NÃO, ao contrário do painel, onde o padrão é deixar
+   * passar. Aqui quem paga o preço da dúvida é o lado certo: se a
+   * pergunta falhar, a pessoa da equipe digita o endereço da gestão (e
+   * ela sabe o endereço), enquanto um cliente jamais vê um atalho que
+   * não é dele. */
+  async function souDaEquipe() {
+    var N = window.PharmaFitNuvem;
+    if (!N || !N.cliente) return false;
+    try {
+      await N.pronto;
+      var sb = N.cliente();
+      if (!sb || !sb.rpc) return false;
+      var r = await sb.rpc('pf_e_equipe');
+      return !!(r && !r.error && r.data === true);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function mostrarAtalhoDaGestao() {
+    var atalho = document.querySelector('[data-painel-equipe]');
+    if (!atalho) return;
+    souDaEquipe().then(function (sim) {
+      atalho.hidden = !sim;
+    }).catch(function () { atalho.hidden = true; });
+  }
+
   function montarConta() {
     if (!document.querySelector('[data-ficha-conta]')) return;
 
@@ -509,6 +542,7 @@
 
       desenhaFicha({ usuario: u, pedidos: doAparelho.length });
       saudacao(u);
+      mostrarAtalhoDaGestao();
 
       if (!Conta.pedidos) return;
       return Conta.pedidos().then(function (r) {

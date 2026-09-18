@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=24e68c43">
+<link rel="stylesheet" href="assets/css/styles.css?v=122dd675">
 </head>
 <body>
 
@@ -109,6 +109,37 @@
          boas. Sem conta, esta página mostrava "0 pedidos, 0 favoritos"
          e uma lista vazia, sem nem dizer que bastava entrar. -->
     <div data-ficha-conta></div>
+
+    <!-- O ATALHO PARA A GESTÃO, E SÓ PARA QUEM É DA EQUIPE.
+         Brian, 18/09/2026: "Quero que unicamente na conta aqui de adm
+         tenha um acesso pro painel de gestao". Ele tropeçou nisso na
+         prática: tentou entrar na gestão pela tela de conta do site, que
+         é a porta do CLIENTE, e não tinha ali nada dizendo onde ficava a
+         outra porta.
+         NASCE ESCONDIDO e só aparece depois de o BANCO confirmar que
+         esta conta está na equipe (`pf_e_equipe()`, que responde apenas
+         sobre quem pergunta). Se a resposta não vier, ele continua
+         escondido: cliente nenhum pode ver atalho de gestão, e quem é da
+         equipe sempre pode digitar o endereço.
+         Leva para a ENTRADA da gestão, não direto para o painel: são
+         duas sessões diferentes (a do site e a da gestão), e a entrada
+         encaminha sozinha quando já existe sessão lá. -->
+    <a class="painel-atalho" data-painel-equipe href="gestao/login.html" hidden>
+      <span class="painel-atalho__ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 5.5h17v13h-17z"/><path d="M3.5 9.5h17"/><path d="M8 13h5"/>
+        </svg>
+      </span>
+      <span class="painel-atalho__texto">
+        <span class="painel-atalho__titulo">Painel de gestão</span>
+        <span class="painel-atalho__pe">Pedidos, produtos, clientes e relatórios</span>
+      </span>
+      <svg class="painel-atalho__seta" width="17" height="17" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m9 5 7 7-7 7"/>
+      </svg>
+    </a>
 
     <!-- OS PEDIDOS.
          Antes: um título "Últimos pedidos" e, para quem nunca comprou,
@@ -259,9 +290,9 @@
 <script src="assets/js/favoritos.js?v=b87b4c60"></script>
 <script src="assets/js/paginas.js?v=3cbf8a54"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>
-<script src="assets/js/idioma-es.js?v=d680c634"></script>
+<script src="assets/js/idioma-es.js?v=d207e960"></script>
 <script src="assets/js/idioma.js?v=81611de9"></script>
-<script src="assets/js/cliente.js?v=33bd2e2c"></script>
+<script src="assets/js/cliente.js?v=a7fb9889"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
 <script src="assets/js/app.js?v=61f1dfcd"></script>
 <script src="assets/js/pedido.js?v=19f67c9c"></script>

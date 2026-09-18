@@ -246,6 +246,8 @@ window.PHARMAFIT_ES ={
   "Para quando precisa?": "¿Para cuándo lo necesita?",
   "Para quem já fez tratamento antes": "Para quien ya hizo tratamiento antes",
   "Paraguai": "Paraguay",
+  "Painel de gestão": "Panel de gestión",
+  "Pedidos, produtos, clientes e relatórios": "Pedidos, productos, clientes e informes",
   "Pedidos": "Pedidos",
   "Pedidos maiores têm preço e prazo próprios. Diga o que precisa que a equipe monta o orçamento.": "Los pedidos grandes tienen precio y plazo propios. Diga lo que necesita y el equipo arma el presupuesto.",
   "Pedir no WhatsApp": "Pedir por WhatsApp",
