@@ -1215,11 +1215,25 @@ body:has(.hero__art--foto) .topbar{
    As medidas novas saíram da medição, não do gosto: o nome continua
    caber sem quebrar no meio da palavra, e o cartão encurtou ~90px. */
 .product__body{padding:11px 11px 12px;display:flex;flex-direction:column;gap:5px;flex:1}
+/* O NOME DO PRODUTO EM TEXTO NORMAL.
+   Brian, 18/09/2026: "texto normal". Era Playfair (a serifada da
+   marca), 16px.
+
+   A serifada continua onde ela trabalha: nos títulos das seções e no
+   topo, onde há UMA frase grande e ela dá o tom da casa. No cartão ela
+   atrapalhava — "BIOGENISES GHK-CU 100MG" em serifada, com o corpo
+   miúdo de um cartão de 146px, vira ornamento em cima de informação
+   técnica. Nome de produto é dado: peso, dose, quantidade. Lê-se melhor
+   na mesma letra do resto da tela.
+
+   600 e não 700: precisa pesar mais que a descrição e menos que o
+   preço, que é quem manda no cartão. */
 .product__name{
-  font-family:var(--serif);
-  font-weight:500;
-  font-size:16px;
-  line-height:1.18;
+  font-family:var(--sans);
+  font-weight:600;
+  font-size:14px;
+  line-height:1.3;
+  letter-spacing:-.01em;
   margin:0;
   min-width:0;
   overflow-wrap:break-word;
@@ -1250,8 +1264,25 @@ body:has(.hero__art--foto) .topbar{
   z-index:1;
 }
 /* o coração já é `position:absolute` com z-index 2, então está acima */
-.product__acoes,
-.product .btn--espera{position:relative;z-index:2}
+/* O "Avise-me quando chegar" NA ESCALA DO CARTÃO.
+   Ele nunca passou pelo enxugamento que o "Adicionar" levou em
+   18/09/2026 (o "botao esta gigante" do Brian): herdava o `.btn` cheio
+   e ocupava três linhas num cartão de 146px. Enquanto o outro botão
+   existia do lado, dava para não ver; agora que o carrinho virou uma
+   bolinha, ele ficou sendo a coisa mais pesada do cartão — e ele é a
+   ação do produto que NÃO está à venda.
+   Só dentro do cartão: na página do produto o botão é o principal da
+   tela e continua grande. */
+.product .btn--espera{
+  position:relative;
+  z-index:2;
+  width:100%;
+  font-size:12px;
+  padding:10px 12px;
+  gap:6px;
+  margin-top:6px;
+}
+.product .btn--espera svg{width:12px;height:12px}
 .product__desc{
   font-size:11.5px;
   line-height:1.4;
@@ -1303,6 +1334,61 @@ body:has(.hero__art--foto) .topbar{
   letter-spacing:.03em;
   padding:2px 7px;
   border-radius:6px;
+}
+
+/* ---- o pé do cartão: o valor de um lado, o carrinho do outro ----
+
+   Brian, 18/09/2026: "em baixo o preco, e do lado o simbolo de jogar
+   pro carrinho". Antes o botão era uma faixa escrita "Adicionar",
+   ocupando uma linha inteira embaixo do preço.
+
+   Só o PREÇO divide a linha com o botão; o preço antigo fica acima e o
+   parcelamento abaixo, cada um com a largura inteira do cartão. O
+   motivo está em `blocoPe()`, no loja.js, e é de régua: o botão come
+   46px dos 146 do cartão, e a linha das parcelas já usava 140 deles.
+
+   `margin-top:auto` é quem empurra este bloco para o pé do cartão —
+   era o que o botão de largura inteira fazia antes de virar símbolo.
+   Sem isso, cartões com descrição curta ficariam com o preço no meio e
+   a fila perderia a linha de base. */
+.product__pe{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:auto;
+  padding-top:4px;
+}
+/* `min-width:0` porque sem ele um preço longo empurraria a bolinha
+   para fora do cartão em vez de deixar o texto se ajustar. */
+.product__pe .product__price{flex:1;min-width:0}
+
+.product__carrinho{
+  flex:none;
+  width:38px;
+  height:38px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  box-shadow:0 6px 14px rgba(176,140,74,.3);
+  /* Acima da sombra do link que cobre o cartão inteiro (ver
+     `.product__name a::after`): sem isto, tocar na bolinha abriria a
+     página do produto em vez de pôr no carrinho. */
+  position:relative;
+  z-index:2;
+  transition:transform .18s ease,box-shadow .18s ease,background .25s ease;
+}
+.product__carrinho:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(176,140,74,.38)}
+.product__carrinho:active{transform:scale(.94)}
+
+/* O MESMO VERDE DO "No carrinho" que o botão escrito já usava. O aviso
+   importa mais aqui do que importava lá: o botão de texto trocava a
+   palavra para "No carrinho", e um botão só de símbolo não tem palavra
+   para trocar — sobra a cor para dizer que deu certo. */
+.product__carrinho.is-feito{
+  background:linear-gradient(135deg,#3f8b7a,#2f6f62);
+  box-shadow:0 6px 14px rgba(47,111,98,.32);
 }
 
 .product__price{
@@ -3768,43 +3854,30 @@ textarea:focus-visible{
    Carrinho
    ========================================================= */
 
-/* Os dois botões do cartão de produto, lado a lado. Em tela estreita
-   empilham, porque dois botões de 150px não cabem em 160px. */
-.product__acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:2px}
-.product__acoes .btn{flex:1 1 auto;min-width:0;justify-content:center}
+/* AQUI MORAVA `.product__acoes`, a faixa de botões do cartão de
+   produto, e com ela o "Adicionar" enxugado que o Brian pediu em
+   18/09/2026 ("o botao de 'adicionar esta gigante, deixe um pouco
+   menor"). As duas coisas saíram no dia seguinte, quando ele mandou a
+   foto de outro cartão: "em baixo o preco, e do lado o simbolo de
+   jogar pro carrinho".
+
+   O botão escrito virou a bolinha `.product__carrinho`, que mora ao
+   lado do preço e está lá em cima, junto do resto do cartão. Não
+   sobrou nada aqui: um seletor que nenhum HTML usa é pior que seletor
+   nenhum — no dia de mexer, alguém o edita achando que está mudando a
+   tela.
+
+   A LIÇÃO DAQUELE DIA FICOU, e é o motivo de este parágrafo existir: o
+   botão era "gigante" porque herdava o `.btn--primary` inteiro, o
+   mesmo do convite grande da página inicial — 17,5px de letra e sombra
+   de 30px dentro de um cartão de 146px. Quem for pôr outro botão num
+   cartão, herde do cartão, não da página. */
+
+/* O `.btn--carrinho` continua vivo: é o "Adicionar ao carrinho" da
+   PÁGINA DO PRODUTO (produto.html), onde o botão é o principal da tela
+   e tem largura para o texto. */
 .btn--carrinho{gap:8px}
 .btn--carrinho svg{flex:none}
-
-/* O "ADICIONAR" DO CARTÃO, MENOR.
-   Brian, 18/09/2026: "o botao de 'adicionar esta gigante, deixe um
-   pouco menor".
-
-   Ele estava gigante porque herdava o `.btn--primary` inteiro — o
-   mesmo botão desenhado para o convite grande da página inicial:
-   17,5px de letra, 48px de altura e sombra de 30px. Num cartão de
-   168px de largura ele era a coisa mais pesada da tela, e competia
-   com a foto e com o preço, que é o que decide a compra.
-
-   Aqui ele vira o que é: a ação de um cartão. 13px de letra, 36px de
-   altura, sombra curta. Continua sendo o único botão do cartão e
-   continua ocupando a largura toda — quem procura onde tocar não
-   precisa procurar. */
-.product__acoes .btn{
-  font-size:13px;
-  /* 12px de respiro põe o botão em 42px de altura. O NÚMERO NÃO É
-     GOSTO: com 9px ele ficava em 38, e abaixo de 40 o polegar começa a
-     errar — este é o botão de comprar, e errar aqui custa venda. O que
-     dava o peso de "gigante" era a LETRA de 17,5px e a sombra de 30px,
-     não a altura; com 13px e sombra curta ele já parece a ação de um
-     cartão, e continua com alvo de dedo.
-     (A largura não entra na conta: ele ocupa o cartão todo, 146px.) */
-  padding:12px 14px;
-  min-width:0;
-  gap:7px;
-  box-shadow:0 8px 16px rgba(176,140,74,.22);
-}
-.product__acoes .btn:hover{box-shadow:0 10px 20px rgba(176,140,74,.3)}
-.product__acoes .btn svg{width:14px;height:14px}
 
 /* O botão diz que deu certo, no próprio botão. Um item somado ao
    carrinho sem nenhum sinal deixa a pessoa clicando de novo. */
