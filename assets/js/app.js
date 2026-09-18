@@ -460,28 +460,45 @@
     });
   }
 
-  /* ---------- atalhos para uma categoria (ex.: "Ver seleção") ---------- */
-  document.querySelectorAll('[data-chip-jump]').forEach(function (el) {
-    el.addEventListener('click', function () {
-      var target = el.getAttribute('data-chip-jump');
-      var chip = document.querySelector('[data-chip="' + target + '"]');
+  /* ---------- chegar já filtrado por categoria ----------
 
-      if (chip) {
-        chip.click();
-        chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        return;
-      }
+     Aqui morava `data-chip-jump`, que procurava esse atributo no HTML
+     para pular de um atalho da página para uma categoria. NINGUÉM o
+     usava: nenhum arquivo do site tinha esse atributo. Eram vinte
+     linhas de código sem porta nenhuma.
 
-      /* sem chip correspondente (ex.: "todos"): limpa o filtro */
-      chips.forEach(function (other) {
-        other.classList.remove('is-active');
-        other.setAttribute('aria-pressed', 'false');
-      });
-      products.forEach(function (card) { card.classList.remove('is-hidden'); });
-      animarEntrada(document.querySelector('[data-grade]'));
-      conferirVitrine();
-    });
-  });
+     E a porta que faltava é outra: os ícones de categoria da página
+     inicial (18/09/2026, "deixe icones de cada categoria de produtos")
+     levam para `produtos.html#tirzepatida`. Sem alguém lendo esse
+     pedaço do endereço, o toque cairia na lista inteira e a pessoa
+     teria de filtrar de novo na mão — o ícone prometeria uma coisa e
+     entregaria outra.
+
+     Então o código dos vinte sem porta virou o que tem porta: ler a
+     categoria do endereço e aplicar o filtro. O `#` também faz o
+     endereço poder ser guardado e mandado para alguém, que é de graça
+     e não existia. */
+
+  function aplicarCategoriaDoEndereco() {
+    if (!chips.length || !products.length) return;
+
+    var pedida = String(location.hash || '').replace(/^#/, '').trim().toLowerCase();
+    if (!pedida) return;
+
+    var chip = document.querySelector('[data-chip="' + pedida.replace(/["\\]/g, '') + '"]');
+    if (!chip) return;   /* categoria que não existe: deixa a lista inteira */
+
+    chip.click();
+    /* Sem rolar, a barra de categorias pode estar mostrando outra
+       parte dela e a pessoa não vê qual ficou marcada. */
+    chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+
+  aplicarCategoriaDoEndereco();
+
+  /* E de novo se a pessoa trocar o endereço sem recarregar (voltar,
+     avançar, ou tocar em outro ícone de categoria vindo de fora). */
+  window.addEventListener('hashchange', aplicarCategoriaDoEndereco);
 
   /* ---------- busca por texto nos produtos ---------- */
   var searchField = document.querySelector('[data-search-field]');

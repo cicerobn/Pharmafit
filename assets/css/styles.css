@@ -541,21 +541,37 @@ body:has(.hero__art--foto) .topbar{
   padding-bottom:2px;
 }
 
-/* ---------- cards de destaque ---------- */
+/* ---------- os ícones das categorias ----------
 
-.features{
+   Este bloco era `.features`, os quatro cartões de diferenciais que o
+   Brian mandou tirar em 18/09/2026 ("deixe icones de cada categoria de
+   produtos"). Não é CSS novo ao lado do antigo: é o MESMO bloco, com o
+   nome do que ele mostra agora. Deixar `.features` aqui sem ninguém
+   usando seria peso morto, e no dia de mexer alguém leria as duas
+   coisas sem saber qual vale.
+
+   QUANTAS COLUNAS: o número de categorias vem do catálogo e pode
+   mudar. `auto-fit` com largura mínima resolve sem eu escrever uma
+   regra por quantidade — três categorias viram três colunas, cinco
+   viram duas fileiras, e nenhuma fica estreita demais para o nome
+   caber. */
+
+.categorias{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
+  grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:10px;
   padding:26px 20px 6px;
   /* A PASSAGEM DO BRANCO DO TOPO PARA O CREME DA PÁGINA MORA AQUI.
      Em pixels fixos, e não em porcentagem: 46px de degradê a partir do
      alto deste bloco. Nenhuma conta dependendo de quantas linhas o
-     texto do topo tem — foi isso que me fez errar duas vezes. */
+     texto do topo tem — foi isso que me fez errar duas vezes.
+     Isto veio junto de propósito: o degradê é a emenda entre a foto do
+     topo e o creme da página, e trocar a seção sem trazer a emenda
+     deixaria uma linha branca visível ali. */
   background:linear-gradient(180deg,#fdfdfd 0,var(--cream) 46px);
 }
 
-.feature{
+.categoria{
   background:var(--card);
   border-radius:16px;
   padding:16px 8px 14px;
@@ -564,14 +580,24 @@ body:has(.hero__art--foto) .topbar{
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:10px;
+  gap:9px;
+  min-width:0;
+  color:inherit;
+  text-decoration:none;
   transition:transform .2s ease,box-shadow .2s ease;
 }
-.feature:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
-.feature__icon{color:var(--gold)}
-.feature__label{font-size:12px;line-height:1.3}
-.feature__label b{display:block;font-weight:600;color:var(--ink)}
-.feature__label span{color:var(--muted)}
+.categoria:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.categoria:active{transform:translateY(-1px)}
+.categoria__ico{color:var(--gold);line-height:0}
+.categoria__nome{
+  font-size:12px;
+  line-height:1.25;
+  font-weight:600;
+  color:var(--ink);
+  max-width:100%;
+  overflow-wrap:break-word;
+}
+.categoria__conta{font-size:10.5px;line-height:1.2;color:var(--muted)}
 
 /* ---------- seções ---------- */
 
@@ -1460,7 +1486,7 @@ body:has(.hero__art--foto) .topbar{
   :root{--shell:1120px}
 
   .shell{box-shadow:none}
-  .wrap,.hero,.features,.section-head,.carousel,.grid-products,.chips,.page-head{padding-inline:48px}
+  .wrap,.hero,.categorias,.section-head,.carousel,.grid-products,.chips,.page-head{padding-inline:48px}
   .promo{margin-inline:48px}
 
   .hero{padding-top:24px}
@@ -1479,9 +1505,10 @@ body:has(.hero__art--foto) .topbar{
     margin-inline:auto;
   }
 
-  .features{gap:18px;padding-top:36px}
-  .feature{padding:24px 14px}
-  .feature__label{font-size:13.5px}
+  .categorias{gap:18px;padding-top:36px}
+  .categoria{padding:24px 14px}
+  .categoria__nome{font-size:13.5px}
+  .categoria__conta{font-size:12px}
 
   .protocol{flex-basis:calc((100% - 28px)/2)}
   .grid-products{grid-template-columns:repeat(4,1fr);gap:20px}
@@ -2600,10 +2627,14 @@ textarea:focus-visible{
      O preço disso é a letra: em 390px cada cartão fica com 84px, e
      "Acompanhamento" (14 letras) não cabe em 13px. A letra cai para
      10,5px e o padding aperta, que é o que o desenho dele mostra. */
-  .features{grid-template-columns:repeat(4,1fr);gap:7px;padding-inline:14px}
-  .feature{padding:14px 5px 12px;gap:7px;border-radius:14px}
-  .feature__icon svg{width:24px;height:24px}
-  .feature__label{font-size:10.5px;line-height:1.25}
+  /* No celular estreito: colunas mais magras, respiro menor e letra
+     menor — as medidas saíram da medição de largura de palavra, a
+     mesma regra da faixa do cartão. */
+  .categorias{grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:7px;padding-inline:14px}
+  .categoria{padding:14px 5px 12px;gap:7px;border-radius:14px}
+  .categoria__ico svg{width:23px;height:23px}
+  .categoria__nome{font-size:10.5px;line-height:1.2}
+  .categoria__conta{font-size:9.5px}
 
   /* AQUI HAVIA `.hero__title{font-size:30px}` E ELE MANDAVA EM TUDO.
      Esta faixa é `max-width:430px`, então ela vale em QUALQUER celular

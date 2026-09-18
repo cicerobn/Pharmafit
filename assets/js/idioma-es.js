@@ -72,6 +72,7 @@ window.PHARMAFIT_ES ={
   "Cadastro de parceiros e orçamentos": "Registro de socios y presupuestos",
   "Caneta aplicadora de tirzepatida 15 mg, pronta para uso.": "Lapicera aplicadora de tirzepatida 15 mg, lista para usar.",
   "Carregando o produto…": "Cargando el producto…",
+  "Categorias de produtos": "Categorías de productos",
   "Categorias": "Categorías",
   "Cidade": "Ciudad",
   "Ciência. Segurança. Resultado.": "Ciencia. Seguridad. Resultado.",
@@ -255,10 +256,13 @@ window.PHARMAFIT_ES ={
   "Produto de interesse": "Producto de interés",
   "Produto retirado do protocolo.": "Producto quitado del protocolo.",
   "Produto — Pharma Fit": "Producto — Pharma Fit",
-  /* A aba "Produtos" da barra de baixo virou "Protocolos" no desenho
-     que ele mandou. A palavra é a mesma nas duas línguas, mas ela
-     tem de estar no dicionário: o que não está lá o conferidor
-     acusa, e com razão — é assim que ele descobre frase nova. */
+  /* A ABA DA BARRA DE BAIXO VOLTOU A SER "Produtos".
+     Ela tinha virado "Protocolos" por causa de um desenho que o Brian
+     mandou; em 18/09/2026 ele pediu de volta: "mude o nome de
+     protocolos para produtos". A entrada de "Protocolos" fica aqui de
+     propósito — a palavra continua no site no sentido de TRATAMENTO
+     ("3 perguntas e indicamos seu protocolo", "Inicie seu protocolo"),
+     e é esse sentido que ela traduz agora, não o da aba. */
   "Protocolos": "Protocolos",
   "Produtos": "Productos",
   "Produtos de uso sob orientação profissional.": "Productos de uso bajo orientación profesional.",
@@ -474,6 +478,12 @@ window.PHARMAFIT_ES_PADROES = [
   { pt: /^Pergunta (\d+) de (\d+)$/, es: "Pregunta $1 de $2" },
   { pt: /^(\d+) itens?$/, es: "$1 ítems" },
   { pt: /^(\d+) unid\.$/, es: "$1 unid." },
+
+  /* "7 produtos" / "1 produto" embaixo de cada ícone de categoria, na
+     página inicial. O número vem do catálogo, então a frase inteira
+     nunca estaria no dicionário — é padrão, não frase. */
+  { pt: /^(\d+) produtos$/, es: "$1 productos" },
+  { pt: /^1 produto$/, es: "1 producto" },
 
   /* AS FAIXAS DE ATACADO.
      Entraram no site em 16/09 e eu esqueci o espanhol: quem abria a
