@@ -233,25 +233,36 @@
      mesmo dia, só sem desenho próprio até alguém dar um a ela. */
 
   var DESENHO_CATEGORIA = {
-    /* tirzepatida: a ampola, que é a forma como ela é vendida */
+    /* tirzepatida: a CANETA aplicadora, que é como ela chega na mão do
+       cliente — o mesmo objeto do `prod-caneta.svg` da vitrine. Aqui
+       havia uma ampola; ampola e frasco são a mesma silhueta em
+       miniatura, e a tirzepatida ficava com o desenho do genérico. */
     'Tirzepatida':
-      '<path d="M9.6 3.2h4.8M12 3.2v2.6M8.4 5.8h7.2v11.4a3.6 3.6 0 0 1-7.2 0z"/>' +
-      '<path d="M8.4 11.4h7.2"/>',
-    /* retatrutida: pontos ligados, de molécula — é o protocolo mais
-       avançado do catálogo, e o desenho diz isso sem escrever */
+      '<rect x="10.2" y="2.4" width="3.6" height="3.4" rx="1.2"/>' +
+      '<rect x="9.2" y="5.6" width="5.6" height="12" rx="1.9"/>' +
+      '<path d="M10.8 8.8h2.4"/>' +
+      '<path d="M12 17.6v3.6"/>',
+    /* retatrutida: o anel da molécula, com o núcleo dentro. É o
+       protocolo mais avançado do catálogo, e o hexágono diz isso sem
+       escrever. Antes eram quatro bolinhas ligadas por traços finos:
+       no chip, a 15px, os traços sumiam e sobravam quatro pontos
+       soltos. O anel fechado aguenta o tamanho pequeno. */
     'Retatrutida':
-      '<circle cx="12" cy="5.4" r="2.1"/><circle cx="5.6" cy="15" r="2.1"/>' +
-      '<circle cx="18.4" cy="15" r="2.1"/><circle cx="12" cy="19.6" r="1.6"/>' +
-      '<path d="m10.6 7.2-3.6 6M13.4 7.2l3.6 6M7.2 16.2l3.4 2.4M16.8 16.2l-3.4 2.4"/>',
-    /* peptídeos: a gota */
+      '<path d="M9.2 8.1 13.4 10.5v4.8l-4.2 2.4-4.2-2.4v-4.8z"/>' +
+      '<path d="m13.4 10.5 2.5-1.4"/><circle cx="17.4" cy="8.1" r="1.7"/>',
+    /* peptídeos: a corrente de aminoácidos — três contas ligadas, que é
+       literalmente o que um peptídeo é. A gota que estava aqui é o
+       desenho de qualquer líquido, e não dizia nada deste produto. */
     'Peptídeos':
-      '<path d="M12 3.2c3.4 4 5.4 6.8 5.4 9.6a5.4 5.4 0 0 1-10.8 0c0-2.8 2-5.6 5.4-9.6z"/>' +
-      '<path d="M9.6 13.4a2.4 2.4 0 0 0 2.4 2.4"/>'
+      '<circle cx="5.9" cy="17" r="2.5"/><circle cx="12" cy="12" r="2.5"/>' +
+      '<circle cx="18.1" cy="7" r="2.5"/>' +
+      '<path d="m7.9 15.4 2.1-1.8M14 10.4l2.1-1.8"/>'
   };
 
   var DESENHO_RESERVA =
-    '<path d="M9.8 3.4h4.4v3.2l2.8 3.6v9.2a1.2 1.2 0 0 1-1.2 1.2H8.2A1.2 1.2 0 0 1 7 19.4v-9.2l2.8-3.6z"/>' +
-    '<path d="M7 12.6h10"/>';
+    '<path d="M9.9 2.8h4.2v2.7H9.9z"/>' +
+    '<path d="M8.3 5.5h7.4a1.8 1.8 0 0 1 1.8 1.8v11.1a2.2 2.2 0 0 1-2.2 2.2H8.7a2.2 2.2 0 0 1-2.2-2.2V7.3a1.8 1.8 0 0 1 1.8-1.8z"/>' +
+    '<path d="M6.5 12.3h11"/>';
 
   /* O "Todos" também ganha desenho: quatro quadradinhos, que é o
      símbolo de "tudo junto". Sem ele, a fila de categorias ficaria com
@@ -287,21 +298,28 @@
     if (!vistas.length) { caixa.hidden = true; return; }
     caixa.hidden = false;
 
-    caixa.innerHTML = vistas.map(function (v) {
+    caixa.innerHTML = vistas.map(function (v, i) {
       var desenho = DESENHO_CATEGORIA[v.nome] || DESENHO_RESERVA;
       /* ESTE `svg` ESCRITO À MÃO NÃO VIROU `svgCategoria()` de
-         propósito: aqui o traço é 1.4 e o desenho é grande, dentro de
-         um círculo; no chip ele é 1.5 e pequeno. Juntar os dois numa
-         função com dois parâmetros de aparência só mudaria o lugar
-         onde a diferença mora. */
+         propósito: aqui o traço é 1.7 e o desenho é grande, branco
+         dentro de um disco colorido; no chip ele é 1.5, pequeno e da
+         cor do texto. Juntar os dois numa função com dois parâmetros
+         de aparência só mudaria o lugar onde a diferença mora. */
+      /* A COR DO DISCO ENTRA POR ÍNDICE, como nos chips (`data-cor`), e
+         pela mesma razão: renomear uma categoria no painel não pode
+         trocar a cor de lugar. O rodízio de 4 garante cor definida da
+         quinta categoria em diante. E é o MESMO número do chip, então
+         a mesma categoria tem a mesma cor na página inicial e na lista
+         — é isso que deixa a cor significar alguma coisa. */
       /* `#chave` no endereço: a lista de produtos lê isso e já abre
          filtrada (ver `app.js`). Sem isso o ícone levaria para a lista
          inteira e a pessoa teria de filtrar de novo na mão — o toque
          prometeria uma coisa e entregaria outra. */
-      return '<a class="categoria" href="produtos.html#' + chave(v.nome) + '">' +
+      return '<a class="categoria" data-cor="' + ((i % 4) + 1) + '" ' +
+        'href="produtos.html#' + chave(v.nome) + '">' +
         '<span class="categoria__ico">' +
-          '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-          'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
           desenho + '</svg>' +
         '</span>' +
         '<span class="categoria__nome">' + esc(v.nome) + '</span>' +

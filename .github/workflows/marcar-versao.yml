@@ -1,0 +1,85 @@
+# Põe as marcas de versão nas páginas sozinho, a cada push.
+#
+# POR QUE ISTO EXISTE
+#
+# `marcar-versao.mjs` já resolvia o problema — e o `conferir-site.yml` já
+# reprovava a publicação quando a marca ficava velha. O que faltava era ALGUÉM
+# RODAR o marcador, e esse alguém era uma pessoa lembrando.
+#
+# Em 18/09/2026 a lembrança falhou: a troca dos ícones da página inicial foi
+# commitada com a marca do CSS antigo. O `.htaccess` manda o navegador guardar
+# estilo e script por um dia (`ExpiresByType text/css "access plus 1 day"`), e
+# a hospedagem ainda responde com cópia velha por sorteio — então o cliente
+# continuaria vendo a tela de ontem, sem erro nenhum na tela, até alguém pedir
+# "atualiza no navegador". A página em si não é o problema: HTML sai com
+# "access plus 0 seconds". É a marca do endereço que faz o arquivo novo chegar.
+#
+# Tarefa que depende de alguém lembrar não está automatizada, está adiada.
+# Aqui ela não depende: o marcador roda a cada push, e se alguma marca estiver
+# atrás do arquivo, a correção é commitada na mesma branch.
+#
+# O CONFERIDOR NÃO SAI DO LUGAR. `marcar-versao.mjs --conferir` continua no
+# `conferir-site.yml`, e é bom que continue: este arquivo é quem CONSERTA, e
+# aquele é quem não deixa passar no dia em que este não rodar.
+#
+# DUAS COISAS QUE PARECEM DEFEITO E NÃO SÃO:
+#
+# 1. O push deste job dispara os workflows de novo. Na segunda volta o marcador
+#    não acha nada para mudar e o job termina sem commitar — a conta fecha
+#    sozinha. O `if` abaixo evita até essa segunda volta.
+# 2. Num push direto para `main` que chegue com marca velha, o
+#    `conferir-site.yml` daquele push pode falhar enquanto este conserta. O
+#    push do conserto roda a conferência de novo, e aí ela passa. Um vermelho
+#    que se resolve sozinho é melhor que um site velho que ninguém vê.
+
+name: Marcar versão
+
+on:
+  push:
+    # AS BRANCHES `claude/**` FICAM DE FORA, e não é esquecimento: quem cuida
+    # delas é o `publicar.yml`, que marca a versão E leva para a `main` no
+    # mesmo job. Se os dois rodassem no mesmo push, os dois rodariam o marcador
+    # e os dois tentariam commitar na mesma branch — um perderia a corrida, e o
+    # que perdesse publicaria uma árvore sem as marcas. Uma branch, um dono.
+    branches-ignore: ['claude/**']
+
+permissions:
+  contents: write
+
+jobs:
+  marcar:
+    # Sem isto, o commit deste job dispararia o job de novo. Ele pararia na
+    # volta seguinte de qualquer jeito (nada para mudar), mas gastar uma volta
+    # para descobrir isso é gastar à toa.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pegar o código
+        uses: actions/checkout@v5
+
+      - name: Preparar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Marcar, e commitar se mudou
+        run: |
+          node marcar-versao.mjs
+
+          # `--quiet` sai com 1 quando HÁ diferença: é ele que responde
+          # "precisa commitar?" sem eu ter de ler texto de saída.
+          if git diff --quiet -- '*.html'; then
+            echo "Nada a fazer: as marcas já estavam na versão dos arquivos."
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # Só páginas: o marcador não toca em mais nada, e um `add -A` aqui
+          # varreria para dentro do commit qualquer coisa que outro passo
+          # tivesse deixado na árvore.
+          git add -u -- '*.html'
+          git commit -m 'Marcas de versão em dia, para o navegador receber o arquivo novo'
+          git push origin HEAD:'${{ github.ref }}'

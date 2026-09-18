@@ -1,0 +1,222 @@
+# Leva o trabalho até o ar sozinho: marca a versão, confere tudo, e só então
+# passa para a `main` — que é a branch que a Hostinger publica.
+#
+# POR QUE ISTO EXISTE
+#
+# Brian, 18/09/2026: "Quero que voce faca tudo automaticamente sem eu precisar
+# fazer". O pedido veio depois de um dia em que o trabalho ficou pronto e não
+# apareceu na tela dele — duas vezes, por dois motivos diferentes: primeiro a
+# marca de versão velha, depois a branch que ninguém tinha levado para a
+# `main`. Nos dois casos o código existia e o cliente via o site de ontem.
+#
+# A etapa que faltava automatizar era a última: sair da branch e entrar na
+# `main`. Ela dependia de alguém autorizar, toda vez. Agora depende de os
+# conferidores passarem.
+#
+# O QUE ELE FAZ, NESTA ORDEM E SÓ NESTA:
+#
+#   1. marca a versão dos endereços de script e estilo (e commita, se mudou)
+#   2. roda os dez conferidores da publicação
+#   3. confere que a pasta /loja/ é a montagem da fonte
+#   4. só aí junta na `main` e empurra
+#
+# A ordem é o ponto. Marcar DEPOIS de conferir deixaria passar uma árvore com
+# marca velha; juntar ANTES de conferir poria no ar exatamente o que os
+# conferidores existem para barrar. Qualquer passo que falhar para tudo, e a
+# `main` não é tocada: o pior resultado possível aqui é o site continuar como
+# está, que é muito melhor que o site quebrado.
+#
+# O QUE ELE NÃO FAZ: julgar se a tela ficou bonita. Os conferidores pegam menu
+# diferente, texto sem tradução, preço de custo vazando, tabela errada, script
+# faltando, marca velha — coisas que têm resposta certa. Se a mudança está
+# feia, eles aprovam. Isso foi dito e aceito na hora de ligar isto.
+#
+# UMA CONSEQUÊNCIA QUE PRECISA ESTAR ESCRITA: push feito com o token do próprio
+# GitHub Actions NÃO dispara workflow nenhum. É o que impede o laço (este job
+# empurrando e se chamando de novo), mas é também o que faria a `main` entrar
+# sem passar pelo `conferir-site.yml`. Por isso o último passo CHAMA aquele
+# workflow na mão. Sem essa linha, a conferência do site no ar só aconteceria
+# no horário marcado, às 11h.
+
+name: Publicar
+
+on:
+  push:
+    branches: ['claude/**']
+
+permissions:
+  contents: write
+  # Para o último passo poder chamar o `conferir-site.yml` depois do merge.
+  actions: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pegar o código
+        uses: actions/checkout@v5
+        with:
+          # `fetch-depth: 0` porque aqui se faz um MERGE de verdade: sem a
+          # história das duas branches, o git não tem base de comparação e a
+          # junção falha. Nos outros workflows a profundidade rasa basta
+          # porque nenhum deles junta nada.
+          fetch-depth: 0
+          # Pelo NOME da branch, não pelo commit do push: assim o checkout
+          # pega a ponta atual. Importa no passo seguinte, que pode commitar.
+          ref: ${{ github.ref_name }}
+
+      - name: Preparar o Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # A MAIN ENTRA NA BRANCH ANTES DE A BRANCH ENTRAR NA MAIN, e esta ordem
+      # foi comprada com a primeira falha desta automação: os dezenove
+      # conferidores passaram e o merge parou em DEZESSEIS páginas conflitadas,
+      # porque a `main` tinha andado com outro trabalho enquanto este corria.
+      # Nenhum dos dois havia encostado no que o outro escreveu — o conflito
+      # era só a marca de versão, que muda em toda página sempre que qualquer
+      # CSS ou script muda. Duas branches vivas conflitam sempre, por desenho.
+      #
+      # `juntar-main.mjs` resolve exatamente esse caso e recusa qualquer outro;
+      # o que ele aceita e o que ele se recusa a tocar está escrito lá dentro.
+      # Quando ele para, este job para junto, e a `main` fica intacta.
+      - name: Trazer a main para dentro da branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          node juntar-main.mjs
+
+      - name: Marcar a versão, e commitar se mudou
+        run: |
+          node marcar-versao.mjs
+
+          if git diff --quiet -- '*.html'; then
+            echo "As marcas já estavam na versão dos arquivos."
+            exit 0
+          fi
+
+          git add -u -- '*.html'
+          git commit -m 'Marcas de versão em dia, para o navegador receber o arquivo novo'
+
+      # Um push só, depois dos dois passos acima: qualquer um deles pode ter
+      # commitado (o merge da main, a marca recalculada), e empurrar em cada um
+      # seria empurrar duas vezes a mesma branch por nada.
+      - name: Empurrar a branch, se ela andou
+        run: |
+          if [ -z "$(git log '@{u}..HEAD' --oneline 2>/dev/null)" ]; then
+            echo "A branch não andou: nada a empurrar."
+            exit 0
+          fi
+          git push origin HEAD:'${{ github.ref }}'
+
+      # Os mesmos conferidores do `conferir-site.yml`, pelos mesmos motivos —
+      # cada um está explicado lá, ao lado do passo. Aqui eles rodam ANTES de a
+      # `main` existir com esta mudança, que é o único momento em que reprovar
+      # ainda é barato.
+      - name: Conferir que a gestão só fala com as tabelas dela
+        run: node conferir-tabelas.mjs gestao pf_
+
+      - name: Conferir que o site só fala com as tabelas dele
+        run: node conferir-tabelas.mjs assets pf_
+
+      - name: Conferir as marcas de versão dos scripts
+        run: node marcar-versao.mjs --conferir
+
+      - name: Conferir que o CSS não tem erro de escrita
+        run: node conferir-css.mjs
+
+      - name: Conferir que cada página se anuncia como ela mesma
+        run: node conferir-paginas.mjs
+
+      - name: Conferir que não há texto sem tradução
+        run: node conferir-idioma.mjs
+
+      - name: Conferir que nenhuma tabela ficou fora do backup
+        run: node conferir-listas.mjs
+
+      - name: Conferir que o preço de compra não está no código do site
+        run: node conferir-custo-no-site.mjs
+
+      - name: Conferir que o menu é o mesmo em toda página
+        run: node conferir-menus.mjs
+
+      - name: Conferir que cada página carrega o que seus scripts precisam
+        run: node conferir-scripts.mjs
+
+      - name: Instalar as dependências da loja
+        working-directory: loja-fonte
+        run: npm ci
+
+      - name: Conferir que nenhum segredo entrou no código da loja
+        working-directory: loja-fonte
+        run: node conferir-segredos.mjs
+
+      - name: Conferir que a loja só fala com as tabelas dela
+        run: node conferir-tabelas.mjs loja-fonte/src loja2_
+
+      - name: Conferir as contas de calendário da loja
+        working-directory: loja-fonte
+        run: node periodos.teste.mjs
+
+      - name: Conferir que a pasta /loja/ é a montagem da fonte
+        run: |
+          cd loja-fonte
+          GITHUB_SHA= npm run build --silent
+          cd ..
+
+          diferentes=""
+          for arq in $(cd loja-fonte/dist && find . -type f | sed 's|^\./||'); do
+            if [ ! -f "loja/$arq" ]; then
+              diferentes="$diferentes $arq(falta)"
+            elif ! cmp -s "loja-fonte/dist/$arq" "loja/$arq"; then
+              diferentes="$diferentes $arq"
+            fi
+          done
+          for arq in $(cd loja && find . -type f | sed 's|^\./||'); do
+            [ -f "loja-fonte/dist/$arq" ] || diferentes="$diferentes $arq(sobrando)"
+          done
+
+          if [ -n "$diferentes" ]; then
+            echo "::error::A pasta loja/ não é a montagem de loja-fonte/. Diferentes:${diferentes}"
+            exit 1
+          fi
+          echo "A pasta loja/ é exatamente a montagem da fonte."
+
+          # A montagem deixa `loja-fonte/dist/` e `node_modules/` na árvore. Os
+          # dois estão no .gitignore, então não entrariam no merge de qualquer
+          # jeito — mas `git merge` se recusa a trabalhar com a árvore suja,
+          # e aí a publicação pararia por causa de lixo de teste.
+          git checkout -- . 2>/dev/null || true
+
+      - name: Juntar na main e publicar
+        run: |
+          git fetch origin main
+          git checkout main
+
+          # Depois do passo que trouxe a main para dentro da branch, esta junção
+          # não tem o que reconciliar. `--no-ff` mesmo assim, para a `main`
+          # guardar de qual branch cada publicação veio: sem isso os commits
+          # entram soltos e, no dia de achar quando uma mudança foi ao ar, não
+          # há nada marcando a costura.
+          git merge --no-ff '${{ github.ref_name }}' \
+            -m 'Publica ${{ github.ref_name }}: passou nos conferidores'
+
+          # Se a main andou DE NOVO enquanto os conferidores rodavam, este push
+          # é recusado e o job falha — sem tocar na main, como todo o resto
+          # deste arquivo. O próximo push da branch refaz o caminho já com a
+          # main nova dentro. Falhar e repetir é mais seguro que forçar.
+          git push origin main
+
+          echo "No ar: a Hostinger publica a main."
+
+          echo "No ar: a Hostinger publica a main."
+
+      # O push acima foi feito com o token do Actions, e push com esse token
+      # não dispara workflow nenhum — inclusive não dispara o `conferir-site`,
+      # que é quem olha o site DEPOIS de publicado. Então ele é chamado aqui.
+      - name: Chamar a conferência do site no ar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run conferir-site.yml --ref main
