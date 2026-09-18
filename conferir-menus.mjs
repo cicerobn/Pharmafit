@@ -102,8 +102,33 @@ for (const bloco of ['gaveta', 'barra de baixo']) {
   }
 }
 
+/* O 404 TEM DE APONTAR TUDO DA RAIZ.
+ *
+ * Esta conferência já ignorava a barra da frente para poder comparar as
+ * páginas entre si — e essa mesma gentileza escondia um defeito DENTRO
+ * do 404: em 18/09/2026 ele tinha oito links do menu absolutos e UM
+ * relativo (`quiz.html`). Servido em /pasta/que/nao/existe, aquele
+ * único link levava para /pasta/que/nao/existe/quiz.html: um 404 a
+ * partir do 404, e nenhuma prova reclamava.
+ *
+ * A regra aqui é simples e vale para a página inteira, não só o menu:
+ * no 404, link e arquivo começam com barra. */
+const erro404 = readFileSync(paginas.find((p) => p.endsWith('404.html')) || paginas[0], 'utf8');
+const relativos = [];
+for (const m of erro404.matchAll(/(?:href|src)="([^"]+)"/g)) {
+  const v = m[1];
+  if (/^(https?:|mailto:|tel:|data:|#|\/)/.test(v)) continue;
+  relativos.push(v);
+}
+if (relativos.length) {
+  problemas.push('404.html: caminho relativo, e esta página é servida em qualquer endereço — ' +
+    'de /pasta/que/nao/existe ele aponta para dentro da pasta inventada: ' +
+    [...new Set(relativos)].join(', '));
+}
+
 if (!problemas.length) {
   console.log('  ok    o menu é o mesmo em toda página');
+  console.log('  ok    e no 404 todo caminho começa na raiz');
   process.exit(0);
 }
 

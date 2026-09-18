@@ -473,8 +473,16 @@
     if (caixa) {
       var absolutoGaveta = (caixa.getAttribute('href') || '').charAt(0) === '/';
       caixa.setAttribute('href', (absolutoGaveta ? '/' : '') + destinoConta);
-      caixa.querySelector('[data-drawer-inicial]').textContent =
-        primeiro ? primeiro.charAt(0).toUpperCase() : '?';
+      /* A LETRA OU O DESENHO DE PESSOA, nunca os dois. Quem chega pela
+         primeira vez via um "?" dourado no lugar da inicial — e
+         interrogação em círculo é o desenho de "ajuda" em qualquer
+         site, não de "você". Os dois estão no HTML; aqui eu acendo um
+         e apago o outro por classe, em vez de reescrever o conteúdo
+         (reescrever apagaria o desenho de dentro). */
+      var circulo = caixa.querySelector('[data-drawer-inicial]');
+      var letra = circulo && circulo.querySelector('[data-drawer-letra]');
+      if (letra) letra.textContent = primeiro ? primeiro.charAt(0).toUpperCase() : '';
+      if (circulo) circulo.classList.toggle('tem-letra', !!primeiro);
       caixa.querySelector('[data-drawer-nome]').textContent = primeiro || 'Entrar na conta';
       caixa.querySelector('[data-drawer-pe]').textContent = primeiro
         ? 'Ver meus pedidos'

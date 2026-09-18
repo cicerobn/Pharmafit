@@ -80,6 +80,7 @@ window.PHARMAFIT_ES ={
   "Clínica": "Clínica",
   "Clínica, profissional ou parceiro": "Clínica, profesional o socio",
   "Com acompanhamento médico especializado": "Con seguimiento médico especializado",
+  "Comprar": "Comprar",
   "Como funciona": "Cómo funciona",
   "Como pago?": "¿Cómo pago?",
   "Como podemos te chamar": "Cómo podemos llamarle",
@@ -171,6 +172,7 @@ window.PHARMAFIT_ES ={
   "Melhor custo por dose": "Mejor costo por dosis",
   "Menor preço": "Menor precio",
   "Menu": "Menú",
+  "Mais": "Más",
   "Meu carrinho": "Mi carrito",
   /* o × que tira o produto do carrinho: é `aria-label`, só o leitor de
      tela lê — e ele lê em espanhol quando o site está em espanhol */

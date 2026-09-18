@@ -349,8 +349,16 @@
       '<span class="idiomas__deslizante" aria-hidden="true"></span>' +
       Object.keys(IDIOMAS).map(function (id) {
         var i = IDIOMAS[id];
+        /* O `aria-label` NÃO É REPETIÇÃO do nome escrito ao lado.
+         * Abaixo de 340px de tela o nome sai por CSS (`display:none`) e
+         * ficam só as bandeiras — e o que sai por `display:none` sai
+         * também do que o leitor de tela enxerga. Num iPhone SE, quem
+         * usa leitor ouvia "botão" duas vezes, sem saber qual era qual.
+         * O rótulo fica no botão, onde nenhuma regra de largura o
+         * alcança. Ele não se traduz, como o nome: cada língua se
+         * escreve na própria língua, sempre. */
         return '<button class="idiomas__opcao" type="button" data-idioma-botao="' + id + '" ' +
-            'aria-pressed="false" data-nao-traduzir>' +
+            'aria-label="' + i.nome + '" aria-pressed="false" data-nao-traduzir>' +
             '<span class="idiomas__bandeira">' + BANDEIRA[i.bandeira] + '</span>' +
             '<span class="idiomas__nome">' + i.nome + '</span>' +
           '</button>';
