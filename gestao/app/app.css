@@ -1100,12 +1100,9 @@ a{color:inherit;text-decoration:none}
   border-bottom:1px solid var(--line-2);
 }
 .gaveta__topo img{width:34px;height:34px}
-.gaveta__marca{
-  font-family:var(--serif);
-  font-size:15px;
-  letter-spacing:.16em;
-  font-weight:500;
-}
+/* o nome e o "GESTÃO" vêm das classes do topo (.topo__marca-*), para
+   os dois cabeçalhos não desencontrarem; aqui só a folga do conjunto */
+.gaveta__topo .topo__marca-texto{gap:3px}
 .gaveta__quem{
   padding:15px 18px;
   border-bottom:1px solid var(--line-2);
@@ -1280,16 +1277,6 @@ body.travado{overflow:hidden}
    O que ainda não existe
    --------------------------------------------------------- */
 
-.falta__lead{margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.55}
-.falta{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
-.falta__item{
-  font-size:12.5px;
-  color:var(--muted);
-  line-height:1.55;
-  padding-left:12px;
-  border-left:2px solid var(--line);
-}
-.falta__item b{color:var(--ink);font-weight:600}
 
 /* ---------------------------------------------------------
    Relatórios: variação, gráfico de linha e rosca

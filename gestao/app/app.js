@@ -181,9 +181,19 @@
       }).join('');
 
       gaveta.innerHTML =
+        /* A MESMA ASSINATURA DO TOPO, aqui também. Brian, 18/09/2026:
+           "Deixe a logo da gestao aqui tambem". A gaveta mostrava só
+           "PHARMA FIT" numa serifa, sem o "GESTÃO" — então o cabeçalho
+           da gaveta era igualzinho ao da loja, e é justo na gaveta que
+           a pessoa para para se localizar. Reaproveito as classes do
+           topo em vez de escrever um segundo desenho da marca: assim
+           os dois não podem desencontrar. */
         '<div class="gaveta__topo">' +
           '<img src="../../assets/img/logo-pf-marca.png" alt="">' +
-          '<span class="gaveta__marca">PHARMA FIT</span>' +
+          '<span class="topo__marca-texto">' +
+            '<span class="topo__marca-nome">PHARMA FIT</span>' +
+            '<span class="topo__marca-tag">GESTÃO</span>' +
+          '</span>' +
         '</div>' +
         '<div class="gaveta__quem">' +
           '<p class="gaveta__ola">Entrou como</p>' +
