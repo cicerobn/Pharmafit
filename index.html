@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=0577989a">
+<link rel="stylesheet" href="assets/css/styles.css?v=7f2fe6f0">
 </head>
 <body>
 
@@ -85,11 +85,30 @@
       <div class="hero__copy">
         <h1 class="hero__title">Sua jornada de <em>saúde</em> e <em>performance</em> começa aqui</h1>
         <div class="rule"></div>
-        <p class="hero__text">
-          Tratamentos com <b>tirzepatida</b> e <b>acompanhamento</b> especializado
-          para transformar seu corpo, sua mente e seu bem-estar.
-          Atendimento no Paraguai 🇵🇾
-        </p>
+        <!-- O TEXTO DE APOIO DO TOPO SAIU DAQUI.
+             Brian, 18/09/2026, com a foto do parágrafo: "Tire essas
+             escritas". Era "Tratamentos com tirzepatida e acompanhamento
+             especializado para transformar seu corpo, sua mente e seu
+             bem-estar. Atendimento no Paraguai 🇵🇾".
+
+             Nada do que ele dizia se perdeu de vista: as categorias
+             logo abaixo mostram tirzepatida, retatrutida e peptídeos
+             com nome e contagem, e o rodapé e o menu dizem onde é o
+             atendimento. O parágrafo repetia em prosa o que a tela já
+             mostra em objeto — e empurrava a primeira fila de produtos
+             para baixo da dobra no celular.
+
+             O traço (`.rule`) FICA. Ele separava o título do texto e
+             agora fecha o título: sem ele, o título encosta na foto e
+             no bloco de categorias sem nada marcando onde o topo
+             termina. -->
+
+        <!-- A DESCRIÇÃO DA ABA NÃO MUDOU, e é de propósito: a
+             `<meta name="description">` lá em cima continua dizendo o
+             que a Pharma Fit faz. Ela não aparece na tela — aparece no
+             Google e no quadradinho do WhatsApp, onde não há categoria
+             nenhuma embaixo para explicar o que este site é. -->
+
         <!-- O BOTÃO "Quero meu atendimento" SAIU DAQUI.
              Brian pediu para tirar em 17/09/2026. Ele estava no
              desenho que o próprio Brian mandou, então não é
@@ -134,6 +153,77 @@
            alt="Frasco de tirzepatida Pharma Fit ao lado de uma seringa">
     </div>
   </section>
+
+  <!-- ===== a faixa dos dois países =====
+
+       Brian, 18/09/2026, com a foto da faixa de outra loja: "Faca algo
+       assim tambem acima das categorias dos produtos, mas com uma
+       escrita diferente dessa".
+
+       ESTE CARTÃO NÃO É NOVO, E ISSO É O PONTO. Ele já existe na página
+       de Atendimento (`.atend-pais`) desde 17/09/2026, com o mesmo
+       desenho: escudo à esquerda, título, uma linha de texto e a
+       bandeira à direita. Desenhar um segundo igual aqui seria a doença
+       dos menus outra vez — duas caixas iguais em dois arquivos, e no
+       dia em que uma mudasse de cor a outra ficaria para trás.
+       Então esta é a MESMA classe, com um modificador (`--rota`) para
+       o que muda de fato: aqui são duas bandeiras com a seta entre
+       elas, e o texto fica centrado com elas em vez de alinhado ao topo.
+
+       A ESCRITA É OUTRA, como ele pediu, E NÃO INVENTA NADA. Ela diz o
+       que este site já afirma em duas telas: "medicamentos originais" e
+       "acompanhamento antes, durante e depois" vêm do cartão do
+       Atendimento, e os dois países vêm de lá (Paraguai) e do rodapé
+       daqui (Manaus · AM). Eu não escrevi nada sobre importação,
+       alfândega ou procedência — isso é afirmação sobre o negócio, e
+       quem a faz é o dono, não eu. Trocar estas duas frases por outras
+       é mexer em duas linhas, logo abaixo. -->
+  <div class="rota">
+    <div class="atend-pais atend-pais--rota">
+      <span class="atend-pais__ico" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z"/><path d="m9.2 12.2 1.9 1.9 3.7-3.8"/></svg>
+      </span>
+      <!-- DUAS FRASES CURTAS, E O TAMANHO DELAS FOI MEDIDO.
+           A primeira escrita era "Atendimento no Brasil e no Paraguai"
+           com "Medicamentos originais, com acompanhamento antes,
+           durante e depois". No computador cabia; num celular de 390px
+           a coluna do texto tem 166px — o escudo, as bandeiras e o
+           tracinho comem o resto — e aquilo virava CINCO linhas, num
+           cartão que na foto dele tem duas. Título curto porque as
+           bandeiras ao lado já repetem os dois países. -->
+      <div class="atend-pais__corpo">
+        <p class="atend-pais__titulo">Brasil e Paraguai</p>
+        <p class="atend-pais__texto">Medicamentos originais, com acompanhamento.</p>
+      </div>
+      <!-- AS BANDEIRAS SÃO ENFEITE, e por isso `aria-hidden`: o título
+           ao lado já diz "Brasil e Paraguai" em letra. Com rótulo
+           próprio, o leitor de tela anunciaria os dois países duas
+           vezes seguidas. -->
+      <span class="atend-pais__rota" aria-hidden="true">
+        <span class="atend-pais__bandeira">
+          <svg viewBox="0 0 28 20" aria-hidden="true">
+            <rect width="28" height="20" rx="2.5" fill="#009c3b"/>
+            <path d="M14 2.6 25.4 10 14 17.4 2.6 10z" fill="#ffdf00"/>
+            <circle cx="14" cy="10" r="4.1" fill="#002776"/>
+            <path d="M10.2 8.4c2.6-.9 5.4-.7 7.7.6" fill="none" stroke="#fff" stroke-width="1.1"/>
+          </svg>
+        </span>
+        <svg class="atend-pais__seta" width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 12h14m-5-5 5 5-5 5"/>
+        </svg>
+        <span class="atend-pais__bandeira">
+          <svg viewBox="0 0 28 20" aria-hidden="true">
+            <rect width="28" height="20" rx="2.5" fill="#fff"/>
+            <path d="M0 2.5A2.5 2.5 0 0 1 2.5 0h23A2.5 2.5 0 0 1 28 2.5V6.7H0z" fill="#d52b1e"/>
+            <path d="M0 13.3h28v4.2A2.5 2.5 0 0 1 25.5 20h-23A2.5 2.5 0 0 1 0 17.5z" fill="#0038a8"/>
+            <circle cx="14" cy="10" r="2.4" fill="none" stroke="#0038a8" stroke-width=".8"/>
+            <circle cx="14" cy="10" r="1.2" fill="#fedf00"/>
+          </svg>
+        </span>
+      </span>
+    </div>
+  </div>
 
   <!-- ===== categorias =====
        Brian, 18/09/2026: "tire isso aqui e deixe icones de cada
@@ -323,9 +413,9 @@
 <script src="assets/js/catalogo.js?v=de046103"></script>
 <script src="assets/js/nuvem.js?v=07de0bc1"></script>
 <script src="assets/js/catalogo-banco.js?v=f3e57ff1"></script>
-<script src="assets/js/loja.js?v=d3a81998"></script>
+<script src="assets/js/loja.js?v=084dd626"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=65866fbc"></script>
+<script src="assets/js/idioma-es.js?v=bebc28fc"></script>
 <script src="assets/js/idioma.js?v=81611de9"></script>
 <script src="assets/js/app.js?v=61f1dfcd"></script>
 <script src="assets/js/favoritos.js?v=b87b4c60"></script>

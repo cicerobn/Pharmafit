@@ -127,23 +127,27 @@
 
   /* ---------- bloco de preço, igual na grade e no carrossel ---------- */
 
-  /* O BLOCO DE PREÇO, igual na grade e no carrossel.
+  /* O PÉ DO CARTÃO: o que custa e como levar.
    *
-   * Brian, 18/09/2026: "Deixe essa parte dos precos ali mais bonita,
-   * com mais destaque" e "De mais enfase nessa promocoes ai".
+   * `botao` é o carrinho redondo, ou vazio quando não há estoque.
    *
-   * Ele se lê em três degraus, de cima para baixo: o que ERA (riscado,
-   * pequeno, com o selo de desconto ao lado), o que É (o número grande,
-   * o mais forte do cartão) e COMO PAGAR (a parcela, com o "3x sem
-   * juros" num chip).
+   * QUEM FICA NA LINHA DO BOTÃO, E QUEM NÃO FICA. Só o preço divide a
+   * linha com ele. O preço antigo e a parcela ficam em linhas inteiras,
+   * em cima e embaixo — e isso foi medido, não escolhido: o botão come
+   * 46px dos 146px do cartão, e a parcela já usava 140 desses 146.
+   * Dentro da coluna estreita ela quebrava em duas linhas e desalinhava
+   * a fila inteira.
    *
-   * O selo de desconto ganhou a classe `selo-off--forte` quando o corte
-   * é de 20% ou mais: aí ele pulsa. Desconto de 5% e desconto de 30%
-   * não podem chamar o olho do mesmo jeito — se tudo pulsa, nada
-   * chama. O 20 não é chute: é o menor corte do catálogo de hoje que
-   * eu chamaria de oferta (os cortes vão de 8% a 31%).
+   * E O BLOCO SE LÊ EM TRÊS DEGRAUS, de cima para baixo: o que ERA
+   * (riscado, com o selo de desconto ao lado), o que É (o número
+   * grande, ao lado do carrinho) e COMO PAGAR (a parcela em chip).
+   *
+   * O selo de desconto ganha `selo-off--forte` quando o corte é de 20%
+   * ou mais: aí o clarão passa por ele. Desconto de 8% e desconto de
+   * 31% não podem chamar o olho do mesmo jeito — se tudo pisca, nada
+   * chama. Os cortes do catálogo de hoje vão de 8% a 31%.
    */
-  function blocoPreco(p) {
+  function blocoPe(p, botao) {
     var desconto = Preco.desconto(p.antes, p.venda);
 
     return (p.antes
@@ -155,7 +159,10 @@
               : '') +
           '</p>'
         : '') +
-      '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
+      '<div class="product__pe">' +
+        '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
+        botao +
+      '</div>' +
       '<p class="product__installment">' + Preco.htmlParcelas(p.venda) + '</p>';
   }
 
@@ -178,37 +185,49 @@
 
     /* Fora de estoque não ganha botão de carrinho: pôr no carrinho o que
        não pode ser entregue só empurra a decepção para o fim da compra. */
-    var acao = semEstoque(p)
+    /* Fora de estoque a ação continua sendo uma FRASE, e não podia ser
+       outra coisa: "avise-me quando chegar" não cabe num símbolo. O
+       botão redondo do carrinho só existe onde há o que pôr nele. */
+    var acaoEspera = semEstoque(p)
       ? '<button class="btn btn--outline btn--espera" type="button" data-avise="' + esc(p.nome) + '">' +
           'Avise-me quando chegar' + setaHtml + '</button>'
-      /* SÓ "ADICIONAR". O "VER DETALHES" SAIU.
-         Brian, 18/09/2026: "Aqui esta muito grande o cards, tire 'ver
-         detalhes' e deixe menor".
-         Ele já não fazia falta desde ontem: o cartão INTEIRO virou link
-         para a página do produto — foto, nome, descrição e preço. O
-         botão repetia com um toque a mais o que o cartão todo já faz, e
-         era ele que empurrava o cartão para baixo. Dois botões lado a
-         lado também disputavam o olho: um cartão de vitrine tem uma
-         ação principal, que é pôr no carrinho. */
-      : '<div class="product__acoes">' +
-          '<button class="btn btn--primary btn--carrinho" type="button" ' +
-            'data-por-no-carrinho="' + esc(p.nome) + '">' +
-            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
-            '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
-            '</svg>' +
-            '<span>Adicionar</span>' +
-            /* O CLARÃO QUE ATRAVESSA O BOTÃO quando o dedo chega. Brian,
-               18/09/2026: "o carrinho nos produtos ali ta muito sem
-               graca". É um elemento em vez de um `::after` porque o
-               botão já usa `::after` na animação de "no carrinho", e
-               dois desenhos no mesmo pseudo-elemento se atropelam.
-               `aria-hidden` porque é cenário: não tem nada a dizer a
-               quem ouve a tela. */
-            '<span class="btn--carrinho__luz" aria-hidden="true"></span>' +
-          '</button>' +
-        '</div>';
+      : '';
+
+    /* O CARRINHO VIROU SÍMBOLO, AO LADO DO PREÇO.
+       Brian, 18/09/2026, com a foto de um cartão de outra loja: "quero
+       que os produtos fiquem assim (...) em baixo o preco, e do lado o
+       simbolo de jogar pro carrinho".
+
+       Antes era um botão de largura inteira escrito "Adicionar", numa
+       linha só dele embaixo do preço. Como símbolo ao lado do preço ele
+       devolve essa linha ao cartão — e põe as duas coisas que decidem a
+       compra (quanto custa, como levar) no mesmo lugar do olho.
+
+       O RÓTULO NÃO SUMIU, mudou de lugar: `aria-label` diz "Adicionar
+       <produto> ao carrinho" para quem usa leitor de tela, e `title`
+       diz o mesmo no passar do mouse. Botão só de desenho sem rótulo é
+       um botão que só funciona para quem enxerga.
+
+       E DENTRO DELE VAI O CLARÃO. Brian, na mesma noite: "o carrinho
+       nos produtos ali ta muito sem graca, nao estou gostando de como
+       ele esta". Eu havia posto este clarão no botão escrito, que este
+       cartão não tem mais — então ele vem para cá, que é onde o
+       carrinho vive agora. É um elemento e não um `::after` porque o
+       botão já usa pseudo-elemento no aviso de "no carrinho", e dois
+       desenhos no mesmo pseudo-elemento se atropelam. `aria-hidden`
+       porque é cenário: não tem nada a dizer a quem ouve a tela. */
+    var botaoCarrinho =
+      '<button class="product__carrinho" type="button" ' +
+        'data-por-no-carrinho="' + esc(p.nome) + '" ' +
+        'title="Adicionar ao carrinho" ' +
+        'aria-label="Adicionar ' + esc(p.nome) + ' ao carrinho">' +
+        '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
+        '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
+        '</svg>' +
+        '<span class="product__carrinho-luz" aria-hidden="true"></span>' +
+      '</button>';
 
     return '' +
       /* `product--promo` existe para o CSS poder tratar o cartão em
@@ -233,8 +252,8 @@
             '<a href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
               esc(p.nome) + '</a></h2>' +
           '<p class="product__desc">' + esc(p.descricao) + '</p>' +
-          blocoPreco(p) +
-          acao +
+          blocoPe(p, semEstoque(p) ? '' : botaoCarrinho) +
+          acaoEspera +
         '</div>' +
       '</article>';
   }
@@ -265,25 +284,36 @@
      mesmo dia, só sem desenho próprio até alguém dar um a ela. */
 
   var DESENHO_CATEGORIA = {
-    /* tirzepatida: a ampola, que é a forma como ela é vendida */
+    /* tirzepatida: a CANETA aplicadora, que é como ela chega na mão do
+       cliente — o mesmo objeto do `prod-caneta.svg` da vitrine. Aqui
+       havia uma ampola; ampola e frasco são a mesma silhueta em
+       miniatura, e a tirzepatida ficava com o desenho do genérico. */
     'Tirzepatida':
-      '<path d="M9.6 3.2h4.8M12 3.2v2.6M8.4 5.8h7.2v11.4a3.6 3.6 0 0 1-7.2 0z"/>' +
-      '<path d="M8.4 11.4h7.2"/>',
-    /* retatrutida: pontos ligados, de molécula — é o protocolo mais
-       avançado do catálogo, e o desenho diz isso sem escrever */
+      '<rect x="10.2" y="2.4" width="3.6" height="3.4" rx="1.2"/>' +
+      '<rect x="9.2" y="5.6" width="5.6" height="12" rx="1.9"/>' +
+      '<path d="M10.8 8.8h2.4"/>' +
+      '<path d="M12 17.6v3.6"/>',
+    /* retatrutida: o anel da molécula, com o núcleo dentro. É o
+       protocolo mais avançado do catálogo, e o hexágono diz isso sem
+       escrever. Antes eram quatro bolinhas ligadas por traços finos:
+       no chip, a 15px, os traços sumiam e sobravam quatro pontos
+       soltos. O anel fechado aguenta o tamanho pequeno. */
     'Retatrutida':
-      '<circle cx="12" cy="5.4" r="2.1"/><circle cx="5.6" cy="15" r="2.1"/>' +
-      '<circle cx="18.4" cy="15" r="2.1"/><circle cx="12" cy="19.6" r="1.6"/>' +
-      '<path d="m10.6 7.2-3.6 6M13.4 7.2l3.6 6M7.2 16.2l3.4 2.4M16.8 16.2l-3.4 2.4"/>',
-    /* peptídeos: a gota */
+      '<path d="M9.2 8.1 13.4 10.5v4.8l-4.2 2.4-4.2-2.4v-4.8z"/>' +
+      '<path d="m13.4 10.5 2.5-1.4"/><circle cx="17.4" cy="8.1" r="1.7"/>',
+    /* peptídeos: a corrente de aminoácidos — três contas ligadas, que é
+       literalmente o que um peptídeo é. A gota que estava aqui é o
+       desenho de qualquer líquido, e não dizia nada deste produto. */
     'Peptídeos':
-      '<path d="M12 3.2c3.4 4 5.4 6.8 5.4 9.6a5.4 5.4 0 0 1-10.8 0c0-2.8 2-5.6 5.4-9.6z"/>' +
-      '<path d="M9.6 13.4a2.4 2.4 0 0 0 2.4 2.4"/>'
+      '<circle cx="5.9" cy="17" r="2.5"/><circle cx="12" cy="12" r="2.5"/>' +
+      '<circle cx="18.1" cy="7" r="2.5"/>' +
+      '<path d="m7.9 15.4 2.1-1.8M14 10.4l2.1-1.8"/>'
   };
 
   var DESENHO_RESERVA =
-    '<path d="M9.8 3.4h4.4v3.2l2.8 3.6v9.2a1.2 1.2 0 0 1-1.2 1.2H8.2A1.2 1.2 0 0 1 7 19.4v-9.2l2.8-3.6z"/>' +
-    '<path d="M7 12.6h10"/>';
+    '<path d="M9.9 2.8h4.2v2.7H9.9z"/>' +
+    '<path d="M8.3 5.5h7.4a1.8 1.8 0 0 1 1.8 1.8v11.1a2.2 2.2 0 0 1-2.2 2.2H8.7a2.2 2.2 0 0 1-2.2-2.2V7.3a1.8 1.8 0 0 1 1.8-1.8z"/>' +
+    '<path d="M6.5 12.3h11"/>';
 
   /* O "Todos" também ganha desenho: quatro quadradinhos, que é o
      símbolo de "tudo junto". Sem ele, a fila de categorias ficaria com
@@ -319,21 +349,28 @@
     if (!vistas.length) { caixa.hidden = true; return; }
     caixa.hidden = false;
 
-    caixa.innerHTML = vistas.map(function (v) {
+    caixa.innerHTML = vistas.map(function (v, i) {
       var desenho = DESENHO_CATEGORIA[v.nome] || DESENHO_RESERVA;
       /* ESTE `svg` ESCRITO À MÃO NÃO VIROU `svgCategoria()` de
-         propósito: aqui o traço é 1.4 e o desenho é grande, dentro de
-         um círculo; no chip ele é 1.5 e pequeno. Juntar os dois numa
-         função com dois parâmetros de aparência só mudaria o lugar
-         onde a diferença mora. */
+         propósito: aqui o traço é 1.7 e o desenho é grande, branco
+         dentro de um disco colorido; no chip ele é 1.5, pequeno e da
+         cor do texto. Juntar os dois numa função com dois parâmetros
+         de aparência só mudaria o lugar onde a diferença mora. */
+      /* A COR DO DISCO ENTRA POR ÍNDICE, como nos chips (`data-cor`), e
+         pela mesma razão: renomear uma categoria no painel não pode
+         trocar a cor de lugar. O rodízio de 4 garante cor definida da
+         quinta categoria em diante. E é o MESMO número do chip, então
+         a mesma categoria tem a mesma cor na página inicial e na lista
+         — é isso que deixa a cor significar alguma coisa. */
       /* `#chave` no endereço: a lista de produtos lê isso e já abre
          filtrada (ver `app.js`). Sem isso o ícone levaria para a lista
          inteira e a pessoa teria de filtrar de novo na mão — o toque
          prometeria uma coisa e entregaria outra. */
-      return '<a class="categoria" href="produtos.html#' + chave(v.nome) + '">' +
+      return '<a class="categoria" data-cor="' + ((i % 4) + 1) + '" ' +
+        'href="produtos.html#' + chave(v.nome) + '">' +
         '<span class="categoria__ico">' +
-          '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-          'stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
           desenho + '</svg>' +
         '</span>' +
         '<span class="categoria__nome">' + esc(v.nome) + '</span>' +
