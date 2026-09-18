@@ -193,6 +193,7 @@ window.PHARMAFIT_ES ={
   "Não achamos este produto": "No encontramos este producto",
   "Não sabe por onde começar?": "¿No sabe por dónde empezar?",
   "Não sei o que escolher": "No sé qué elegir",
+  "Não sei por onde começar": "No sé por dónde empezar",
   "Não tem conta?": "¿No tiene cuenta?",
   "Não vendemos, alugamos nem compartilhamos seus dados com terceiros para publicidade. Não usamos rastreadores de anúncios no site.": "No vendemos, alquilamos ni compartimos sus datos con terceros para publicidad. No usamos rastreadores de anuncios en el sitio.",
   "O endereço que você abriu não existe (ou saiu do ar). Vamos te levar de volta.": "La dirección que abrió no existe (o salió del aire). Le llevamos de vuelta.",
@@ -377,6 +378,7 @@ window.PHARMAFIT_ES ={
   "Você está na conta": "Usted está en la cuenta",
   "Você é": "Usted es",
   "Vocês atendem fora de Manaus?": "¿Atienden fuera de Manaos?",
+  "Voltar": "Volver",
   "Voltar ao início": "Volver al inicio",
   "Vários produtos": "Varios productos",
   "WhatsApp": "WhatsApp",
@@ -469,6 +471,14 @@ window.PHARMAFIT_ES ={
    com `$1` e `$2` no lugar de cada pedaço que varia.
    --------------------------------------------------------------- */
 window.PHARMAFIT_ES_PADROES = [
+  /* "ou até 3x sem juros de R$ 366,33". O "em" saiu em 18/09/2026:
+     com ele a frase quebrava em duas linhas no cartão da vitrine.
+     O padrão antigo fica logo abaixo porque a frase com "em" ainda
+     pode estar viva num cartão guardado no cache do navegador de
+     alguém — padrão que sobra não custa nada; frase sem tradução
+     aparece em português na tela do cliente paraguaio. */
+  { pt: /^ou (\d+)x sem juros de (.+)$/, es: "o $1 cuotas sin interés de $2" },
+  { pt: /^ou até (\d+)x sem juros de (.+)$/, es: "o hasta $1 cuotas sin interés de $2" },
   { pt: /^ou em até (\d+)x sem juros de (.+)$/, es: "o en hasta $1 cuotas sin interés de $2" },
   { pt: /^Bom dia, (.+)$/, es: "Buenos días, $1" },
   { pt: /^Boa tarde, (.+)$/, es: "Buenas tardes, $1" },

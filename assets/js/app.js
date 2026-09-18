@@ -284,6 +284,75 @@
     });
   }
 
+  /* ---------- a foto do produto atravessa as duas telas ----------
+
+     Brian, 18/09/2026: "Deixe animacao legal ao entrar e sair de um
+     produto". O navegador já cruza as duas telas (a regra
+     `@view-transition` no CSS). Isto aqui é o detalhe que faz parecer
+     um aplicativo: a foto do cartão TOCADO recebe o mesmo nome de
+     transição que a foto da página do produto, e o navegador entende
+     que é a mesma coisa — ela voa da vitrine para a ficha e cresce no
+     caminho, em vez de piscar.
+
+     SÓ UM CARTÃO POR VEZ, e isso não é detalhe: dois elementos com o
+     mesmo nome de transição fazem o navegador desistir da animação
+     inteira. Por isso eu limpo o nome antes de pôr, e limpo de novo
+     quando a pessoa volta (o navegador guarda a página como estava, e
+     sem isso o segundo toque não animaria).
+
+     Não mexe em navegação nenhuma: só marca o elemento e deixa o link
+     seguir. Se o aparelho não souber fazer transição, o clique continua
+     sendo um clique comum. */
+
+  var NOME_FOTO = 'produto-foto';
+
+  function limparFotoVoando() {
+    var antes = document.querySelector('[data-foto-voando]');
+    if (!antes) return;
+    antes.style.removeProperty('view-transition-name');
+    antes.removeAttribute('data-foto-voando');
+  }
+
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('a[href*="produto.html?p="]');
+    if (!link) return;
+    /* abrir em outra aba não troca esta tela; animar aqui seria mentira */
+    if (e.metaKey || e.ctrlKey || e.shiftKey || link.target === '_blank') return;
+
+    var foto = link.matches('.protocol')
+      ? link.querySelector('.protocol__media img')
+      : (link.closest('.product') || link).querySelector('.product__media img, img');
+    if (!foto) return;
+
+    limparFotoVoando();
+    foto.style.setProperty('view-transition-name', NOME_FOTO);
+    foto.setAttribute('data-foto-voando', '');
+  });
+
+  /* Voltar traz a página do jeito que ela estava, com o nome ainda
+     posto. Limpo aqui para o toque seguinte animar igual. */
+  window.addEventListener('pageshow', limparFotoVoando);
+  window.addEventListener('popstate', limparFotoVoando);
+
+  /* ---------- o botão de voltar ----------
+
+     Brian, 18/09/2026: "ao clicar em algum produto que tenha icone de
+     voltar".
+
+     `history.back()` quando há para onde voltar DENTRO do site, e o
+     endereço da lista de produtos quando não há — quem abriu o link
+     direto do WhatsApp não tem história nenhuma, e um botão de voltar
+     que não faz nada é pior que nenhum botão. O `referrer` diz se a
+     tela anterior era nossa. */
+  document.querySelectorAll('[data-voltar]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var deCasa = document.referrer &&
+        document.referrer.indexOf(location.origin) === 0;
+      if (deCasa && history.length > 1) history.back();
+      else location.href = b.getAttribute('data-voltar') || 'produtos.html';
+    });
+  });
+
   /* ---------- carrossel de produtos ---------- */
   var carousel = document.querySelector('[data-carousel]');
   var dotsBox = document.querySelector('[data-dots]');
@@ -448,14 +517,33 @@
           other.setAttribute('aria-pressed', String(active));
         });
 
-        products.forEach(function (card) {
-          var cats = (card.getAttribute('data-category') || '').split(' ');
-          var show = target === 'todos' || cats.indexOf(target) !== -1;
-          card.classList.toggle('is-hidden', !show);
-        });
+        /* A TROCA DE CATEGORIA, ANIMADA PELO NAVEGADOR.
+           Brian pediu animação também aqui. A entrada escalonada dos
+           cartões já existia (`animarEntrada`), mas ela só faz os
+           novos APARECEREM — os que ficaram na tela saltavam de
+           posição. `startViewTransition` faz o navegador mover os que
+           ficaram para o lugar novo, e o resultado parece a lista se
+           reorganizando em vez de se redesenhar.
+           Onde não existe, cai no caminho de sempre: o filtro acontece
+           igual, só sem o deslizamento. */
+        function filtrar() {
+          products.forEach(function (card) {
+            var cats = (card.getAttribute('data-category') || '').split(' ');
+            var show = target === 'todos' || cats.indexOf(target) !== -1;
+            card.classList.toggle('is-hidden', !show);
+          });
+        }
 
-        animarEntrada(document.querySelector('[data-grade]'));
-        conferirVitrine();
+        if (!MENOS_MOVIMENTO && document.startViewTransition) {
+          document.startViewTransition(function () {
+            filtrar();
+            conferirVitrine();
+          });
+        } else {
+          filtrar();
+          animarEntrada(document.querySelector('[data-grade]'));
+          conferirVitrine();
+        }
       });
     });
   }

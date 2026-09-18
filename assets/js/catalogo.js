@@ -186,10 +186,19 @@ window.PharmaFitPreco = {
     return Number(valor || 0) / vezes;
   },
 
-  /** "ou em até 3x sem juros de R$ 333,00" */
+  /** "ou 3x sem juros de R$ 333,00"
+   *
+   * Era "ou EM ATÉ 3x…". As duas palavras saíram por medida, não por
+   * gosto: com elas a frase pedia 150px e a coluna do cartão da
+   * vitrine tem 146 — quatro pixels custavam uma linha inteira (14px
+   * de altura) em TODO cartão, num cartão que o Brian pediu menor
+   * (18/09/2026). Medi as duas saídas e escolhi esta: diminuir a letra
+   * para caber deixaria o texto menos legível, e o site sempre calcula
+   * em 3 vezes, então "ou 3x" diz o mesmo que "ou em até 3x" sem
+   * prometer nada diferente. */
   textoParcelas: function (valor, vezes) {
     vezes = vezes || 3;
-    return 'ou em até ' + vezes + 'x sem juros de ' +
+    return 'ou ' + vezes + 'x sem juros de ' +
       window.PharmaFitPreco.formatar(window.PharmaFitPreco.parcela(valor, vezes));
   },
 

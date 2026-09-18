@@ -84,22 +84,25 @@
     var acao = semEstoque(p)
       ? '<button class="btn btn--outline btn--espera" type="button" data-avise="' + esc(p.nome) + '">' +
           'Avise-me quando chegar' + setaHtml + '</button>'
+      /* SÓ "ADICIONAR". O "VER DETALHES" SAIU.
+         Brian, 18/09/2026: "Aqui esta muito grande o cards, tire 'ver
+         detalhes' e deixe menor".
+         Ele já não fazia falta desde ontem: o cartão INTEIRO virou link
+         para a página do produto — foto, nome, descrição e preço. O
+         botão repetia com um toque a mais o que o cartão todo já faz, e
+         era ele que empurrava o cartão para baixo. Dois botões lado a
+         lado também disputavam o olho: um cartão de vitrine tem uma
+         ação principal, que é pôr no carrinho. */
       : '<div class="product__acoes">' +
           '<button class="btn btn--primary btn--carrinho" type="button" ' +
             'data-por-no-carrinho="' + esc(p.nome) + '">' +
-            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
             'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
             '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
             '</svg>' +
             '<span>Adicionar</span>' +
           '</button>' +
-          /* "Saiba mais" agora leva à PÁGINA do produto, e não ao
-             formulário de contato: quem clica quer ver o produto, não
-             escrever para alguém. Do lado de lá tem o WhatsApp. */
-          '<a class="btn btn--outline" href="produto.html?p=' +
-            encodeURIComponent(p.nome) + '">' +
-            'Ver detalhes' + setaHtml + '</a>' +
         '</div>';
 
     return '' +
@@ -295,48 +298,49 @@
 
     trilho.innerHTML = destaques.map(function (p, i) {
       var etiqueta = i === 0 ? 'MAIS PROCURADO' : (p.antes ? 'PROMOÇÃO' : '');
-      var minis = window.PharmaFitBeneficios.html(p.categoria);
 
       return '' +
         /* O CARTÃO INTEIRO É UM LINK PARA O PRODUTO.
            Brian, 17/09/2026: "Tem que dar pra clicar no produto e ver
-           tudo sobre ele". Aqui não dava: o cartão do carrossel era um
-           `<article>` sem link nenhum. A pessoa via a foto, o nome, o
-           preço e os benefícios, tocava — e não acontecia nada. É a
-           regra 1 dele invertida: não era um botão que não funcionava,
-           era um cartão que parecia clicável e não era.
-           Como não há botão nenhum dentro deste cartão, o jeito certo
-           é o mais simples: o cartão é a âncora. Um link só, que o
-           leitor de tela anuncia de uma vez, e área de toque do
-           tamanho do cartão. */
+           tudo sobre ele". Como não há botão nenhum dentro dele, o
+           jeito certo é o mais simples: o cartão é a âncora. Um link
+           só, que o leitor de tela anuncia de uma vez, e área de toque
+           do tamanho do cartão. */
         '<a class="protocol" href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
           '<div class="protocol__media">' +
             (etiqueta
               ? '<span class="badge">' +
-                  '<svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">' +
+                  '<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">' +
                     '<path d="m6 .8 1.5 3.1 3.4.5-2.5 2.4.6 3.4L6 8.6 2.9 10.2l.6-3.4L1 4.4l3.4-.5z"/>' +
                   '</svg>' + etiqueta + '</span>'
               : '') +
-            '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit">' +
+            '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
           '</div>' +
           '<div class="protocol__body">' +
             '<h3 class="protocol__name">' + esc(p.nome) + '</h3>' +
-            '<p class="protocol__desc">' + esc(p.descricao) + '</p>' +
-            '<div class="protocol__preco">' + blocoPreco(p) + '</div>' +
+            /* SÓ O PREÇO, e o desconto quando existe.
+               Brian, 18/09/2026: "Deixe esses cards aqui com as fotos
+               menores e um tamanho menor, quero que de ve pra ver 3
+               ali". Três cartões numa tela de 390 dão 110px cada. Nesse
+               espaço não cabe descrição, parcelamento nem a faixa dos
+               três benefícios — "Acompanhamento" sozinho precisa de
+               70px, e numa coluna de 33px voltaria a quebrar no meio
+               da palavra, que é o defeito que eu passei ontem
+               consertando.
+               Nada disso se perdeu: a descrição, as parcelas e os três
+               benefícios estão todos na página do produto, que é onde
+               este cartão leva com um toque. */
+            /* SÓ O VALOR, sem o selo de desconto.
+               Eu tinha posto o "-23%" ao lado do preço e ele não cabia
+               na coluna de 92px: descia para uma linha própria, e aí os
+               três cartões ficavam com o preço em alturas diferentes —
+               um com o preço no pé, dois com preço e selo no meio.
+               Parecia desalinhado porque estava.
+               Nada se perde: a etiqueta PROMOÇÃO em cima da foto já diz
+               que é promoção, e a porcentagem com o preço antigo
+               riscado está na lista de produtos e na página do produto. */
+            '<p class="protocol__valor">' + Preco.formatar(p.venda) + '</p>' +
           '</div>' +
-          /* OS BENEFÍCIOS SAÍRAM DE DENTRO DA COLUNA DE TEXTO.
-             Brian, 17/09/2026: "Isso aqui ta muito feio", com a foto do
-             cartão. Estava mesmo: os três benefícios viviam na coluna
-             da direita, que num celular de 390 tem 148px. Divididos em
-             três, cada rótulo ficava com 45px — menos que a palavra
-             "Acompanhamento" precisa em QUALQUER tamanho de letra
-             legível. O resultado era "Redução de / peso", "Controle do
-             / apetite" e "Acompanha- / mento / médico": três alturas
-             diferentes, tudo quebrado, parecendo defeito.
-             Agora eles são uma faixa na largura INTEIRA do cartão,
-             embaixo da foto e do texto. A mesma fileira de três da foto
-             dele, com 94px por coluna em vez de 45. */
-          '<div class="mini-list">' + minis + '</div>' +
         '</a>';
     }).join('');
   }
