@@ -420,10 +420,12 @@ window.PHARMAFIT_ES ={
   "e suporte": "y soporte",
   "encontrada": "encontrada",
   "especializado": "especializado",
-  /* O TOPO DIZ "Atendimento no Paraguai" desde 17/09/2026: o Brian
-     mandou a tela que ele quer e pediu tudo igual, escritas
-     incluídas. A frase antiga dizia Manaus. */
-  "especializado para transformar seu corpo, sua mente e seu bem-estar. Atendimento no Paraguai 🇵🇾": "especializado para transformar su cuerpo, su mente y su bienestar. Atención en Paraguay 🇵🇾",
+  /* AQUI MORAVA O TEXTO DE APOIO DO TOPO, a frase que terminava em
+     "Atendimento no Paraguai 🇵🇾". Ela saiu da tela em 18/09/2026
+     ("Tire essas escritas"), e a tradução saiu junto: entrada de
+     dicionário sem frase na tela não traduz nada e ainda promete que
+     alguma tela diz aquilo. No dia de mexer, alguém a leria como
+     texto vivo e iria procurar onde ela aparece. */
   "favorito": "favorito",
   "favoritos": "favoritos",
 
