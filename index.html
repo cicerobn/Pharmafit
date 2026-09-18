@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=10ba31f5">
+<link rel="stylesheet" href="assets/css/styles.css?v=9fe7ab29">
 </head>
 <body>
 
@@ -84,7 +84,17 @@
     <div class="hero__grid">
       <div class="hero__copy">
         <h1 class="hero__title">Sua jornada de <em>saúde</em> e <em>performance</em> começa aqui</h1>
-        <div class="rule"></div>
+        <!-- O TRACINHO DOURADO SAIU DAQUI.
+             Brian, 18/09/2026, com o recorte dele: "Tire essa linha".
+             Identifiquei qual das linhas do site era medindo o recorte:
+             o fundo dele é #fdfdfd, que no site inteiro só existe neste
+             bloco, e a linha era dourada de 3px de altura — o `.rule`.
+             Ele existia para separar o título do parágrafo de apoio.
+             Esse parágrafo saiu hoje, também a pedido dele, e o
+             tracinho ficou fechando um texto que não tem mais nada
+             embaixo. Ele continua embaixo do título das outras páginas;
+             saiu da inicial e de Produtos, que são as duas que ele
+             apontou. -->
         <!-- O TEXTO DE APOIO DO TOPO SAIU DAQUI.
              Brian, 18/09/2026, com a foto do parágrafo: "Tire essas
              escritas". Era "Tratamentos com tirzepatida e acompanhamento

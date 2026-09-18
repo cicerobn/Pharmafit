@@ -534,11 +534,10 @@ body:has(.hero__art--foto) .topbar{
 
 .hero__cta{margin:18px 0 4px;position:relative;z-index:2}
 
-/* O RISQUINHO DOURADO DO TOPO É MAIS APERTADO QUE O DAS OUTRAS PÁGINAS.
-   Ele tem `margin:22px 0 20px` em todo o site, o que dá 45px entre o
-   título e o texto. No desenho dele são 28px. Os 17px de diferença
-   empurravam o texto para dentro da seringa. */
-.hero .rule{margin:13px 0 12px}
+/* O RISQUINHO DOURADO DO TOPO SAIU (18/09/2026, "Tire essa linha"), e
+   com ele esta regra: ela só existia para apertar a margem dele neste
+   bloco. Nas outras páginas o `.rule` continua, com a margem de
+   sempre. */
 
 /* O BOTÃO DO TOPO NÃO ATRAVESSA A TELA.
    `.btn--primary` tem `min-width:min(100%,300px)`, que é o certo no
