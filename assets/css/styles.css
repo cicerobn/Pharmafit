@@ -2777,7 +2777,23 @@ body:has(.hero__art--foto) .topbar{
    flex-basis:100% joga ele para a linha de baixo, inteiro — dentro de um
    flex row ele ficaria colado no texto, e um <br> ali não teria efeito
    nenhum. */
+/* O BOTÃO DO AVISO OCUPA A LINHA DE BAIXO INTEIRA. São dois nomes
+   para a mesma forma de propósito: `__tentar` é o "tentar de novo" de
+   um formulário que falhou, e `__acao` é o botão de um aviso que deu
+   certo (o "Limpar o carrinho" depois do pedido enviado). Chamar o
+   segundo de "tentar" faria o próximo leitor procurar um erro que não
+   existe. */
 .aviso-forma__tentar{flex-basis:100%;margin-top:2px;text-align:left}
+/* O `__acao` NÃO leva `flex-basis:100%`: com ele, o botão virava uma
+   barra branca de ponta a ponta dentro da caixa verde, do tamanho do
+   aviso e não do tamanho do que ele faz. Sem ele o botão cai sozinho na
+   linha de baixo (o texto do aviso já ocupa a linha inteira) e fica do
+   tamanho da própria frase. */
+/* `width:auto` porque `.btn--outline` nasce com `width:100%` — foi ele
+   que esticava o botão de ponta a ponta dentro da caixa verde, e eu
+   estava culpando o `flex-basis`. Medido: 294px de largura para uma
+   frase de 130. */
+.aviso-forma__acao{margin-top:6px;margin-left:26px;width:auto}
 
 /* ---------- link discreto (.linkish) ----------
 

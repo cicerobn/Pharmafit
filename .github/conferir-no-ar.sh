@@ -108,7 +108,77 @@ fi
 # duas possibilidades é o site fora do ar — mas sem mandar
 # procurar defeito no código, que não é nenhuma das duas.
 if [ -z "$achou" ] && [ "$respondeu" = "0" ]; then
-  echo "::error::Não consegui nem abrir a conexão com o site (HTTP 000 nas três voltas, em todos os endereços). Daqui não dá para saber qual dos dois é: (a) a Hostinger está fora do ar, ou (b) ela está bloqueando o GitHub por IP — que é o vizinho da proteção antirrobô e não devolve tela nenhuma. O que decide em dez segundos: abra https://darkblue-deer-373108.hostingersite.com no celular. Se abrir, é (b) e o site está bem: hPanel → Segurança → liberar o IP do GitHub. Se não abrir, é (a) e é caso de suporte da Hostinger. Em nenhum dos dois o problema está no código — as conferências que rodam sem internet passaram todas."
+
+  # ANTES DE REPROVAR, JUNTAR PROVA.
+  #
+  # "HTTP 000" é o silêncio, e silêncio não diz quem calou. Em 18/09/2026
+  # este bloco nasceu porque o mesmo 000 apareceu em duas execuções
+  # seguidas (15:04 e 15:55) meia hora depois de uma execução verde — e
+  # eu não tinha NADA para levar ao suporte da Hostinger além de "não
+  # abriu".
+  #
+  # O que cada linha separa:
+  #   · o nome resolve? Se não resolve, o assunto é DNS, não o site.
+  #   · a internet do runner funciona? Sem esta linha, um problema da
+  #     rede do GitHub seria lido como problema da Hostinger.
+  #   · a porta 443 abre? TCP aberto e resposta nenhuma é assinatura de
+  #     filtro no meio do caminho; TCP recusado/estourando é servidor
+  #     fora do ar OU porta fechada para este IP.
+  #   · e a porta 80? Muro antirrobô costuma continuar respondendo em 80
+  #     com um redirecionamento. Se 80 responde e 443 não, o site está
+  #     de pé e o que barrou foi um filtro.
+  # Nada disso conserta: serve para o recado dizer o que aconteceu, e
+  # para o suporte não pedir tudo de novo.
+  echo ""
+  echo "Juntando prova do silêncio (nada aqui conserta, é para o recado):"
+  primeiro=$(printf '%s' "$candidatos" | tr -s ' \n' '\n' | grep . | head -1)
+  primeiro="${primeiro%/}"
+  host_alvo=$(printf '%s' "$primeiro" | sed -e 's|^https\?://||' -e 's|/.*$||')
+  echo "  · endereço olhado: $host_alvo"
+
+  ip_alvo=$(getent hosts "$host_alvo" 2>/dev/null | awk '{print $1}' | tr '\n' ' ')
+  if [ -n "$ip_alvo" ]; then
+    echo "  · o nome resolve para: $ip_alvo"
+  else
+    echo "  · o nome NÃO resolve (DNS) — o assunto é o endereço, não a página"
+  fi
+
+  # sem `|| echo 000`: o -w já escreve 000 quando a conexão não
+  # acontece, e os dois juntos imprimem "000000" (o mesmo alfinete que
+  # está explicado na volta do laço, lá em cima)
+  neutro=$(curl -s -o /dev/null -m 15 -w '%{http_code}' https://example.com) || true
+  [ -n "$neutro" ] || neutro=000
+  echo "  · internet do runner (example.com): HTTP $neutro"
+
+  if timeout 10 bash -c "cat < /dev/null > /dev/tcp/$host_alvo/443" 2>/dev/null; then
+    tcp443="abre"
+  else
+    tcp443="não abre"
+  fi
+  echo "  · porta 443 (https): $tcp443"
+
+  codigo80=$(curl -s -o /dev/null -m 15 -w '%{http_code}' "http://$host_alvo/") || true
+  [ -n "$codigo80" ] || codigo80=000
+  echo "  · porta 80 (http): HTTP $codigo80"
+
+  echo "  · o que o curl reclamou:"
+  curl -sS -o /dev/null -m 20 "$primeiro" 2>&1 | sed 's/^/      /'
+
+  # E O RECADO MUDA CONFORME A PROVA, em vez de listar sempre as duas
+  # possibilidades: quando a porta 80 responde, o servidor está de pé e
+  # a conversa com o suporte é outra.
+  pista=""
+  if [ "$neutro" = "000" ]; then
+    pista="A internet do próprio runner do GitHub não respondeu nem no example.com, então o silêncio pode ser da rede do GitHub e não da Hostinger. Rodar de novo em alguns minutos já resolve a dúvida."
+  elif [ "$codigo80" != "000" ]; then
+    pista="A porta 80 respondeu (HTTP $codigo80) e a 443 não: o servidor da Hostinger está DE PÉ e o que barrou foi um filtro no caminho do https para o IP do GitHub. Isso é (b), e o site está bem para quem entra pelo celular."
+  elif [ "$tcp443" = "abre" ]; then
+    pista="A porta 443 abre e nenhuma resposta vem depois: assinatura de filtro no meio do caminho, não de servidor desligado."
+  elif [ -z "$ip_alvo" ]; then
+    pista="O nome não resolveu no DNS daqui — antes de falar de site fora do ar, é o endereço que tem de voltar a resolver."
+  fi
+
+  echo "::error::Não consegui nem abrir a conexão com o site (HTTP 000 nas três voltas, em todos os endereços). ${pista} Daqui não dá para saber com certeza qual dos dois é: (a) a Hostinger está fora do ar, ou (b) ela está bloqueando o GitHub por IP — que é o vizinho da proteção antirrobô e não devolve tela nenhuma. O que decide em dez segundos: abra https://darkblue-deer-373108.hostingersite.com no celular. Se abrir, é (b) e o site está bem: hPanel → Segurança → liberar o IP do GitHub. Se não abrir, é (a) e é caso de suporte da Hostinger. Em nenhum dos dois o problema está no código — as conferências que rodam sem internet passaram todas."
   exit 1
 fi
 

@@ -120,6 +120,15 @@
       perdidos.hidden = true;
     }
 
+    /* O AVISO DE "ENVIADO" NÃO SOBREVIVE A UMA MUDANÇA NO CARRINHO.
+       Se a pessoa tirou um produto ou mexeu na quantidade depois de
+       fechar, aquele "pedido enviado" passou a falar de um carrinho que
+       não está mais na tela — e ficaria em cima da lista nova dizendo
+       que ela já foi. */
+    if (elEnviado && !elEnviado.hidden && assinaturaDo(conta) !== enviado) {
+      elEnviado.hidden = true;
+    }
+
     elVazio.hidden = conta.itens.length > 0;
     elCheio.hidden = conta.itens.length === 0;
 
@@ -358,13 +367,19 @@
         }).catch(function () {});
       }
 
+      /* A TELA CONTA O QUE ACABOU DE FAZER.
+         Vem antes do registro de propósito: o recado é sobre o pedido
+         ter SAÍDO daqui (o WhatsApp está abrindo), e não sobre o banco
+         ter respondido — a resposta do banco chega depois e a pessoa
+         não fica esperando por ela. O porquê deste bloco existir está
+         no `carrinho.html`, em cima dele. */
+      avisarEnviado();
+
       if (!conta || !conta.itens || !conta.itens.length || !Pedido) return;
 
-      /* a assinatura do carrinho: mesmos itens e quantidades = mesmo
-         pedido, e eu não registro de novo */
-      var assinatura = conta.itens.map(function (i) {
-        return i.nome + 'x' + i.quantidade;
-      }).join('|');
+      /* mesmos itens e quantidades = mesmo pedido, e eu não registro
+         de novo */
+      var assinatura = assinaturaDo(conta);
       if (assinatura === jaRegistrei) return;
       jaRegistrei = assinatura;
 
@@ -387,6 +402,49 @@
           }
         } catch (e2) {}
       });
+    });
+  }
+
+  /* ---------- "pedido enviado" ---------- */
+
+  var elEnviado = document.getElementById('enviado');
+  var enviado = '';
+
+  /* A IDENTIDADE DE UM CARRINHO: os mesmos produtos nas mesmas
+     quantidades. Serve para duas coisas que precisam concordar — não
+     registrar o mesmo pedido duas vezes e não deixar o aviso de
+     "enviado" pendurado num carrinho que a pessoa mudou depois. */
+  function assinaturaDo(conta) {
+    return (conta && conta.itens ? conta.itens : []).map(function (i) {
+      return i.nome + 'x' + i.quantidade;
+    }).join('|');
+  }
+
+  function avisarEnviado() {
+    if (!elEnviado) return;
+    try { enviado = assinaturaDo(C.conta()); } catch (e) { enviado = ''; }
+    elEnviado.hidden = false;
+    /* rola até ele quando ficou fora da vista: o botão de fechar o
+       pedido está no fim da página e o aviso nasce em cima da lista,
+       então em celular ele podia aparecer onde ninguém está olhando */
+    try {
+      var r = elEnviado.getBoundingClientRect();
+      if (r.top < 0 || r.bottom > window.innerHeight) {
+        elEnviado.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    } catch (e) {}
+  }
+
+  if (elEnviado) {
+    document.getElementById('enviado-limpar').addEventListener('click', function () {
+      /* SEM PERGUNTAR DE NOVO, e aqui isso é diferente do outro botão:
+         este aparece DEPOIS de o pedido sair, e é a resposta a um
+         convite que a própria tela fez. O "Limpar o carrinho" lá
+         embaixo continua perguntando, porque lá o toque pode ser
+         engano e apagaria uma compra que ninguém fechou. */
+      C.limpar();
+      elEnviado.hidden = true;
+      pintar();
     });
   }
 

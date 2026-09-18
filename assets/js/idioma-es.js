@@ -234,6 +234,7 @@ window.PHARMAFIT_ES ={
   "Os produtos vendidos são de uso sob orientação profissional. As informações do site não substituem consulta, diagnóstico ou prescrição. Resultados variam de pessoa para pessoa.": "Los productos vendidos son de uso bajo orientación profesional. La información del sitio no sustituye consulta, diagnóstico ni prescripción. Los resultados varían de persona a persona.",
   "Outro parceiro": "Otro socio",
   "Outros produtos, forma de pagamento, entrega…": "Otros productos, forma de pago, entrega…",
+  "Pedido enviado para a equipe. A confirmação do estoque, do valor final e da entrega vem na conversa do WhatsApp.": "Pedido enviado al equipo. La confirmación del stock, del valor final y de la entrega llega en la conversación de WhatsApp.",
   "Pedido confirmado no WhatsApp": "Pedido confirmado por WhatsApp",
   "PROMOÇÃO": "PROMOCIÓN",
   "Para acompanhar seus pedidos": "Para seguir sus pedidos",

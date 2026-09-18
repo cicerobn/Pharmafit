@@ -89,7 +89,12 @@
       fundo.className = 'modal is-open confirmacao-site';
       fundo.innerHTML =
         '<div class="modal__scrim" data-cancelar></div>' +
-        '<div class="modal__card modal__card--pequeno" role="alertdialog" aria-modal="true">' +
+        /* A caixa estreita vem de `.confirmacao-site .modal__card`, que esta
+           no fundo do styles.css — `modal__card--pequeno` nao tem regra
+           em folha nenhuma e nunca teve: era uma promessa que so o
+           nome cumpria. Tirei o nome, a caixa continua com os mesmos
+           380px de largura. */
+        '<div class="modal__card" role="alertdialog" aria-modal="true">' +
           '<h2 class="modal__title">' + escapar(opcoes.titulo || 'Tem certeza?') + '</h2>' +
           '<p class="modal__lead">' + escapar(opcoes.texto || '') + '</p>' +
           '<div class="modal__acoes modal__acoes--empilha">' +
