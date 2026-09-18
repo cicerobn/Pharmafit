@@ -277,6 +277,14 @@
     botaoAvisar.setAttribute('data-avise', produto.nome);
   } else {
     botaoAdicionar.addEventListener('click', function () {
+      /* A foto desta página voa até o carrinho da barra de cima, pela
+         mesma função que a vitrine usa (`app.js`) — uma animação só,
+         para as duas telas não terem cada uma a sua.
+         Chamada ANTES do `C.por`, porque ela mede a foto onde ela está
+         e o `por` dispara o redesenho. */
+      if (window.PharmaFitVoo) {
+        window.PharmaFitVoo.aoCarrinho(achar('foto'));
+      }
       C.por(produto.nome, quantidade);
 
       var texto = botaoAdicionar.querySelector('span');

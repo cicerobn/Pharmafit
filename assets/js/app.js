@@ -159,8 +159,148 @@
       });
     }
 
+    /* =========================================================
+       A FOTO VOA ATÉ O CARRINHO
+
+       Brian, 18/09/2026: "quero uma animacao muito foda ao adicionar
+       no carrinho".
+
+       O que acontece: a foto do produto solta do cartão, sobe fazendo
+       uma curva, encolhe e entra no ícone do carrinho da barra de
+       cima; o ícone dá um pulo, um anel dourado se abre em volta dele
+       e SÓ ENTÃO o número muda.
+
+       O número esperar é o detalhe que faz a coisa funcionar: ele
+       mudar no instante do toque, com a foto ainda no meio do
+       caminho, conta a mesma história duas vezes e em ordens
+       diferentes. Esperando, o olho segue a foto e vê o número virar
+       por causa dela.
+
+       Só `transform` e `opacity`, que o navegador anima sem
+       recalcular a página — e nada do que voa participa do layout
+       (`position:fixed`, `pointer-events:none`), então a vitrine não
+       se move um pixel enquanto isso.
+
+       TRÊS DESISTÊNCIAS, e em todas o carrinho funciona igual:
+       quem pediu menos movimento no sistema; navegador sem
+       `element.animate`; e não achar a foto ou o ícone do carrinho na
+       tela. A animação é enfeite do caminho, nunca o caminho. */
+
+    function menosMovimento() {
+      return !!(window.matchMedia &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    var voando = 0;
+
+    function voarAoCarrinho(foto) {
+      var alvo = document.querySelector('[data-voar-carrinho]');
+
+      if (menosMovimento() || !foto || !alvo || !foto.animate || !foto.getBoundingClientRect) {
+        return Promise.resolve();
+      }
+
+      var de = foto.getBoundingClientRect();
+      var para = alvo.getBoundingClientRect();
+      if (!de.width || !para.width) return Promise.resolve();
+
+      var clone = foto.cloneNode(true);
+      clone.className = 'voo-carrinho';
+      clone.removeAttribute('loading');
+      clone.style.left = de.left + 'px';
+      clone.style.top = de.top + 'px';
+      clone.style.width = de.width + 'px';
+      clone.style.height = de.height + 'px';
+      document.body.appendChild(clone);
+
+      /* do centro da foto ao centro do ícone */
+      var dx = (para.left + para.width / 2) - (de.left + de.width / 2);
+      var dy = (para.top + para.height / 2) - (de.top + de.height / 2);
+
+      voando++;
+
+      var voo = clone.animate([
+        { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1, offset: 0 },
+        /* o pulinho para trás antes de sair: é o que dá peso à coisa */
+        { transform: 'translate(0,10px) scale(1.06) rotate(-2deg)', opacity: 1, offset: .12 },
+        /* a curva: sobe mais do que o caminho reto pediria */
+        { transform: 'translate(' + (dx * .42) + 'px,' + (dy * .82) + 'px) scale(.55) rotate(6deg)',
+          opacity: .96, offset: .62 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.14) rotate(12deg)',
+          opacity: .3, offset: 1 }
+      ], { duration: 760, easing: 'cubic-bezier(.36,.06,.6,.96)', fill: 'forwards' });
+
+      return new Promise(function (pronto) {
+        var acabou = false;
+
+        function terminar() {
+          if (acabou) return;
+          acabou = true;
+          voando = Math.max(0, voando - 1);
+          if (clone.parentNode) clone.parentNode.removeChild(clone);
+          chegou(alvo);
+          pronto();
+        }
+
+        if (voo.finished && voo.finished.then) voo.finished.then(terminar, terminar);
+        else voo.onfinish = terminar;
+        /* Rede: aba escondida pausa animação, e sem isto o número
+           ficaria esperando para sempre um voo que não termina. */
+        setTimeout(terminar, 1400);
+      });
+    }
+
+    /** O ícone pula e um anel dourado se abre quando a foto chega. */
+    function chegou(alvo) {
+      if (menosMovimento()) return;
+
+      if (alvo.animate) {
+        alvo.animate([
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.32)' },
+          { transform: 'scale(.94)' },
+          { transform: 'scale(1)' }
+        ], { duration: 520, easing: 'ease-out' });
+      }
+
+      var r = alvo.getBoundingClientRect();
+      var anel = document.createElement('span');
+      anel.className = 'anel-carrinho';
+      anel.style.left = (r.left + r.width / 2) + 'px';
+      anel.style.top = (r.top + r.height / 2) + 'px';
+      anel.style.width = r.width + 'px';
+      anel.style.height = r.width + 'px';
+      document.body.appendChild(anel);
+
+      function limpar() { if (anel.parentNode) anel.parentNode.removeChild(anel); }
+
+      if (anel.animate) {
+        anel.animate([
+          { transform: 'translate(-50%,-50%) scale(.5)', opacity: .9 },
+          { transform: 'translate(-50%,-50%) scale(1.9)', opacity: 0 }
+        ], { duration: 560, easing: 'ease-out' }).onfinish = limpar;
+      }
+      setTimeout(limpar, 800);
+    }
+
+    /* A foto daquele cartão — ou a da ficha, na página do produto. */
+    function fotoDoBotao(botao) {
+      var cartao = botao.closest ? botao.closest('.product') : null;
+      if (cartao) return cartao.querySelector('.product__media img');
+      return document.querySelector('[data-foto]');
+    }
+
+    window.PharmaFitVoo = { aoCarrinho: voarAoCarrinho, fotoDoBotao: fotoDoBotao };
+
     contar();
-    window.addEventListener(C.EVENTO, contar);
+
+    /* O NÚMERO ESPERA A FOTO CHEGAR — mas só quando há foto voando.
+       Sem voo (menos movimento, outra aba, teclado) ele muda na hora. */
+    window.addEventListener(C.EVENTO, function () {
+      if (!voando) { contar(); return; }
+      setTimeout(contar, 700);
+    });
+
     /* Outra aba mexeu no carrinho: o contador desta também acompanha. */
     window.addEventListener('storage', function (e) {
       if (e.key === 'pharmafit_carrinho') contar();
@@ -173,6 +313,12 @@
       var b = e.target.closest('[data-por-no-carrinho]');
       if (!b) return;
 
+      /* A FOTO SAI ANTES DE O CARRINHO MUDAR.
+         A ordem importa: `voarAoCarrinho` mede a posição da foto na
+         tela, e `C.por` dispara o evento que redesenha a lista. Se o
+         redesenho viesse primeiro, eu mediria um elemento que acabou
+         de ser trocado por outro. */
+      voarAoCarrinho(fotoDoBotao(b));
       C.por(b.getAttribute('data-por-no-carrinho'), 1);
 
       /* O aviso vai no próprio botão, por um instante. Somar ao carrinho

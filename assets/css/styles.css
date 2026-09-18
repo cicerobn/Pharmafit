@@ -3196,7 +3196,17 @@ textarea:focus-visible{
   margin-bottom:18px;
 }
 
-.carrinho{
+/* A CAIXA BRANCA COM AS LINHAS DENTRO, na área do parceiro.
+   Ela se chamava `.carrinho`, e a PÁGINA do carrinho usa esse mesmo
+   nome — então a página do carrinho ganhava esta caixa branca de
+   brinde, e desde que cada produto virou um cartão próprio
+   (18/09/2026) o resultado era cartão dentro de cartão: dois brancos
+   um sobre o outro, com duas bordas e duas sombras. Era boa parte do
+   "esta muito feia".
+   Aqui ela fica com o nome do que é — uma lista em cartão —, e quem a
+   usa é a área do parceiro, onde as linhas separadas por fio são o
+   desenho certo. */
+.lista-cartao{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:var(--radius);
@@ -3411,6 +3421,37 @@ textarea:focus-visible{
 .btn--carrinho{gap:8px}
 .btn--carrinho svg{flex:none}
 
+/* O "ADICIONAR" DO CARTÃO, MENOR.
+   Brian, 18/09/2026: "o botao de 'adicionar esta gigante, deixe um
+   pouco menor".
+
+   Ele estava gigante porque herdava o `.btn--primary` inteiro — o
+   mesmo botão desenhado para o convite grande da página inicial:
+   17,5px de letra, 48px de altura e sombra de 30px. Num cartão de
+   168px de largura ele era a coisa mais pesada da tela, e competia
+   com a foto e com o preço, que é o que decide a compra.
+
+   Aqui ele vira o que é: a ação de um cartão. 13px de letra, 36px de
+   altura, sombra curta. Continua sendo o único botão do cartão e
+   continua ocupando a largura toda — quem procura onde tocar não
+   precisa procurar. */
+.product__acoes .btn{
+  font-size:13px;
+  /* 12px de respiro põe o botão em 42px de altura. O NÚMERO NÃO É
+     GOSTO: com 9px ele ficava em 38, e abaixo de 40 o polegar começa a
+     errar — este é o botão de comprar, e errar aqui custa venda. O que
+     dava o peso de "gigante" era a LETRA de 17,5px e a sombra de 30px,
+     não a altura; com 13px e sombra curta ele já parece a ação de um
+     cartão, e continua com alvo de dedo.
+     (A largura não entra na conta: ele ocupa o cartão todo, 146px.) */
+  padding:12px 14px;
+  min-width:0;
+  gap:7px;
+  box-shadow:0 8px 16px rgba(176,140,74,.22);
+}
+.product__acoes .btn:hover{box-shadow:0 10px 20px rgba(176,140,74,.3)}
+.product__acoes .btn svg{width:14px;height:14px}
+
 /* O botão diz que deu certo, no próprio botão. Um item somado ao
    carrinho sem nenhum sinal deixa a pessoa clicando de novo. */
 .btn--carrinho.is-feito{
@@ -3432,60 +3473,136 @@ textarea:focus-visible{
   font-weight:700;
 }
 
+/* ---- a foto voando até o carrinho ----
+   Brian, 18/09/2026: "quero uma animacao muito foda ao adicionar no
+   carrinho". Quem move é o JavaScript (`app.js`), porque as duas
+   pontas — de onde a foto sai e onde o ícone está — só se sabem na
+   hora do toque. O CSS aqui é só a aparência do que voa, e as duas
+   regras estão FORA do fluxo da página: nada do que voa empurra
+   nada. */
+.voo-carrinho{
+  position:fixed;
+  z-index:120;
+  pointer-events:none;
+  object-fit:contain;
+  border-radius:14px;
+  background:var(--card);
+  border:1px solid var(--gold-soft);
+  padding:5px;
+  box-shadow:0 16px 34px rgba(40,30,10,.3);
+  will-change:transform,opacity;
+}
+.anel-carrinho{
+  position:fixed;
+  z-index:119;
+  pointer-events:none;
+  border-radius:50%;
+  border:2px solid var(--gold);
+  will-change:transform,opacity;
+}
+
 /* ---- a página do carrinho ---- */
 .carrinho{max-width:680px;margin:0 auto}
 
+/* CADA PRODUTO NUM CARTÃO, E A LINHA É UMA GRADE.
+
+   Brian, 18/09/2026: "a parte de 'meu carrinho' esta muito feia, faca
+   algo mais bonito".
+
+   Tinha um defeito de verdade junto do feio, e está na foto que ele
+   mandou: O PREÇO SAÍA PELA BORDA DA TELA. A linha era uma fila —
+   foto, corpo, lado —, e a coluna do preço não encolhe (um número não
+   quebra em duas linhas): "R$ 2.198,00" em 19px de serifa pede 112px,
+   e com a foto de 76px e o respiro não sobrava tanto num celular de
+   390. O "tirar" ia embora com ele.
+
+   Agora são duas colunas — a foto e o resto, que ENCOLHE — e a
+   quantidade e o preço num rodapé da própria linha, um em cada ponta.
+   Nada disputa espaço com o nome, e a soma nunca passa da largura.
+
+   O resto do "mais bonito" é isto: cada produto num cartão com borda e
+   sombra (antes era uma listinha separada por fio), a foto maior, o
+   "tirar" escrito virou um × discreto no canto (era a única ação
+   destrutiva e ficava colada no preço) e a caixa verde do atacado
+   virou uma linha dourada de uma linha. */
+
+#itens{display:flex;flex-direction:column;gap:10px}
+
 .carrinho__item{
-  display:flex;
-  gap:14px;
-  align-items:flex-start;
-  padding:16px 0;
-  border-top:1px solid var(--line);
+  position:relative;          /* o × mora no canto */
+  display:grid;
+  grid-template-columns:64px minmax(0,1fr);
+  grid-template-areas:
+    "foto nome"
+    "foto meta"
+    "pe   pe";
+  column-gap:12px;
+  row-gap:6px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--card);
+  box-shadow:var(--shadow-sm);
 }
-.carrinho__item:first-child{border-top:0}
 
 .carrinho__foto{
-  flex:none;
-  width:76px;height:76px;
+  grid-area:foto;
+  align-self:start;
+  width:64px;height:64px;
   object-fit:contain;
   border-radius:12px;
   background:var(--cream);
-  padding:7px;
+  padding:6px;
 }
 
-.carrinho__corpo{flex:1;min-width:0}
 .carrinho__nome{
-  font-size:15.5px;
+  grid-area:nome;
+  align-self:end;
+  /* espaço do × à direita, para o nome comprido não passar embaixo dele */
+  padding-right:28px;
+  font-size:14.5px;
   font-weight:600;
-  margin:0 0 3px;
-  line-height:1.35;
+  margin:0;
+  line-height:1.3;
+  min-width:0;
 }
-.carrinho__unidade{font-size:13px;color:var(--muted);margin:0}
+.carrinho__meta{grid-area:meta;align-self:start;min-width:0}
+.carrinho__unidade{font-size:12.5px;color:var(--muted);margin:0}
 
-/* Aparece só quando o produto tem faixa de atacado e falta pouco para
-   a próxima. É a única frase da tela que pede mais quantidade, e ela
-   só existe quando há desconto de verdade esperando. */
+/* A linha do atacado: uma etiqueta dourada e o texto, sem caixa. */
 .carrinho__faixa{
-  margin:7px 0 0;
-  font-size:12.5px;
-  line-height:1.5;
-  color:#2f6f62;
-  background:#e9f2ef;
-  border-radius:9px;
-  padding:7px 10px;
+  display:flex;
+  align-items:flex-start;
+  gap:6px;
+  margin:5px 0 0;
+  font-size:11.5px;
+  line-height:1.45;
+  color:var(--gold);
+}
+.carrinho__faixa svg{flex:none;margin-top:1px}
+.carrinho__faixa span{min-width:0}
+
+/* O rodapé da linha: quantidade à esquerda, preço à direita. */
+.carrinho__pe{
+  grid-area:pe;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:4px;
 }
 
 .carrinho__quantidade{
   display:inline-flex;
   align-items:center;
-  margin-top:10px;
+  flex:none;
   border:1px solid var(--line);
   border-radius:999px;
   overflow:hidden;
   background:var(--card);
 }
 .carrinho__qbtn{
-  width:38px;height:38px;
+  width:34px;height:34px;
   display:grid;place-items:center;
   color:var(--ink-2);
   transition:background .16s ease;
@@ -3493,59 +3610,82 @@ textarea:focus-visible{
 .carrinho__qbtn:hover{background:var(--cream)}
 .carrinho__qbtn[disabled]{opacity:.35;pointer-events:none}
 .carrinho__qnum{
-  min-width:40px;
+  min-width:34px;
   text-align:center;
-  font-size:15px;
+  font-size:14.5px;
   font-weight:600;
 }
 
 .carrinho__lado{
-  flex:none;
+  min-width:0;
   text-align:right;
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:6px;
 }
 .carrinho__subtotal{
   font-family:var(--serif);
-  font-size:19px;
+  font-size:18px;
   margin:0;
   white-space:nowrap;
 }
-.carrinho__cada{font-size:12px;color:var(--muted);margin:0;white-space:nowrap}
+.carrinho__cada{font-size:11.5px;color:var(--muted);margin:1px 0 0;white-space:nowrap}
+
+/* O × DE TIRAR, no canto do cartão.
+   Tirar um item é destrutivo e o alvo antigo media 34×22 — pequeno
+   para acertar de propósito e fácil de acertar sem querer. Aqui ele
+   tem 34×34 num canto onde não há mais nada para tocar por engano, e
+   só fica vermelho quando o dedo está nele. */
 .carrinho__tirar{
-  font-size:12.5px;
+  position:absolute;
+  top:8px;right:8px;
+  width:34px;height:34px;
+  display:grid;place-items:center;
+  border-radius:50%;
   color:var(--muted);
-  text-decoration:underline;
-  text-decoration-color:transparent;
-  text-underline-offset:3px;
-  transition:color .18s ease,text-decoration-color .18s ease;
-  /* Tirar um item é destrutivo, e o alvo media 34×22 — pequeno para
-     acertar de propósito e fácil de acertar sem querer. A área cresce
-     por dentro (padding) e a mesma medida volta por fora (margem
-     negativa), então a linha do carrinho não mudou de tamanho. */
-  padding:10px 8px;
-  margin:0 -8px -10px;
+  transition:background .18s ease,color .18s ease;
 }
-.carrinho__tirar:hover{color:#8f2b2b;text-decoration-color:#e0b4b4}
+.carrinho__tirar:hover{background:#fbeceb;color:#8f2b2b}
 
 .carrinho__acoes{
   margin:14px 0 0;
   display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:0 2px;
+  gap:8px;
 }
-.carrinho__acoes-sep{color:var(--line);margin:0 6px}
+.carrinho__acoes .btn{flex:1 1 0;min-width:0;justify-content:center;text-align:center}
 
-/* Os dois links somados passam de 340px, então em tela estreita eles
-   não caberiam lado a lado. Aqui eles empilham de propósito, e o ponto
-   separador sai — solto no meio de uma coluna ele não separa nada. */
-@media (max-width:420px){
-  .carrinho__acoes{flex-direction:column;gap:2px}
-  .carrinho__acoes-sep{display:none}
+/* Botão secundário pequeno: o do carrinho e onde mais precisar. */
+.btn--mini{
+  font-size:12.5px;
+  padding:10px 12px;
+  gap:6px;
+  font-weight:500;
 }
+
+/* O botão de fechar o pedido leva o desenho do WhatsApp.
+   Ele abre uma conversa, e dizer isso com o ícone custa nada — quem
+   está com o dedo em cima sabe para onde vai antes de tocar. */
+.btn--zap{justify-content:center;gap:10px}
+.btn--zap svg{flex:none}
+/* Em duas linhas (celular estreito) o texto ficava alinhado à
+   esquerda dentro do botão centralizado: a segunda linha é mais curta,
+   e o conjunto parecia torto. */
+.btn--zap span{text-align:center;line-height:1.3}
+/* EM 320px A CONTA NÃO FECHAVA.
+   "Fechar pedido no WhatsApp" pede 230px em 17,5px de letra; dentro do
+   resumo (20px de respiro de cada lado, dentro de uma página com
+   outros 20) sobravam 210px para o texto, e com o ícone e o vão
+   quebrava em duas linhas.
+   Três dedos de espaço resolvem sem mexer na frase: letra em 15,5px
+   (mede 200), respiro do botão em 12 e o do resumo em 16 — este
+   último ajuda todas as linhas do resumo, não só o botão. */
+.zap-curto{display:none}
+@media (max-width:360px){
+  .btn--zap{font-size:15.5px;padding-inline:12px}
+  /* mais específico que `.resumo{padding:20px}`, que vem depois daqui
+     no arquivo e ganharia de uma regra de uma classe só */
+  .carrinho .resumo{padding:16px}
+  .zap-curto{display:inline}
+  .zap-longo{display:none}
+}
+
 .carrinho__atacado{margin:18px 0 0;text-align:center;font-size:13px;color:var(--muted)}
 /* ALVO DE DEDO NO LINK DO ATACADO.
    Ele nasceu com 15px de altura — é a altura da letra, e é o que
@@ -4238,112 +4378,16 @@ textarea:focus-visible{
 /* sem estoque: o aviso ocupa a linha inteira, no lugar do carrinho */
 .ficha__acoes .btn--espera{grid-column:1 / -1}
 
-/* ---- as quatro tarjas ---- */
-/* DUAS COLUNAS NO CELULAR, QUATRO NO GRANDE.
-   Na referência dele as quatro tarjas ficam numa fileira só, e eu
-   comecei assim. Mas a palavra mais comprida das nossas quatro é
-   "Acompanhamento", e ela mede 83px na letra da tarja: não cabe em
-   coluna de 62px (celular de 390) nem de 72px (de 430). Em quatro
-   colunas ela QUEBRAVA NO MEIO, que é o defeito que eu passei a tarde
-   consertando no cartão.
-   Duas colunas legíveis valem mais que quatro com palavra partida —
-   ele pediu para melhorar a referência, não para copiá-la. A partir de
-   520px a coluna passa de 110px e as quatro entram na mesma fileira,
-   como no desenho. Medido em `clicar-no-produto.mjs`, comparando a
-   coluna com a palavra desenhada na fonte real. */
-.ficha__tarjas{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:7px;
-  margin:18px 0 0;
-  padding:0 20px;
-  list-style:none;
-}
-.ficha__tarjas li{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:5px;
-  min-width:0;
-  padding:11px 5px;
-  border:1px solid var(--line);
-  border-radius:13px;
-  background:var(--card);
-  text-align:center;
-}
-.ficha__tarjas svg{color:var(--gold);flex:none}
-.ficha__tarjas span{display:flex;flex-direction:column;gap:1px;min-width:0;max-width:100%}
-.ficha__tarjas b{
-  font-size:9.5px;
-  font-weight:600;
-  line-height:1.2;
-  color:var(--ink);
-  overflow-wrap:break-word;
-}
-.ficha__tarjas span span{
-  font-size:9px;
-  line-height:1.2;
-  color:var(--ink-2);
-  overflow-wrap:break-word;
-}
-
-/* ---- as sanfonas ----
-   `<details>`/`<summary>` do navegador: abre e fecha sem JavaScript,
-   responde ao teclado e o leitor de tela já sabe anunciar "expandido /
-   recolhido". Uma sanfona escrita à mão custaria código e entregaria
-   menos. */
-.sanfona{
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  margin:18px 0 0;
-  padding:0 20px;
-}
-.sanfona__item{
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:var(--card);
-  overflow:hidden;
-}
-.sanfona__item > summary{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  min-height:52px;
-  padding:13px 14px;
-  font-size:13.5px;
-  font-weight:600;
-  color:var(--ink);
-  cursor:pointer;
-  list-style:none;
-}
-/* a setinha padrão do navegador sai, e entra uma que gira ao abrir */
-.sanfona__item > summary::-webkit-details-marker{display:none}
-.sanfona__item > summary svg:first-child{flex:none;color:var(--gold)}
-.sanfona__item > summary > span{flex:1;min-width:0}
-.sanfona__item > summary::after{
-  content:"";
-  flex:none;
-  width:8px;height:8px;
-  border-right:2px solid var(--muted);
-  border-bottom:2px solid var(--muted);
-  transform:rotate(45deg) translateY(-2px);
-  transition:transform .18s ease;
-}
-.sanfona__item[open] > summary::after{transform:rotate(-135deg) translateY(-2px)}
-.sanfona__corpo{
-  display:flex;
-  flex-direction:column;
-  gap:9px;
-  padding:0 14px 14px;
-  border-top:1px solid var(--line);
-  padding-top:12px;
-}
-.sanfona__corpo p{margin:0;font-size:12.5px;line-height:1.6;color:var(--ink-2)}
-.sanfona__corpo b{font-weight:600;color:var(--ink)}
-@media (prefers-reduced-motion:reduce){
-  .sanfona__item > summary::after{transition:none}
-}
+/* ---- AQUI MORAVAM AS QUATRO TARJAS E AS DUAS SANFONAS ----
+   Brian, 18/09/2026: "tire tudo isso da foto que te mandei, ao entrar
+   no pedido". Saíram do HTML, e o CSS sai com elas: regra sem elemento
+   é peso que todo visitante baixa para nada, e daqui a um mês ninguém
+   sabe mais se ela está em uso.
+   Havia medida ganha nesses dois blocos — as tarjas eram duas colunas
+   no celular porque "Acompanhamento" mede 83px e não cabe em coluna de
+   62px. Está registrado aqui, em uma linha, para o dia em que uma
+   fileira de quatro colunas voltar a ser desenhada em qualquer lugar
+   do site. O resto está no histórico do arquivo. */
 
 /* ---- produtos da mesma linha ---- */
 .relacionados{margin-top:8px}

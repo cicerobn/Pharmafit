@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=5d143dfa">
+<link rel="stylesheet" href="assets/css/styles.css?v=6b0615f6">
 </head>
 <body>
 
@@ -53,21 +53,34 @@
       </span>
     </a>
     <div class="topbar__actions">
-      <!-- O NÚMERO NO BOTÃO DO MENU.
-           A barra de cima do desenho dele tem só a marca e o menu, e é
-           isso que está aqui. Mas tirar o ícone do carrinho tirou o
-           ÚNICO aviso de que existe algo no carrinho — os contadores
-           viviam nele. Quem punha um produto não recebia sinal nenhum
-           em página nenhuma; tinha de abrir o menu para descobrir.
-           Isso custa venda, e o estrago era meu.
-           O número nasce ESCONDIDO e só aparece quando há item. Com o
-           carrinho vazio, que é o estado da foto dele, a barra fica
-           idêntica à foto. -->
+      <!-- CARRINHO E CONTA NA BARRA DE CIMA.
+           Brian, 18/09/2026: "Deixe um icone de carrinho e um icone de
+           conta ali na parte superior do lado das 3 setinhas".
+           O NÚMERO MUDOU DE DONO: ele morava no botão do menu, porque o
+           ícone do carrinho não existia aqui e sem ele ninguém sabia que
+           tinha algo no carrinho. Agora ele volta para o lugar natural,
+           em cima do próprio carrinho. Continua nascendo escondido e só
+           aparece quando há item.
+           `data-voar-carrinho` é o alvo da animação de pôr no carrinho:
+           a foto do produto voa até aqui. -->
+      <a class="icon-btn" href="carrinho.html" aria-label="Meu carrinho" data-voar-carrinho>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
+          <path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>
+        </svg>
+        <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
+      </a>
+      <a class="icon-btn" href="conta.html" aria-label="Minha conta">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 20v-1.5a4 4 0 0 0-8 0V20"/><circle cx="12" cy="8" r="3.4"/>
+        </svg>
+      </a>
       <button class="icon-btn" type="button" data-drawer-open aria-label="Abrir menu">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <path d="M4 7h16M4 12h16M4 17h16"/>
         </svg>
-        <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
       </button>
     </div>
   </header>
@@ -240,98 +253,26 @@
       </div>
     </div>
 
-    <!-- AS QUATRO TARJAS.
-         São as mesmas quatro da página inicial, palavra por palavra —
-         não inventei promessa nova para a página do produto. A
-         referência dele tem uma fileira assim logo depois dos botões, e
-         é um bom lugar: é a dúvida que vem depois de "quero", não
-         antes. -->
-    <ul class="ficha__tarjas">
-      <li>
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="4.4" r="1.8"/>
-          <path d="M9.4 7.8h5.2c0 2.1-1.1 3-1.1 4.5s1.1 2.4 1.1 4.5v3H9.4v-3c0-2.1 1.1-3 1.1-4.5s-1.1-2.4-1.1-4.5z"/>
-        </svg>
-        <span><b>Controle</b><span>de peso</span></span>
-      </li>
-      <li>
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="7.4" r="3.4"/>
-          <path d="M4.6 20.5c.6-4 3.6-6.4 7.4-6.4s6.8 2.4 7.4 6.4"/>
-        </svg>
-        <span><b>Acompanhamento</b><span>especializado</span></span>
-      </li>
-      <li>
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 2.8 4.8 5.9v5.4c0 4.3 2.9 7.9 7.2 9.9 4.3-2 7.2-5.6 7.2-9.9V5.9z"/>
-        </svg>
-        <span><b>Produtos</b><span>premium</span></span>
-      </li>
-      <li>
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M2.8 7.4h11v9H2.8zM13.8 10.4h4l3.4 3v3h-7.4z"/>
-          <circle cx="6.4" cy="18.2" r="1.5"/><circle cx="17" cy="18.2" r="1.5"/>
-        </svg>
-        <span><b>Entrega</b><span>e suporte</span></span>
-      </li>
-    </ul>
+    <!-- AS QUATRO TARJAS E AS DUAS SANFONAS SAÍRAM DAQUI.
 
-    <!-- AS SANFONAS.
-         A referência dele tem quatro: Descrição, Apresentação, Como
-         comprar e Entrega. Eu pus DUAS, e o motivo é que eu não
-         inventaria as outras: "Apresentação" pede um dado que o
-         catálogo não tem (nenhum produto tem esse campo), e a de
-         entrega precisa do texto dele — hoje o rodapé diz Manaus e o
-         topo da página inicial diz Paraguai, e essa decisão é do
-         Brian. Sanfona vazia é pior que sanfona nenhuma.
-         Estas duas dizem o que é verdade hoje, e o "Como comprar" é o
-         caminho real do site: carrinho, dados, WhatsApp da equipe.
-         `<details>` do próprio navegador: abre e fecha sem uma linha
-         de JavaScript, funciona com o teclado e o leitor de tela já
-         sabe anunciar. -->
-    <div class="sanfona">
-      <details class="sanfona__item">
-        <summary>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"/><path d="M12 8.2h.01M11.4 11.4h1.2v4.4"/>
-          </svg>
-          <span>Como comprar</span>
-        </summary>
-        <!-- CADA FRASE INTEIRA NUM PEDAÇO SÓ.
-             Eu tinha escrito "toque em <b>Adicionar</b>. No carrinho…",
-             com o negrito no meio da frase. Isso parte o texto em três
-             pedaços, e o tradutor procura frase inteira no dicionário:
-             o espanhol viria remendado, com metade em português. O
-             conferidor de idioma apontou os pedaços um por um.
-             Então o negrito só envolve frase inteira. -->
-        <div class="sanfona__corpo">
-          <p>Escolha a quantidade e toque em Adicionar. No carrinho você preenche nome, WhatsApp e endereço e finaliza o pedido.</p>
-          <p>O pedido chega no WhatsApp da nossa equipe, que confere tudo e combina com você o pagamento e a entrega.</p>
-          <p><b>Nada é cobrado aqui no site.</b></p>
-          <p>Se preferir, toque em Pedir no WhatsApp e a conversa já abre com este produto e a quantidade dentro.</p>
-        </div>
-      </details>
+         Brian, 18/09/2026, com a foto desta parte na tela: "tire tudo
+         isso da foto que te mandei, ao entrar no pedido".
 
-      <details class="sanfona__item">
-        <summary>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M2.8 7.4h11v9H2.8zM13.8 10.4h4l3.4 3v3h-7.4z"/>
-            <circle cx="6.4" cy="18.2" r="1.5"/><circle cx="17" cy="18.2" r="1.5"/>
-          </svg>
-          <span>Entrega e pagamento</span>
-        </summary>
-        <div class="sanfona__corpo">
-          <p>A forma de entrega e o pagamento são combinados no WhatsApp, junto com a confirmação do pedido.</p>
-          <p>Quanto maior a quantidade, melhor o preço por unidade: as faixas estão logo acima, e o valor do seu pedido aparece antes de finalizar.</p>
-        </div>
-      </details>
-    </div>
+         Eram as quatro tarjas (Controle de peso, Acompanhamento
+         especializado, Produtos premium, Entrega e suporte) e as duas
+         sanfonas ("Como comprar" e "Entrega e pagamento").
+
+         As tarjas eu tinha trazido da página inicial ontem, quando ele
+         mandou tirá-las de lá. Hoje saíram também daqui — e o texto
+         delas não existe mais em tela nenhuma do site, o que é a
+         decisão dele: são promessas genéricas, e a página do produto
+         fica com o que é DAQUELE produto.
+
+         As sanfonas contavam como comprar e como é a entrega. Isso
+         continua sendo verdade e continua acontecendo — a conversa do
+         pedido é no WhatsApp da equipe, e o carrinho diz isso na hora
+         de finalizar. Se um dia você quiser esse texto de volta em
+         algum lugar, ele está guardado no histórico deste arquivo. -->
   </section>
 
   <!-- PRODUTOS DA MESMA LINHA.
@@ -442,15 +383,15 @@
      uma segunda cópia do cartão aqui. Nesta página ele não desenha
      mais nada: a grade, os filtros e o carrossel que ele monta não
      existem aqui, e ele sai calado quando não acha. -->
-<script src="assets/js/loja.js?v=db0476a3"></script>
+<script src="assets/js/loja.js?v=445e26ae"></script>
 <script src="assets/js/favoritos.js?v=b87b4c60"></script>
 <script src="assets/js/paginas.js?v=3cbf8a54"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=6970abf2"></script>
+<script src="assets/js/idioma-es.js?v=bdf1acd5"></script>
 <script src="assets/js/idioma.js?v=84149bbd"></script>
-<script src="assets/js/app.js?v=a57aaf61"></script>
+<script src="assets/js/app.js?v=0c7ffe8d"></script>
 <script src="assets/js/moedas.js?v=ddbb4a9b"></script>
-<script src="assets/js/tela-produto.js?v=aea213d7"></script>
+<script src="assets/js/tela-produto.js?v=e16524bf"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>
 <script src="assets/js/pedido.js?v=19f67c9c"></script>
 </body>

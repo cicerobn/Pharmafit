@@ -39,9 +39,14 @@
   async function pintar() {
     var conta = C.conta();
 
-    document.getElementById('carrinho-lead').textContent = conta.itens.length
-      ? 'O que você escolheu até agora.'
-      : 'Escolha os produtos e eles aparecem aqui.';
+    /* A FRASE DO TOPO SOME QUANDO O CARRINHO ESTÁ VAZIO.
+       Ela dizia "Escolha os produtos e eles aparecem aqui." — a MESMA
+       frase, palavra por palavra, que o bloco de vazio diz dois dedos
+       abaixo, com o desenho e o botão. Duas vezes o mesmo texto na
+       mesma tela parece erro de montagem. */
+    var lead = document.getElementById('carrinho-lead');
+    lead.textContent = 'O que você escolheu até agora.';
+    lead.hidden = !conta.itens.length;
 
     /* Produto que saiu do catálogo depois de entrar no carrinho. Não dá
        para somar como zero nem ignorar em silêncio: a pessoa escolheu
@@ -86,41 +91,88 @@
     document.querySelector('.resumo').hidden = false;
 
     elItens.innerHTML = conta.itens.map(function (i) {
-      /* A frase da faixa só existe quando há faixa e falta pouco. Sem
-         faixa cadastrada ela não aparece; hoje só o Tirzec Pen tem. */
+      /* A FRASE DA FAIXA VIROU UMA LINHA, NÃO UMA CAIXA VERDE.
+         Ela era um retângulo verde de três linhas dentro da linha do
+         produto — a coisa mais colorida da tela, gritando mais que o
+         preço e que o botão de fechar o pedido. Continua dizendo a
+         mesma coisa, agora como uma linha discreta com uma etiqueta
+         dourada na frente.
+         Só existe quando há faixa de atacado e falta pouco para a
+         próxima; hoje só o Tirzec Pen tem faixa. */
       var faixa = '';
       if (i.proxima && i.faltam > 0) {
-        faixa = '<p class="carrinho__faixa">Levando ' + i.faltam +
+        faixa = '<p class="carrinho__faixa">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M20.6 13.4 13 21a2 2 0 0 1-2.8 0L3 13.8V3h10.8l6.8 6.8a2 2 0 0 1 0 2.8z"/>' +
+          '<circle cx="8.2" cy="8.2" r="1.4"/></svg>' +
+          '<span>Levando ' + i.faltam +
           (i.faltam === 1 ? ' unidade a mais' : ' unidades a mais') +
-          ', cada uma sai por ' + moeda(i.proxima.preco) + '.</p>';
+          ', cada uma sai por ' + moeda(i.proxima.preco) + '.</span></p>';
       }
 
+      /* A LINHA DO PRODUTO É UMA GRADE, E NÃO TRÊS CAIXAS EM FILA.
+       *
+       * Em fila, a coluna do preço não tinha para onde ir: "R$ 2.198,00"
+       * em 19px de serifa pede 112px e não encolhe (é um número, não dá
+       * para quebrar), então ele e o "tirar" saíam pela borda direita da
+       * tela num celular de 390 — está na foto que o Brian mandou, com o
+       * preço cortado no meio.
+       *
+       * São DUAS colunas: a foto (64px) e o resto, que encolhe
+       * (`minmax(0,1fr)`). A quantidade e o preço descem para um rodapé
+       * próprio da linha, onde um fica na esquerda e o outro na
+       * direita, sem disputar coluna com o nome.
+       *
+       * Eu tinha feito com três colunas, e a terceira ficava do
+       * tamanho do maior conteúdo dela — o preço, 112px — inclusive na
+       * linha de cima, onde só tem o ×. A coluna do nome caía para
+       * 52px num celular de 320. Contar a largura antes de desenhar é
+       * o que evita esse tipo de coisa.
+       *
+       * O "tirar" escrito virou um × no canto: tirar item é a única
+       * ação destrutiva da tela e ela estava na mesma coluna do preço,
+       * disputando espaço com o número que importa. */
       return '<div class="carrinho__item" data-linha="' + esc(i.nome) + '">' +
         '<img class="carrinho__foto" src="' + esc(i.produto.imagem) + '" alt="" loading="lazy">' +
-        '<div class="carrinho__corpo">' +
-          '<h2 class="carrinho__nome">' + esc(i.nome) + '</h2>' +
+
+        '<h2 class="carrinho__nome">' + esc(i.nome) + '</h2>' +
+
+        '<button class="carrinho__tirar" type="button" data-tirar="' + esc(i.nome) + '" ' +
+          'aria-label="Tirar do carrinho">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+          '<path d="m6 6 12 12M18 6 6 18"/></svg>' +
+        '</button>' +
+
+        '<div class="carrinho__meta">' +
           '<p class="carrinho__unidade">' + esc(i.produto.categoria || '') + '</p>' +
           faixa +
-          '<div class="carrinho__quantidade">' +
-            '<button class="carrinho__qbtn" type="button" data-menos="' + esc(i.nome) + '" ' +
-              'aria-label="Tirar um"' + (i.quantidade <= 1 ? ' disabled' : '') + '>' +
-              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-              'stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>' +
-            '</button>' +
-            '<span class="carrinho__qnum" data-qtd>' + i.quantidade + '</span>' +
-            '<button class="carrinho__qbtn" type="button" data-mais="' + esc(i.nome) + '" ' +
-              'aria-label="Pôr um a mais">' +
-              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-              'stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
-            '</button>' +
-          '</div>' +
         '</div>' +
+
+        '<div class="carrinho__pe">' +
+
+        '<div class="carrinho__quantidade">' +
+          '<button class="carrinho__qbtn" type="button" data-menos="' + esc(i.nome) + '" ' +
+            'aria-label="Tirar um"' + (i.quantidade <= 1 ? ' disabled' : '') + '>' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+            'stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>' +
+          '</button>' +
+          '<span class="carrinho__qnum" data-qtd>' + i.quantidade + '</span>' +
+          '<button class="carrinho__qbtn" type="button" data-mais="' + esc(i.nome) + '" ' +
+            'aria-label="Pôr um a mais">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+            'stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>' +
+          '</button>' +
+        '</div>' +
+
         '<div class="carrinho__lado">' +
           '<p class="carrinho__subtotal">' + moeda(i.subtotal) + '</p>' +
           (i.quantidade > 1
             ? '<p class="carrinho__cada">' + moeda(i.preco) + ' cada</p>'
             : '') +
-          '<button class="carrinho__tirar" type="button" data-tirar="' + esc(i.nome) + '">tirar</button>' +
+        '</div>' +
+
         '</div>' +
       '</div>';
     }).join('');

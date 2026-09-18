@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=5d143dfa">
+<link rel="stylesheet" href="assets/css/styles.css?v=6b0615f6">
 </head>
 <body>
 
@@ -38,21 +38,34 @@
       </span>
     </a>
     <div class="topbar__actions">
-      <!-- O NÚMERO NO BOTÃO DO MENU.
-           A barra de cima do desenho dele tem só a marca e o menu, e é
-           isso que está aqui. Mas tirar o ícone do carrinho tirou o
-           ÚNICO aviso de que existe algo no carrinho — os contadores
-           viviam nele. Quem punha um produto não recebia sinal nenhum
-           em página nenhuma; tinha de abrir o menu para descobrir.
-           Isso custa venda, e o estrago era meu.
-           O número nasce ESCONDIDO e só aparece quando há item. Com o
-           carrinho vazio, que é o estado da foto dele, a barra fica
-           idêntica à foto. -->
+      <!-- CARRINHO E CONTA NA BARRA DE CIMA.
+           Brian, 18/09/2026: "Deixe um icone de carrinho e um icone de
+           conta ali na parte superior do lado das 3 setinhas".
+           O NÚMERO MUDOU DE DONO: ele morava no botão do menu, porque o
+           ícone do carrinho não existia aqui e sem ele ninguém sabia que
+           tinha algo no carrinho. Agora ele volta para o lugar natural,
+           em cima do próprio carrinho. Continua nascendo escondido e só
+           aparece quando há item.
+           `data-voar-carrinho` é o alvo da animação de pôr no carrinho:
+           a foto do produto voa até aqui. -->
+      <a class="icon-btn" href="carrinho.html" aria-label="Meu carrinho" data-voar-carrinho>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
+          <path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>
+        </svg>
+        <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
+      </a>
+      <a class="icon-btn" href="conta.html" aria-label="Minha conta">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 20v-1.5a4 4 0 0 0-8 0V20"/><circle cx="12" cy="8" r="3.4"/>
+        </svg>
+      </a>
       <button class="icon-btn" type="button" data-drawer-open aria-label="Abrir menu">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <path d="M4 7h16M4 12h16M4 17h16"/>
         </svg>
-        <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
       </button>
     </div>
   </header>
@@ -195,10 +208,10 @@
 <script src="assets/js/formularios.js?v=785d8f81"></script>
 <script src="assets/js/lista-produtos.js?v=b46bdd06"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=6970abf2"></script>
+<script src="assets/js/idioma-es.js?v=bdf1acd5"></script>
 <script src="assets/js/idioma.js?v=84149bbd"></script>
 <script src="assets/js/favoritos.js?v=b87b4c60"></script>
-<script src="assets/js/app.js?v=a57aaf61"></script>
+<script src="assets/js/app.js?v=0c7ffe8d"></script>
 <script src="assets/js/modal.js?v=9146042c"></script>
 <script src="assets/js/minha-area.js?v=101981a3"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>

@@ -70,6 +70,19 @@
      qualquer caminho, o cartão fica SEM etiqueta em vez de ficar feio. */
 
   var ETIQUETAS = {
+    /* A ETIQUETA DA FILA "EM DESTAQUE", na página inicial.
+       Brian, 18/09/2026: "Todos que estiverem ai deixe a barra de
+       'mais procurado'".
+       Ela NÃO é oferecida no painel de propósito: não é característica
+       de um produto, é o nome da vitrine onde ele está. Quem manda
+       nela é o lugar (a fila da inicial), e por isso os três cartões
+       de lá mostram a mesma — quem quiser saber o que é promoção vê o
+       preço riscado, no próprio cartão. */
+    'mais-procurado': {
+      texto: 'MAIS PROCURADO',
+      classe: 'vendido',
+      desenho: '<path d="m6 .8 1.5 3.1 3.4.5-2.5 2.4.6 3.4L6 8.6 2.9 10.2l.6-3.4L1 4.4l3.4-.5z"/>'
+    },
     'mais-vendido': {
       texto: 'MAIS VENDIDO',
       classe: 'vendido',
@@ -464,7 +477,14 @@
            do tamanho do cartão. */
         '<a class="protocol" href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
           '<div class="protocol__media">' +
-            etiquetaHtml(p, 'badge') +
+            /* A FILA DA INICIAL É "EM DESTAQUE", E OS TRÊS LEVAM A
+               MESMA ETIQUETA: ela fala da fila, não do produto.
+               A etiqueta que a equipe escolhe no painel (mais vendido
+               / promoção) manda na LISTA de produtos e na página do
+               produto, onde o cartão está sozinho e a etiqueta
+               distingue um do outro. Aqui todos os três são destaque,
+               então distinguir não faz sentido. */
+            etiquetaHtml({ destaque: 'mais-procurado' }, 'badge') +
             '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
           '</div>' +
           '<div class="protocol__body">' +

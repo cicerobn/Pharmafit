@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=5d143dfa">
+<link rel="stylesheet" href="assets/css/styles.css?v=6b0615f6">
 </head>
 <body>
 
@@ -39,21 +39,34 @@
       </span>
     </a>
     <div class="topbar__actions">
-      <!-- O NÚMERO NO BOTÃO DO MENU.
-           A barra de cima do desenho dele tem só a marca e o menu, e é
-           isso que está aqui. Mas tirar o ícone do carrinho tirou o
-           ÚNICO aviso de que existe algo no carrinho — os contadores
-           viviam nele. Quem punha um produto não recebia sinal nenhum
-           em página nenhuma; tinha de abrir o menu para descobrir.
-           Isso custa venda, e o estrago era meu.
-           O número nasce ESCONDIDO e só aparece quando há item. Com o
-           carrinho vazio, que é o estado da foto dele, a barra fica
-           idêntica à foto. -->
+      <!-- CARRINHO E CONTA NA BARRA DE CIMA.
+           Brian, 18/09/2026: "Deixe um icone de carrinho e um icone de
+           conta ali na parte superior do lado das 3 setinhas".
+           O NÚMERO MUDOU DE DONO: ele morava no botão do menu, porque o
+           ícone do carrinho não existia aqui e sem ele ninguém sabia que
+           tinha algo no carrinho. Agora ele volta para o lugar natural,
+           em cima do próprio carrinho. Continua nascendo escondido e só
+           aparece quando há item.
+           `data-voar-carrinho` é o alvo da animação de pôr no carrinho:
+           a foto do produto voa até aqui. -->
+      <a class="icon-btn" href="carrinho.html" aria-label="Meu carrinho" data-voar-carrinho>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
+          <path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>
+        </svg>
+        <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
+      </a>
+      <a class="icon-btn" href="conta.html" aria-label="Minha conta">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 20v-1.5a4 4 0 0 0-8 0V20"/><circle cx="12" cy="8" r="3.4"/>
+        </svg>
+      </a>
       <button class="icon-btn" type="button" data-drawer-open aria-label="Abrir menu">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <path d="M4 7h16M4 12h16M4 17h16"/>
         </svg>
-        <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
       </button>
     </div>
   </header>
@@ -118,10 +131,16 @@
        Brian, 18/09/2026: "tire isso aqui e deixe icones de cada
        categoria de produtos". Aqui estavam quatro cartões de
        diferenciais (Controle de peso, Acompanhamento especializado,
-       Produtos premium, Entrega e suporte). Eles não sumiram do site:
-       são as mesmas quatro tarjas que ficam na página do produto,
-       onde a dúvida sobre entrega e suporte aparece — depois de
-       "quero", não antes.
+       Produtos premium, Entrega e suporte).
+
+       ELES FORAM PARA A PÁGINA DO PRODUTO E SAÍRAM DE LÁ TAMBÉM, no
+       mesmo dia: "tire tudo isso da foto que te mandei, ao entrar no
+       pedido". Hoje esse texto não existe em tela nenhuma do site —
+       era promessa genérica, e o lugar onde ela apareceria é a página
+       do produto, que fica com o que é DAQUELE produto.
+       (Este comentário dizia que as tarjas estavam na página do
+       produto. Depois de tirá-las, a frase virou mentira no código —
+       e comentário errado engana mais que comentário nenhum.)
 
        No lugar entram as categorias DE VERDADE, lidas do catálogo por
        `loja.js` — não uma lista escrita à mão aqui, que desencontraria
@@ -137,9 +156,25 @@
 
   <!-- ===== protocolos ===== -->
   <section class="panel" id="protocolos">
-    <!-- Sem título nem "Ver todos": os cartões falam por si, e a lista
-         completa de produtos está a um toque na barra de baixo, que
-         aparece em todas as páginas. -->
+    <!-- "EM DESTAQUE" DE UM LADO, "VER TUDO" DO OUTRO.
+         Brian, 18/09/2026: "Nessa parte aqui deixe escrito ali 'em
+         destaque' e do outro lado 'ver tudo'".
+
+         Aqui havia "Nossos protocolos / Ciência. Segurança. Resultado.
+         / Ver todos", e ele mandou tirar hoje mesmo, mais cedo. Volta
+         enxuto: duas palavras que dizem o que a fila é, e a porta para
+         a lista inteira do lado. O subtítulo não volta — era a parte
+         que não dizia nada. -->
+    <div class="section-head">
+      <h2 class="section-title">Em destaque</h2>
+      <a class="link-more" href="produtos.html">Ver tudo
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 5 7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+
     <div class="carousel" data-carousel></div>
 
     <!-- AS BOLINHAS SAÍRAM COM OS CARTÕES PEQUENOS.
@@ -243,11 +278,11 @@
 <script src="assets/js/catalogo.js?v=ccbf027b"></script>
 <script src="assets/js/nuvem.js?v=07de0bc1"></script>
 <script src="assets/js/catalogo-banco.js?v=f3e57ff1"></script>
-<script src="assets/js/loja.js?v=db0476a3"></script>
+<script src="assets/js/loja.js?v=445e26ae"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=6970abf2"></script>
+<script src="assets/js/idioma-es.js?v=bdf1acd5"></script>
 <script src="assets/js/idioma.js?v=84149bbd"></script>
-<script src="assets/js/app.js?v=a57aaf61"></script>
+<script src="assets/js/app.js?v=0c7ffe8d"></script>
 <script src="assets/js/favoritos.js?v=b87b4c60"></script>
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/formularios.js?v=785d8f81"></script>

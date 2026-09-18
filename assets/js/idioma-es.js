@@ -140,6 +140,8 @@ window.PHARMAFIT_ES ={
   "Fechar": "Cerrar",
   "Fechar menu": "Cerrar menú",
   "Fechar pedido no WhatsApp": "Cerrar pedido por WhatsApp",
+  /* a versão curta do mesmo botão, que aparece no celular estreito */
+  "Fechar pedido": "Cerrar pedido",
   "Forma de pagamento, entrega, algo fora da lista…": "Forma de pago, entrega, algo fuera de la lista…",
   "Frasco de tirzepatida Pharma Fit ao lado de uma seringa": "Frasco de tirzepatida Pharma Fit al lado de una jeringa",
   "Garantias": "Garantías",
@@ -168,6 +170,14 @@ window.PHARMAFIT_ES ={
   "Menor preço": "Menor precio",
   "Menu": "Menú",
   "Meu carrinho": "Mi carrito",
+  /* o × que tira o produto do carrinho: é `aria-label`, só o leitor de
+     tela lê — e ele lê em espanhol quando o site está em espanhol */
+  "Tirar do carrinho": "Quitar del carrito",
+  /* os dois ícones novos da barra de cima (18/09/2026). O conferidor
+     de idioma lê `aria-label` também, e bem: é o que o leitor de tela
+     anuncia, e um site em espanhol com o botão falando português é
+     igualmente meio traduzido. */
+  "Minha conta": "Mi cuenta",
   "Meu carrinho — Pharma Fit": "Mi carrito — Pharma Fit",
   "Meu protocolo": "Mi protocolo",
   "Meus dados": "Mis datos",
@@ -367,6 +377,9 @@ window.PHARMAFIT_ES ={
   "Ver produtos": "Ver productos",
   "Ver seleção": "Ver selección",
   "Ver todos": "Ver todos",
+  "Ver tudo": "Ver todo",
+  /* o cabeçalho da fila da página inicial */
+  "Em destaque": "Destacados",
   "Ver todos os produtos": "Ver todos los productos",
   "Você ainda não fez pedidos por aqui.": "Todavía no hizo pedidos por aquí.",
   "Você ainda não salvou nada": "Todavía no guardó nada",
