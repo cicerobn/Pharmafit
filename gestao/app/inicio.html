@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=70f91e2b">
+<link rel="stylesheet" href="app.css?v=d117b41b">
 </head>
 <body>
 
@@ -112,11 +112,26 @@
         <div class="bloco__corpo" data-fatias></div>
       </section>
 
-      <!-- pedidos recentes -->
-      <section class="bloco">
+      <!-- O QUE ESTÁ ESPERANDO VOCÊ, e só depois o que é recente.
+           Brian, 18/09/2026: "melhore o painel... deixe ele util". Este
+           bloco mostrava os cinco últimos pedidos misturados — pago,
+           enviado, pendente —, e a pergunta de quem abre o painel pela
+           manhã é outra: o que falta eu fazer? Quando há pedido
+           esperando, o bloco troca de nome, conta quantos são e põe os
+           pendentes na frente. Quando não há nenhum, ele volta a ser a
+           lista dos recentes, sem inventar uma caixa vazia de "nada
+           para fazer". O título e o "ver todos" são escritos pelo
+           JavaScript, por isso os ganchos.
+
+           E quando há pedido esperando, este bloco SOBE para o alto da
+           tela: era o último de todos, depois do aviso, do cartão de
+           vendas, dos quatro números e do gráfico — ou seja, a única
+           coisa que pede ação ficava fora da primeira tela do celular.
+           Quem sobe é o JavaScript, porque só ele sabe se há pendente. -->
+      <section class="bloco" data-bloco-recentes>
         <div class="bloco__topo">
-          <h2 class="bloco__titulo">Pedidos recentes</h2>
-          <a class="bloco__link" href="pedidos.html">Ver todos</a>
+          <h2 class="bloco__titulo" data-recentes-titulo>Pedidos recentes</h2>
+          <a class="bloco__link" href="pedidos.html" data-recentes-link>Ver todos</a>
         </div>
         <ul class="lista" data-recentes></ul>
       </section>
@@ -131,7 +146,7 @@
 <script src="../assets/auth.js?v=9db91d6d"></script>
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
-<script src="app.js?v=484ba67d"></script>
-<script src="inicio.js?v=ec3651a2"></script>
+<script src="app.js?v=253bbf62"></script>
+<script src="inicio.js?v=a0671715"></script>
 </body>
 </html>

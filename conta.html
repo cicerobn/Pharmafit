@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=122dd675">
+<link rel="stylesheet" href="assets/css/styles.css?v=3384520b">
 </head>
 <body>
 
@@ -125,10 +125,19 @@
          duas sessões diferentes (a do site e a da gestão), e a entrada
          encaminha sozinha quando já existe sessão lá. -->
     <a class="painel-atalho" data-painel-equipe href="gestao/login.html" hidden>
+      <!-- O DESENHO É UM PAINEL DE QUADROS, e não uma janelinha com
+           barra de título. Brian, 18/09/2026: "melhore esse icone que
+           leva pro painel de gestao". A janelinha podia ser qualquer
+           coisa — navegador, cartão, tabela; quatro quadros de tamanhos
+           diferentes é o desenho que o mundo usa para "painel", e é
+           também o que ele vai ver do outro lado. -->
       <span class="painel-atalho__ico" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3.5 5.5h17v13h-17z"/><path d="M3.5 9.5h17"/><path d="M8 13h5"/>
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3.2" y="3.2" width="8" height="8.6" rx="1.8"/>
+          <rect x="12.8" y="3.2" width="8" height="5" rx="1.8"/>
+          <rect x="12.8" y="9.8" width="8" height="11" rx="1.8"/>
+          <rect x="3.2" y="13.4" width="8" height="7.4" rx="1.8"/>
         </svg>
       </span>
       <span class="painel-atalho__texto">

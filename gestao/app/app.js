@@ -32,6 +32,12 @@
     sair: '<path d="M15 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4"/><path d="M10 17l-5-5 5-5M5 12h10"/>',
     seta: '<path d="m9 5 7 7-7 7"/>',
     volta: '<path d="m14 5-7 7 7 7"/>',
+    /* A LOJA: o toldo e a porta. É o ícone de "ver o site" — pedido do
+       Brian em 18/09/2026, "Deixe icone pra voltar pro site do painel
+       de gestao pro site". Vitrine desenhada diz "a loja" mais rápido
+       que uma seta ou um globo, que podem ser qualquer coisa. */
+    loja: '<path d="M4.5 9.5V20h15V9.5"/><path d="M3 9.5 5 4h14l2 5.5z"/>' +
+          '<path d="M9.8 20v-5.4h4.4V20"/>',
 
     /* para a tela de Configurações e a de Relatórios */
     predio: '<path d="M4 21V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v16"/><path d="M15 10h4a1 1 0 0 1 1 1v10"/><path d="M8 8h3M8 12h3M8 16h3"/><path d="M2 21h20"/>',
@@ -69,6 +75,29 @@
   /* A gaveta lista tudo, inclusive as telas do painel antigo que
      ainda não foram refeitas neste formato. Assim nada fica
      inalcançável enquanto o painel novo não está completo. */
+  /* UM NOME, UM DESTINO.
+   *
+   * Brian, 18/09/2026: "melhore o painel, ele esta confuso, deixe ele
+   * util, simples de usar e funcional". Medido antes de mexer, o mapa
+   * do painel tinha isto:
+   *
+   *   "Relatórios" na gaveta      -> tela ANTIGA
+   *   "Relatórios" no Mais        -> tela do aplicativo   (mesmo nome, dois lugares)
+   *   "Ajustes" na gaveta         -> tela ANTIGA
+   *   "Configurações" no Mais     -> tela do aplicativo   (duas telas de ajuste)
+   *   "Pedidos" na barra          -> tela do aplicativo
+   *   "Fila de pedidos" no Mais   -> tela ANTIGA          (duas filas do mesmo pedido)
+   *   "Clientes" na gaveta e no Mais                      (repetido)
+   *   "Dashboard" no Mais         -> terceira visão geral, além do Início
+   *
+   * Duas gerações de painel no mesmo menu, com nomes iguais levando a
+   * lugares diferentes. Não era falta de tela: era excesso de caminho.
+   * Agora a gaveta é o mapa do aplicativo, cada nome aparece uma vez, e
+   * o "Ajustes" velho saiu (ele também não gostou dele: "tire isso ai
+   * de ajustes, nao gostei").
+   *
+   * "Ver o site" fecha o círculo: o painel leva para a loja, e a Conta
+   * da loja leva para o painel. Antes, do painel não havia volta. */
   var GAVETA = [
     { secao: 'Painel' },
     { rotulo: 'Início', icone: 'casa', href: 'inicio.html', id: 'inicio' },
@@ -76,9 +105,11 @@
     { rotulo: 'Produtos', icone: 'cubo', href: 'produtos.html', id: 'produtos' },
     { rotulo: 'Clientes', icone: 'gente', href: 'clientes.html', id: 'clientes' },
     { secao: 'Números e ajustes' },
-    { rotulo: 'Relatórios', icone: 'grafico', href: '../relatorios.html' },
+    { rotulo: 'Relatórios', icone: 'grafico', href: 'relatorios.html' },
     { rotulo: 'Gastos', icone: 'dinheiro', href: '../despesas.html' },
-    { rotulo: 'Ajustes', icone: 'engrenagem', href: '../ajustes.html' }
+    { rotulo: 'Configurações', icone: 'engrenagem', href: 'configuracoes.html' },
+    { secao: 'A loja' },
+    { rotulo: 'Ver o site', icone: 'loja', href: '../../index.html' }
   ];
 
   var Moldura = {
@@ -118,6 +149,13 @@
             '<span class="topo__marca-tag">GESTÃO</span>' +
           '</span>' +
         '</a>' +
+        /* O CAMINHO DE VOLTA PARA A LOJA, sempre à mão — pedido do
+         * Brian: "Deixe icone pra voltar pro site do painel de gestao
+         * pro site". Ele fica no topo, e não só na gaveta, porque é o
+         * caminho que a equipe faz o dia inteiro: olhar o pedido aqui e
+         * conferir o produto lá. */
+        '<a class="topo__botao" href="../../index.html" ' +
+          'aria-label="Ver o site da loja" data-ver-site>' + svg('loja', 21, 1.7) + '</a>' +
         '<a class="topo__botao sino" href="pedidos.html?ver=pendentes" ' +
           'aria-label="Pedidos esperando">' + svg('sino', 21, 1.7) +
           '<span class="sino__conta" data-sino hidden>0</span>' +

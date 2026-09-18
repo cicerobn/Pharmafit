@@ -12,15 +12,34 @@
   var Auth = window.PharmaFitAuth;
   var Moldura = window.PharmaFitMoldura;
 
+  /* CADA COISA UMA VEZ, E EM UM LUGAR SÓ.
+   *
+   * Brian, 18/09/2026: "melhore o painel, ele esta confuso". Esta tela
+   * tinha três atalhos que repetiam o que já existe na barra de baixo
+   * ou na gaveta, dois deles levando para telas da geração ANTIGA:
+   *
+   *   "Fila de pedidos" -> ../index.html   (a aba Pedidos já é a fila)
+   *   "Clientes"        -> repetido aqui e na gaveta
+   *   "Dashboard"       -> uma terceira visão geral, além do Início
+   *
+   * A fila velha saiu da lista, e não do site: ela continua sendo onde
+   * a venda é confirmada, e o caminho até lá é tocar no pedido — que é
+   * como se chega a um pedido de qualquer jeito.
+   * O Dashboard ficou, num bloco próprio e com o nome honesto do que
+   * ele é: a mesma visão geral desenhada para tela grande. */
   var NUMEROS = [
-    /* Relatórios agora abre a tela do app (gráficos, no celular). O
+    /* Relatórios abre a tela do aplicativo (gráficos, no celular). O
        relatório completo, com comparação de meses e planilha, continua
        na tela grande e está linkado lá dentro. */
     { rotulo: 'Relatórios', pe: 'Faturamento, lucro e gráficos do mês', icone: 'grafico', href: 'relatorios.html' },
-    { rotulo: 'Gastos', pe: 'Lançar e ver as despesas', icone: 'dinheiro', href: '../despesas.html' },
-    { rotulo: 'Dashboard', pe: 'A visão geral em tela grande', icone: 'casa', href: '../dashboard.html' }
+    { rotulo: 'Gastos', pe: 'Lançar e ver as despesas', icone: 'dinheiro', href: '../despesas.html' }
   ];
 
+  /* A REGRA DESTA TELA, escrita para eu não errar de novo: aqui fica o
+     que NÃO está na barra de baixo. Clientes é uma tela principal e não
+     tem lugar na barra (que tem quatro), então o caminho dela é este —
+     eu havia tirado junto com as duplicatas e deixei a tela sem porta
+     no Mais. */
   var AJUSTES = [
     { rotulo: 'Clientes', pe: 'Quem já comprou', icone: 'gente', href: 'clientes.html' },
     /* O CAMINHO ATÉ O QUE CHEGA DO SITE — ele NÃO existia.
@@ -40,8 +59,14 @@
      * contato foi perdido — o furo era para a frente.) */
     { rotulo: 'Contatos do site', pe: 'Atacado, representantes, avise-me e atendimento',
       icone: 'sino', href: '../clientes.html', contar: true },
-    { rotulo: 'Fila de pedidos', pe: 'Confirmar, separar e enviar', icone: 'caixa', href: '../index.html' },
     { rotulo: 'Configurações', pe: 'Dados da empresa, cotação e cópia de segurança', icone: 'engrenagem', href: 'configuracoes.html' }
+  ];
+
+  /* A geração anterior do painel, desenhada para computador. Não é
+     "outro painel": é a MESMA visão geral do Início, na tela grande. */
+  var TELA_GRANDE = [
+    { rotulo: 'Dashboard', pe: 'A mesma visão geral, desenhada para o computador',
+      icone: 'tabela', href: '../dashboard.html' }
   ];
 
   /* QUANTOS ESTÃO ESPERANDO RESPOSTA.
@@ -104,6 +129,8 @@
 
     document.querySelector('[data-atalhos-numeros]').innerHTML = linhas(NUMEROS);
     document.querySelector('[data-atalhos-ajustes]').innerHTML = linhas(AJUSTES);
+    var caixaGrande = document.querySelector('[data-atalhos-tela-grande]');
+    if (caixaGrande) caixaGrande.innerHTML = linhas(TELA_GRANDE);
 
     /* O número vem DEPOIS da tela aparecer, e sem travar nada: contar
        são quatro leituras no banco, e a tela não pode esperar por

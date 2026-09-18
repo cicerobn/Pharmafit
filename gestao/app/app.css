@@ -104,7 +104,10 @@ a{color:inherit;text-decoration:none}
   height:calc(var(--topo-h) + env(safe-area-inset-top,0px));
   padding-top:env(safe-area-inset-top,0px);
   display:grid;
-  grid-template-columns:44px 1fr 44px;
+  /* QUATRO LUGARES AGORA: menu · marca · ver o site · sino. A coluna
+     do meio é a que encolhe, e a marca já corta o que não cabe — em
+     320px sobram 188px para ela, e o conjunto marca+nome pede 150. */
+  grid-template-columns:44px minmax(0,1fr) 40px 44px;
   align-items:center;
   background:rgba(247,245,241,.88);
   backdrop-filter:blur(14px);

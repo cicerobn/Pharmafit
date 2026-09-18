@@ -245,9 +245,44 @@
   function pintarRecentes() {
     var alvo = document.querySelector('[data-recentes]');
 
-    var lista = estado.pedidos.slice().sort(function (a, b) {
+    /* PENDENTE PRIMEIRO, e o bloco muda de nome quando há algum.
+       "Pendente" é o que o site grava e o que a equipe ainda não
+       confirmou; status vazio conta como pendente, porque é assim que o
+       pedido nasce. */
+    var todos = estado.pedidos.slice().sort(function (a, b) {
       return dataDe(b) - dataDe(a);
-    }).slice(0, 5);
+    });
+    var pendentes = todos.filter(function (p) {
+      return String(p.status || 'pendente').toLowerCase() === 'pendente';
+    });
+
+    /* O QUE PEDE AÇÃO VAI PARA O ALTO. Com pendente na fila, este bloco
+       passa à frente do cartão de vendas; sem nenhum, volta para o fim,
+       depois do gráfico — porque aí ele é só histórico. */
+    var secao = document.querySelector('[data-bloco-recentes]');
+    var conteudo = document.getElementById('conteudo');
+    if (secao && conteudo) {
+      if (pendentes.length) conteudo.insertBefore(secao, conteudo.firstElementChild);
+      else conteudo.appendChild(secao);
+    }
+
+    var titulo = document.querySelector('[data-recentes-titulo]');
+    var link = document.querySelector('[data-recentes-link]');
+    if (titulo && link) {
+      if (pendentes.length) {
+        titulo.textContent = 'Esperando você · ' + pendentes.length;
+        link.textContent = 'Ver a fila';
+        link.setAttribute('href', 'pedidos.html?ver=pendentes');
+      } else {
+        titulo.textContent = 'Pedidos recentes';
+        link.textContent = 'Ver todos';
+        link.setAttribute('href', 'pedidos.html');
+      }
+    }
+
+    var lista = (pendentes.length ? pendentes.concat(todos.filter(function (p) {
+      return String(p.status || 'pendente').toLowerCase() !== 'pendente';
+    })) : todos).slice(0, 5);
 
     if (!lista.length) {
       alvo.innerHTML =
@@ -262,7 +297,13 @@
       var numero = p.numero ? '#' + p.numero : ('#' + String(p.id).slice(-4));
       /* A ordem segue o desenho: numero pequeno em cima, nome do cliente,
          valor embaixo; do lado direito a etiqueta e a hora. */
-      return '<li><a class="item" href="pedidos.html?pedido=' + encodeURIComponent(p.id) + '">' +
+      /* O DESTINO ESTAVA MORTO: `pedidos.html?pedido=<id>` — e a tela de
+         Pedidos lê `?ver=`, nunca leu `?pedido=`. Quem tocava num
+         pedido daqui caía na LISTA, sem o pedido aberto, e tinha de
+         procurar de novo o que já havia escolhido. A tela do pedido
+         (onde a venda é confirmada) é a mesma que a fila usa, e é para
+         lá que este toque vai agora. */
+      return '<li><a class="item" href="../index.html?pedido=' + encodeURIComponent(p.id) + '">' +
         '<span class="item__icone">' + Moldura.svg('caixa', 19, 1.6) + '</span>' +
         '<span class="item__corpo">' +
           '<span class="item__numero">' + esc(numero) + '</span>' +
