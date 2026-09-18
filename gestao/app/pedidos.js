@@ -210,10 +210,12 @@
     document.querySelectorAll('[data-ver]').forEach(function (b) {
       var meu = b.getAttribute('data-ver');
       b.classList.toggle('is-ativa', meu === estado.ver);
+      b.setAttribute('aria-pressed', String(meu === estado.ver));
       b.addEventListener('click', function () {
         estado.ver = meu;
         document.querySelectorAll('[data-ver]').forEach(function (o) {
           o.classList.toggle('is-ativa', o === b);
+          o.setAttribute('aria-pressed', String(o === b));
         });
         pintar();
       });

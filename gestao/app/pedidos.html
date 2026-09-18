@@ -54,11 +54,17 @@
       </div>
     </div>
 
+    <!-- A ABA ESCOLHIDA TAMBÉM PRECISA SER DITA, não só pintada. Estas
+         abas só mudavam de cor, e cor não chega ao leitor de tela: quem
+         ouve a tela ouvia quatro botões iguais e não sabia qual filtro
+         estava valendo. `aria-pressed` é o estado certo para botão que
+         liga e desliga. Quem troca o valor é o JavaScript, junto com a
+         classe. -->
     <nav class="abas" data-abas aria-label="Situação do pedido">
-      <button class="aba is-ativa" type="button" data-ver="todos">Todos</button>
-      <button class="aba" type="button" data-ver="pendentes">Pendentes</button>
-      <button class="aba" type="button" data-ver="andamento">Em andamento</button>
-      <button class="aba" type="button" data-ver="enviados">Enviados</button>
+      <button class="aba is-ativa" type="button" data-ver="todos" aria-pressed="true">Todos</button>
+      <button class="aba" type="button" data-ver="pendentes" aria-pressed="false">Pendentes</button>
+      <button class="aba" type="button" data-ver="andamento" aria-pressed="false">Em andamento</button>
+      <button class="aba" type="button" data-ver="enviados" aria-pressed="false">Enviados</button>
     </nav>
 
     <div id="carregando" aria-live="polite" aria-busy="true" style="padding:18px">
@@ -98,6 +104,6 @@
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
 <script src="app.js?v=253bbf62"></script>
-<script src="pedidos.js?v=77e8e2a0"></script>
+<script src="pedidos.js?v=e718b8b7"></script>
 </body>
 </html>
