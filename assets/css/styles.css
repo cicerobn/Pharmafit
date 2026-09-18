@@ -895,7 +895,7 @@ body:has(.hero__art--foto) .topbar{
   inset:-1px;
   border-radius:999px;
   background:linear-gradient(135deg,var(--c2),var(--c));
-  box-shadow:0 8px 18px color-mix(in srgb,var(--c) 34%,transparent);
+  box-shadow:0 4px 12px color-mix(in srgb,var(--c) 16%,transparent);
   opacity:0;
   z-index:-1;
   transition:opacity .26s ease;
