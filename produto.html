@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=6b0615f6">
+<link rel="stylesheet" href="assets/css/styles.css?v=466a35f1">
 </head>
 <body>
 
@@ -156,10 +156,18 @@
         <!-- as outras moedas, quando há cotação -->
         <p class="ficha__moedas" data-moedas hidden></p>
 
-        <!-- quantidade -->
-        <div class="ficha__quantidade" data-bloco-quantidade>
-          <span class="ficha__qrotulo">Quantidade</span>
-          <div class="carrinho__quantidade">
+        <!-- QUANTIDADE E TOTAL NUM CARTÃO SÓ.
+             Brian, 18/09/2026, com a foto desta parte: "Essa parte
+             aqui nao ta bonita, ta feia".
+             Eram três blocos soltos empilhados — a linha da
+             quantidade, uma caixa cinza com o total e o aviso do
+             WhatsApp —, cada um com um respiro diferente. Agora a
+             quantidade e o total ficam no MESMO cartão, lado a lado,
+             porque é uma conta só: quantas × quanto = total. -->
+        <div class="ficha__compra" data-bloco-quantidade>
+          <div class="ficha__compra-lado">
+            <span class="ficha__qrotulo">Quantidade</span>
+            <div class="carrinho__quantidade">
             <button class="carrinho__qbtn" type="button" data-menos aria-label="Tirar um">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                    stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
@@ -169,14 +177,17 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                    stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
             </button>
+            </div>
+            <span class="ficha__estoque" data-estoque></span>
           </div>
-          <span class="ficha__estoque" data-estoque></span>
-        </div>
 
-        <!-- a conta desta quantidade -->
-        <div class="ficha__conta" data-conta hidden>
-          <p class="ficha__conta-linha" data-conta-linha></p>
-          <p class="ficha__conta-total" data-conta-total></p>
+          <!-- a conta desta quantidade, na outra ponta da mesma linha -->
+          <div class="ficha__conta" data-conta hidden>
+            <p class="ficha__conta-linha" data-conta-linha></p>
+            <p class="ficha__conta-total" data-conta-total></p>
+          </div>
+
+          <!-- e a linha do atacado atravessa o cartão inteiro, embaixo -->
           <p class="carrinho__faixa" data-proxima hidden></p>
         </div>
 
@@ -187,7 +198,7 @@
              site não paga: o pedido vai para o WhatsApp da equipe, que
              confirma e combina o pagamento. Estava verdade e não
              estava escrito em lugar nenhum. -->
-        <p class="ficha__aviso">
+        <p class="ficha__aviso ficha__aviso--quieto">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 2.8 4.8 5.9v5.4c0 4.3 2.9 7.9 7.2 9.9 4.3-2 7.2-5.6 7.2-9.9V5.9z"/>
@@ -231,7 +242,8 @@
             <span>Pedir no WhatsApp</span>
           </a>
 
-          <button class="btn btn--outline" type="button" data-favoritar>
+          <div class="ficha__acoes-menores">
+          <button class="btn btn--outline btn--mini" type="button" data-favoritar>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 20.4 4.6 13a4.6 4.6 0 0 1 6.5-6.5l.9.9.9-.9A4.6 4.6 0 1 1 19.4 13z"/>
@@ -239,7 +251,7 @@
             <span data-fav-texto>Favoritar</span>
           </button>
 
-          <button class="btn btn--outline" type="button" data-compartilhar>
+          <button class="btn btn--outline btn--mini" type="button" data-compartilhar>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <circle cx="18" cy="5.6" r="2.6"/><circle cx="6" cy="12" r="2.6"/>
@@ -248,6 +260,7 @@
             </svg>
             <span data-share-texto>Compartilhar</span>
           </button>
+          </div>
         </div>
 
       </div>
@@ -387,11 +400,11 @@
 <script src="assets/js/favoritos.js?v=b87b4c60"></script>
 <script src="assets/js/paginas.js?v=3cbf8a54"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=bdf1acd5"></script>
+<script src="assets/js/idioma-es.js?v=1533d2cf"></script>
 <script src="assets/js/idioma.js?v=84149bbd"></script>
-<script src="assets/js/app.js?v=0c7ffe8d"></script>
+<script src="assets/js/app.js?v=ed977702"></script>
 <script src="assets/js/moedas.js?v=ddbb4a9b"></script>
-<script src="assets/js/tela-produto.js?v=e16524bf"></script>
+<script src="assets/js/tela-produto.js?v=833ba7ec"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>
 <script src="assets/js/pedido.js?v=19f67c9c"></script>
 </body>

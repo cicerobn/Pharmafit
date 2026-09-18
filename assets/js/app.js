@@ -193,18 +193,58 @@
 
     var voando = 0;
 
-    function voarAoCarrinho(foto) {
+    /** Quanto deste elemento está dentro da tela, de 0 a 1. */
+    function quantoNaTela(r) {
+      var H = window.innerHeight || document.documentElement.clientHeight;
+      if (!r || !r.height) return 0;
+      return Math.max(0, Math.min(r.bottom, H) - Math.max(r.top, 0)) / r.height;
+    }
+
+    /**
+     * A foto voa até o carrinho.
+     *
+     * `foto` é de onde ela sai, e `botao` é o que o dedo tocou. O
+     * segundo é a rede de segurança do primeiro, e ela existe por um
+     * defeito real:
+     *
+     * NA PÁGINA DO PRODUTO, QUANDO O DEDO CHEGA NO BOTÃO, A FOTO JÁ
+     * SAIU DA TELA. Medido em 18/09/2026, celular de 390x844: rolando
+     * até o "Adicionar", a foto ficava 671px ACIMA do alto da tela —
+     * 0% visível. O clone nascia fora da tela e a animação acontecia
+     * onde ninguém vê. O Brian tocou e me disse que não havia animação
+     * nenhuma; ele estava certo.
+     *
+     * Então: se a origem não está visível, a foto sai DE ONDE O DEDO
+     * TOCOU. É de onde ela deveria sair de qualquer forma — o gesto
+     * começa no dedo.
+     */
+    function voarAoCarrinho(foto, botao) {
       var alvo = document.querySelector('[data-voar-carrinho]');
 
-      if (menosMovimento() || !foto || !alvo || !foto.animate || !foto.getBoundingClientRect) {
-        return Promise.resolve();
+      if (menosMovimento() || !alvo || !document.body.animate) return Promise.resolve();
+      if (!foto && !botao) return Promise.resolve();
+
+      var para = alvo.getBoundingClientRect();
+      if (!para.width || quantoNaTela(para) < 0.5) return Promise.resolve();
+
+      var de = foto ? foto.getBoundingClientRect() : null;
+
+      /* Origem escondida (ou sem foto): sai do botão, num quadrado de
+         76px centrado nele. 76 e não o tamanho do botão porque um
+         retângulo largo encolhendo até o ícone parece um papel sendo
+         amassado; um quadrado parece uma coisa sendo levada. */
+      if (!de || !de.width || quantoNaTela(de) < 0.35) {
+        var b = botao && botao.getBoundingClientRect();
+        if (!b || !b.width) return Promise.resolve();
+        var lado = 76;
+        de = {
+          left: b.left + b.width / 2 - lado / 2,
+          top: b.top + b.height / 2 - lado / 2,
+          width: lado, height: lado
+        };
       }
 
-      var de = foto.getBoundingClientRect();
-      var para = alvo.getBoundingClientRect();
-      if (!de.width || !para.width) return Promise.resolve();
-
-      var clone = foto.cloneNode(true);
+      var clone = foto ? foto.cloneNode(true) : document.createElement('div');
       clone.className = 'voo-carrinho';
       clone.removeAttribute('loading');
       clone.style.left = de.left + 'px';
@@ -221,14 +261,17 @@
 
       var voo = clone.animate([
         { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1, offset: 0 },
-        /* o pulinho para trás antes de sair: é o que dá peso à coisa */
-        { transform: 'translate(0,10px) scale(1.06) rotate(-2deg)', opacity: 1, offset: .12 },
-        /* a curva: sobe mais do que o caminho reto pediria */
-        { transform: 'translate(' + (dx * .42) + 'px,' + (dy * .82) + 'px) scale(.55) rotate(6deg)',
-          opacity: .96, offset: .62 },
-        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.14) rotate(12deg)',
-          opacity: .3, offset: 1 }
-      ], { duration: 760, easing: 'cubic-bezier(.36,.06,.6,.96)', fill: 'forwards' });
+        /* PEGA E LEVANTA: cresce um pouco e desce 8px antes de sair.
+           É o que dá peso à coisa — sem isso ela parece só sumir. */
+        { transform: 'translate(0,8px) scale(1.14) rotate(-4deg)', opacity: 1, offset: .16 },
+        /* A CURVA: sobe bem mais do que o caminho reto pediria, e a
+           essa altura ainda tem mais de meio tamanho — é o pedaço em
+           que o olho acompanha. */
+        { transform: 'translate(' + (dx * .38) + 'px,' + (dy * .74) + 'px) scale(.62) rotate(9deg)',
+          opacity: .98, offset: .6 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.16) rotate(16deg)',
+          opacity: .35, offset: 1 }
+      ], { duration: 820, easing: 'cubic-bezier(.34,.05,.55,.98)', fill: 'forwards' });
 
       return new Promise(function (pronto) {
         var acabou = false;
@@ -263,24 +306,48 @@
         ], { duration: 520, easing: 'ease-out' });
       }
 
+      /* DOIS ANÉIS, um atrás do outro: um só passa quase
+         desapercebido no canto da tela. O segundo sai 110ms depois e
+         vai mais longe — é o que faz o olho voltar para o carrinho
+         depois que a foto entrou. */
       var r = alvo.getBoundingClientRect();
-      var anel = document.createElement('span');
-      anel.className = 'anel-carrinho';
-      anel.style.left = (r.left + r.width / 2) + 'px';
-      anel.style.top = (r.top + r.height / 2) + 'px';
-      anel.style.width = r.width + 'px';
-      anel.style.height = r.width + 'px';
-      document.body.appendChild(anel);
+      var aneis = [];
 
-      function limpar() { if (anel.parentNode) anel.parentNode.removeChild(anel); }
+      [0, 110].forEach(function (atraso, i) {
+        var anel = document.createElement('span');
+        anel.className = 'anel-carrinho';
+        anel.style.left = (r.left + r.width / 2) + 'px';
+        anel.style.top = (r.top + r.height / 2) + 'px';
+        anel.style.width = r.width + 'px';
+        anel.style.height = r.width + 'px';
+        document.body.appendChild(anel);
+        aneis.push(anel);
 
-      if (anel.animate) {
-        anel.animate([
-          { transform: 'translate(-50%,-50%) scale(.5)', opacity: .9 },
-          { transform: 'translate(-50%,-50%) scale(1.9)', opacity: 0 }
-        ], { duration: 560, easing: 'ease-out' }).onfinish = limpar;
+        if (anel.animate) {
+          anel.animate([
+            { transform: 'translate(-50%,-50%) scale(.45)', opacity: i ? .5 : .95 },
+            { transform: 'translate(-50%,-50%) scale(' + (i ? 2.4 : 1.8) + ')', opacity: 0 }
+          ], { duration: 620, delay: atraso, easing: 'ease-out' });
+        }
+      });
+
+      function limpar() {
+        aneis.forEach(function (a) { if (a.parentNode) a.parentNode.removeChild(a); });
       }
-      setTimeout(limpar, 800);
+      setTimeout(limpar, 900);
+
+      /* E O NÚMERO ENTRA QUICANDO. Ele aparece no mesmo instante, e
+         sem movimento próprio era a única parte parada de uma cena em
+         movimento. A classe sai no fim para poder quicar de novo. */
+      var numero = alvo.querySelector('[data-carrinho-contador]');
+      if (numero) {
+        numero.classList.remove('is-quicando');
+        void numero.offsetWidth;
+        numero.classList.add('is-quicando');
+        numero.addEventListener('animationend', function () {
+          numero.classList.remove('is-quicando');
+        }, { once: true });
+      }
     }
 
     /* A foto daquele cartão — ou a da ficha, na página do produto. */
@@ -298,7 +365,7 @@
        Sem voo (menos movimento, outra aba, teclado) ele muda na hora. */
     window.addEventListener(C.EVENTO, function () {
       if (!voando) { contar(); return; }
-      setTimeout(contar, 700);
+      setTimeout(contar, 760);
     });
 
     /* Outra aba mexeu no carrinho: o contador desta também acompanha. */
@@ -318,7 +385,7 @@
          tela, e `C.por` dispara o evento que redesenha a lista. Se o
          redesenho viesse primeiro, eu mediria um elemento que acabou
          de ser trocado por outro. */
-      voarAoCarrinho(fotoDoBotao(b));
+      voarAoCarrinho(fotoDoBotao(b), b);
       C.por(b.getAttribute('data-por-no-carrinho'), 1);
 
       /* O aviso vai no próprio botão, por um instante. Somar ao carrinho

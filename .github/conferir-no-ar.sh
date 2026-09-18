@@ -130,12 +130,33 @@ case "$tipo" in
 esac
 
 # ---- 2. as páginas todas abrem ----
+#
+# COM TRÊS TENTATIVAS, E O MOTIVO É A HOSTINGER.
+#
+# A publicação dela NÃO É ATÔMICA: ela troca arquivo por arquivo, e uma
+# página pode não existir por alguns segundos no meio disso. Esta
+# conferência roda segundos depois do `git push`, então ela cai
+# justamente dentro dessa janela.
+#
+# Aconteceu em 18/09/2026: `produtos.html` respondeu 404 às 14:30:21 e,
+# 21 segundos depois, a MESMA conferência (a parte que compara arquivo
+# por arquivo) achou os 40 arquivos certos, produtos.html incluído. O
+# site estava bem; a foto foi tirada no meio da troca.
+#
+# Uma página que continua 404 depois de três tentativas com 8 segundos
+# entre elas é defeito de verdade — e continua falhando a publicação.
 for pagina in index.html produtos.html atendimento.html parceiro.html atacado.html \
               conta.html quiz.html representantes.html privacidade.html \
               pedidos.html favoritos.html gestao/login.html; do
-  c=$(curl -s -A "$NAVEGADOR" -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$pagina" || echo 000)
+  c=000
+  for tentativa in 1 2 3; do
+    c=$(curl -s -A "$NAVEGADOR" -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$pagina" || echo 000)
+    [ "$c" = "200" ] && break
+    echo "  $pagina veio $c (tentativa $tentativa de 3) — a publicação pode estar no meio da troca"
+    [ "$tentativa" != "3" ] && sleep 8
+  done
   if [ "$c" != "200" ]; then
-    echo "::error::$pagina respondeu HTTP $c"
+    echo "::error::$pagina respondeu HTTP $c em três tentativas"
     falhou=1
   fi
 done

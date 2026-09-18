@@ -501,6 +501,10 @@ window.PHARMAFIT_ES_PADROES = [
   { pt: /^Pergunta (\d+) de (\d+)$/, es: "Pregunta $1 de $2" },
   { pt: /^(\d+) itens?$/, es: "$1 ítems" },
   { pt: /^(\d+) unid\.$/, es: "$1 unid." },
+  /* as faixas encurtaram para caber em três colunas (18/09/2026):
+     "unid." virou "un.", que sai igual nas duas línguas */
+  { pt: /^(\d+) un\.$/, es: "$1 un." },
+  { pt: /^(\d+) a (\d+) un\.$/, es: "$1 a $2 un." },
 
   /* "7 produtos" / "1 produto" embaixo de cada ícone de categoria, na
      página inicial. O número vem do catálogo, então a frase inteira
@@ -518,6 +522,7 @@ window.PHARMAFIT_ES_PADROES = [
      começasse com número seguido de "unid".
      "1 a 4 unid." não entra aqui: sai igual nas duas línguas. */
   { pt: /^(\d+) unid\. ou mais$/, es: "$1 unid. o más" },
+  { pt: /^(\d+) un\. ou mais$/, es: "$1 un. o más" },
   { pt: /^Levando (\d+) unidade a mais, cada uma sai por (.+)\.$/,
     es: "Llevando $1 unidad más, cada una sale por $2." },
   { pt: /^Levando (\d+) unidades a mais, cada uma sai por (.+)\.$/,

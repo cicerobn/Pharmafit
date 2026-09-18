@@ -85,7 +85,33 @@ ul{margin:0;padding:0;list-style:none}
   background:linear-gradient(180deg,#f8f5f0 0%,#f4efe7 42%,#f7f3ed 100%);
   min-height:100vh;
   position:relative;
+  /* `clip` E NÃO `hidden` — ISTO CONSERTA A BARRA DE CIMA.
+   *
+   * A barra é `position:sticky` desde sempre, com fundo translúcido e
+   * desfoque: ela foi DESENHADA para ficar grudada no alto enquanto a
+   * pessoa rola. E ela nunca grudou.
+   *
+   * O culpado era o `overflow-x:hidden` aqui. Esconder a rolagem em um
+   * eixo faz o navegador criar uma CAIXA DE ROLAGEM neste elemento (o
+   * outro eixo vira `auto`), e um `sticky` gruda em relação à caixa de
+   * rolagem mais próxima — que passava a ser esta, e não a janela. A
+   * página rola na janela, então a barra subia junto e ia embora.
+   * Medido em 18/09/2026: rolando 900px, a barra ficava 900px acima do
+   * alto da tela, nas quatro páginas que eu olhei.
+   *
+   * `overflow-x:clip` corta a mesma coisa (nada vaza para o lado) SEM
+   * criar caixa de rolagem — então o sticky volta a se medir pela
+   * janela. As duas linhas ficam: navegador antigo que não conhece
+   * `clip` ignora a segunda e segue com `hidden`, como era.
+   *
+   * ISSO APARECEU POR CAUSA DO CARRINHO NO TOPO. O Brian pôs um ícone
+   * de carrinho ali e pediu a foto voando até ele; com a barra
+   * escapando, o alvo do voo estava fora da tela e a animação
+   * acontecia onde ninguém vê. Um pedido de enfeite achou um defeito
+   * de navegação: o carrinho e o menu só eram alcançáveis no alto da
+   * página. */
   overflow-x:hidden;
+  overflow-x:clip;
   box-shadow:0 0 60px rgba(60,45,20,.07);
 }
 
@@ -3501,6 +3527,21 @@ textarea:focus-visible{
   will-change:transform,opacity;
 }
 
+/* O NÚMERO ENTRA QUICANDO quando a foto chega.
+   Ele aparecia no mesmo instante, mas parado — a única parte imóvel
+   de uma cena em movimento, e justamente a que diz o resultado. */
+.carrinho-contador.is-quicando{
+  animation:contadorQuica .46s cubic-bezier(.3,1.6,.5,1);
+}
+@keyframes contadorQuica{
+  0%{transform:scale(.2)}
+  55%{transform:scale(1.45)}
+  100%{transform:scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  .carrinho-contador.is-quicando{animation:none}
+}
+
 /* ---- a página do carrinho ---- */
 .carrinho{max-width:680px;margin:0 auto}
 
@@ -3855,46 +3896,68 @@ textarea:focus-visible{
 
 /* ---- as faixas de preço, lado a lado ---- */
 
+/* TRÊS FAIXAS, TRÊS COLUNAS — E NÃO DUAS E UMA ÓRFÃ.
+
+   Brian, 18/09/2026: "Essa parte aqui nao ta bonita, ta feia", com a
+   foto desta parte.
+
+   A regra era `auto-fit` com mínimo de 150px: num celular de 390 cabem
+   duas colunas de 150, então a terceira faixa caía sozinha na linha de
+   baixo com metade da largura vazia ao lado. Era a coisa mais torta da
+   tela.
+
+   Agora são SEMPRE três colunas, e isso só fecha porque eu encurtei o
+   texto de baixo junto: "1 a 4 unid." virava 76px e não cabia numa
+   coluna de 88px com respiro; "1 a 4 un." mede 48. A conta, em 320px:
+   (280 - 2×8 de vão - 3×16 de respiro) / 3 = 72px por coluna de
+   conteúdo, e "R$ 1.099,00" em 14px de serifa mede 68. */
 .faixas{
   display:grid;
-  /* minmax(0,1fr): sem isso um preço grande empurra a grade para fora
-     da tela, e o .ficha corta o que passa. */
-  grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));
-  gap:10px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
   margin:20px 0 0;
 }
 
 .faixa{
+  min-width:0;
   border:1px solid var(--line);
   border-radius:14px;
-  padding:13px;
+  padding:10px 8px;
   background:var(--card);
+  text-align:center;
   transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
 }
 .faixa__nome{
-  font-size:10.5px;
-  letter-spacing:.09em;
+  font-size:9px;
+  letter-spacing:.06em;
   text-transform:uppercase;
   color:var(--muted);
-  margin:0 0 5px;
+  margin:0 0 3px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .faixa__valor{
   font-family:var(--serif);
-  font-size:clamp(18px,5vw,22px);
+  font-size:clamp(13.5px,3.8vw,17px);
   margin:0;
-  line-height:1.1;
+  line-height:1.15;
+  white-space:nowrap;
 }
-.faixa__quantas{font-size:11.5px;color:var(--muted);margin:5px 0 0}
+.faixa__quantas{font-size:9.5px;color:var(--muted);margin:3px 0 0;white-space:nowrap}
 
 /* A faixa que vale para a quantidade escolhida. Sem esta marca, três
    preços na tela é confusão em vez de informação: a pessoa não sabe
    qual é o dela. */
 .faixa.is-valendo{
   border-color:var(--gold);
-  background:rgba(176,140,74,.06);
-  box-shadow:0 0 0 1px var(--gold);
+  background:rgba(176,140,74,.09);
+  box-shadow:0 0 0 1px var(--gold),0 6px 16px rgba(176,140,74,.18);
 }
 .faixa.is-valendo .faixa__nome{color:var(--gold)}
+/* o preço da faixa que vale também fica dourado: é o número que a
+   pessoa vai pagar, e ele tem de ser o que salta entre os três */
+.faixa.is-valendo .faixa__valor{color:var(--gold-2)}
 
 /* ---- preço, quando não há faixas ---- */
 
@@ -3927,37 +3990,52 @@ textarea:focus-visible{
 
 /* ---- quantidade ---- */
 
-.ficha__quantidade{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-  margin:22px 0 0;
-  padding-top:20px;
-  border-top:1px solid var(--line);
+/* O CARTÃO DA COMPRA: quantas de um lado, quanto do outro.
+
+   Eram dois blocos soltos — a linha da quantidade com um fio em cima,
+   e uma caixa cinza com o total embaixo — e a caixa cinza, sem borda,
+   parecia um campo desabilitado. É uma conta só (quantas × quanto), e
+   agora é um cartão só, com as duas pontas na mesma linha. */
+.ficha__compra{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:end;
+  gap:10px 12px;
+  margin:20px 0 0;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:var(--card);
+  box-shadow:var(--shadow-sm);
 }
-.ficha__qrotulo{font-size:13.5px;color:var(--muted)}
-.ficha__estoque{font-size:12.5px;color:var(--muted)}
+.ficha__compra-lado{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ficha__qrotulo{
+  font-size:9.5px;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.ficha__estoque{font-size:11px;color:var(--muted)}
 
 .ficha__conta{
-  margin:16px 0 0;
-  padding:14px 16px;
-  background:var(--cream);
-  border-radius:14px;
+  min-width:0;
+  text-align:right;
 }
-.ficha__conta-linha{font-size:13px;color:var(--muted);margin:0}
+.ficha__conta-linha{font-size:11.5px;color:var(--muted);margin:0;white-space:nowrap}
 .ficha__conta-total{
   font-family:var(--serif);
-  font-size:clamp(22px,6vw,27px);
-  margin:3px 0 0;
+  /* 20px no celular estreito: "R$ 10.494,00" em 27px pedia 150px e a
+     coluna tem 110. Cresce com a tela. */
+  font-size:clamp(20px,5.4vw,26px);
+  margin:1px 0 0;
   line-height:1.1;
+  white-space:nowrap;
 }
+/* a linha do atacado atravessa o cartão inteiro, embaixo das duas */
+.ficha__compra .carrinho__faixa{grid-column:1 / -1;margin:2px 0 0}
 
 /* ---- botões ---- */
 
-.ficha__acoes{margin:20px 0 0;display:flex;flex-direction:column;gap:10px}
-.ficha__acoes-linha{display:flex;gap:10px;flex-wrap:wrap}
-.ficha__acoes-linha .btn{flex:1 1 150px;justify-content:center;min-width:0}
 .ficha__acoes .linkish{align-self:center;margin-top:4px}
 .ficha__acoes .btn.is-salvo{border-color:#e0b4b4;color:#c0392b}
 
@@ -4353,6 +4431,18 @@ textarea:focus-visible{
 .ficha__aviso > svg{flex:none;margin-top:1px;color:var(--gold)}
 .ficha__aviso > span{display:flex;flex-direction:column;gap:2px;min-width:0}
 .ficha__aviso b{font-size:13px;font-weight:600;color:var(--ink)}
+
+/* A VERSÃO QUIETA: sem caixa, sem borda.
+   Ele era um retângulo com borda e fundo entre o preço e os botões, e
+   caixa com moldura ali significa "atenção, problema" — este aviso é
+   uma boa notícia (não se paga nada no site). Sem a moldura ele
+   informa em vez de alarmar, e o dourado do escudo já o marca. */
+.ficha__aviso--quieto{
+  border:0;
+  background:none;
+  padding:2px 2px 0;
+  margin:14px 0 0;
+}
 .ficha__aviso span span{font-size:11.5px;line-height:1.45;color:var(--ink-2)}
 
 /* ---- os botões, dois por linha ----
@@ -4362,21 +4452,45 @@ textarea:focus-visible{
    `min-width:0` porque "Pedir no WhatsApp" é comprido e, sem ele, o
    item da grade não encolhe abaixo do conteúdo e empurra a coluna
    vizinha (o mesmo alfinete de sempre em grid). */
+/* OS BOTÕES EM TRÊS NÍVEIS, E NÃO QUATRO IGUAIS.
+
+   Eram quatro do mesmo tamanho numa grade 2×2 — parecia teclado, e o
+   dourado gritava no meio dos três brancos sem que a ordem das coisas
+   ficasse clara. Agora a tela diz o que fazer:
+
+     1. Adicionar — largura inteira, dourado. É A ação.
+     2. Pedir no WhatsApp — largura inteira, contorno. É o outro
+        caminho de compra, para quem prefere conversar.
+     3. Favoritar e Compartilhar — pequenos, lado a lado. São
+        secundários de verdade e agora parecem.
+
+   O alvo de dedo dos dois pequenos continua acima de 40px: eles
+   encolheram na letra e no respiro lateral, não na altura. */
 .ficha__acoes{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  display:flex;
+  flex-direction:column;
   gap:9px;
-  margin-top:13px;
+  margin-top:14px;
 }
 .ficha__acoes .btn{
   min-width:0;
   justify-content:center;
-  gap:7px;
-  padding-inline:10px;
+  gap:8px;
+  padding-inline:12px;
 }
 .ficha__acoes .btn > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-/* sem estoque: o aviso ocupa a linha inteira, no lugar do carrinho */
-.ficha__acoes .btn--espera{grid-column:1 / -1}
+
+/* o principal e o do WhatsApp ocupam a linha */
+.ficha__acoes > .btn{width:100%}
+
+/* os dois pequenos, lado a lado */
+.ficha__acoes-menores{display:flex;gap:9px}
+.ficha__acoes-menores .btn{
+  flex:1 1 0;
+  min-width:0;
+  justify-content:center;
+  padding-block:11px;
+}
 
 /* ---- AQUI MORAVAM AS QUATRO TARJAS E AS DUAS SANFONAS ----
    Brian, 18/09/2026: "tire tudo isso da foto que te mandei, ao entrar

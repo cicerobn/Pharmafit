@@ -152,10 +152,16 @@
 
     caixa.innerHTML = r.faixas.map(function (f) {
       var valendo = r.faixa && Number(f.de) === Number(r.faixa.de);
+      /* "un." E NÃO "unid.", E ISSO É MEDIDA, NÃO GOSTO.
+         As três faixas passaram a ficar numa fileira só (antes eram
+         duas e uma órfã na linha de baixo, que é o que o Brian chamou
+         de feio). Numa tela de 320px cada coluna fica com 72px de
+         conteúdo: "1 a 4 unid." pede 76 e não cabe; "1 a 4 un." pede
+         48. O "10 un. ou mais" segue a mesma régua. */
       var ate = f.ate ? Number(f.ate) : null;
       var quantas = ate
-        ? Number(f.de) + ' a ' + ate + ' unid.'
-        : Number(f.de) + ' unid. ou mais';
+        ? Number(f.de) + ' a ' + ate + ' un.'
+        : Number(f.de) + ' un. ou mais';
 
       return '<div class="faixa' + (valendo ? ' is-valendo' : '') + '">' +
         '<p class="faixa__nome">' + esc(f.nome || 'Preço') + '</p>' +
@@ -282,8 +288,14 @@
          para as duas telas não terem cada uma a sua.
          Chamada ANTES do `C.por`, porque ela mede a foto onde ela está
          e o `por` dispara o redesenho. */
+      /* O BOTÃO VAI COMO SEGUNDO ARGUMENTO, e ele é o conserto do
+         defeito que o Brian achou: nesta página, quando o dedo chega
+         aqui, a FOTO já saiu da tela (671px acima, num celular de
+         390x844). O clone nascia fora da tela e o voo acontecia onde
+         ninguém vê — ele tocou e me disse que não tinha animação.
+         Com o botão, a foto sai de onde o dedo tocou. */
       if (window.PharmaFitVoo) {
-        window.PharmaFitVoo.aoCarrinho(achar('foto'));
+        window.PharmaFitVoo.aoCarrinho(achar('foto'), botaoAdicionar);
       }
       C.por(produto.nome, quantidade);
 
