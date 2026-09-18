@@ -36,7 +36,12 @@ name: Marcar versão
 
 on:
   push:
-    branches: ['**']
+    # AS BRANCHES `claude/**` FICAM DE FORA, e não é esquecimento: quem cuida
+    # delas é o `publicar.yml`, que marca a versão E leva para a `main` no
+    # mesmo job. Se os dois rodassem no mesmo push, os dois rodariam o marcador
+    # e os dois tentariam commitar na mesma branch — um perderia a corrida, e o
+    # que perdesse publicaria uma árvore sem as marcas. Uma branch, um dono.
+    branches-ignore: ['claude/**']
 
 permissions:
   contents: write
