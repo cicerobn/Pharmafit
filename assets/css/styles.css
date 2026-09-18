@@ -514,7 +514,15 @@ body:has(.hero__art--foto) .topbar{
   gap:16px;
   border-radius:999px;
   font-weight:600;
-  transition:transform .18s ease,box-shadow .18s ease,background .18s ease,color .18s ease;
+  /* `background` SAIU DA LISTA: o botão principal tem fundo de
+     GRADIENTE, e gradiente não é animável — a transição estava ali
+     prometendo uma suavidade que o navegador nunca fez (64 botões em
+     16 páginas, medido pelo varredor de promessas do CSS). O que
+     muda de verdade no hover é a sombra, e ela continua na lista.
+     Para os botões de fundo CHAPADO a transição segue valendo: eles
+     mudam `color` e `border-color`, que estão aqui. */
+  transition:transform .18s ease,box-shadow .18s ease,
+             border-color .18s ease,color .18s ease;
 }
 .btn:active{transform:translateY(1px)}
 
@@ -1206,6 +1214,17 @@ body:has(.hero__art--foto) .topbar{
      `margin-top:auto` — que é o jeito de fazer isso sem mexer no
      tamanho de mais ninguém.
      A frase inteira está na página do produto, a um toque daqui. */
+  /* ESTE `display:-webkit-box` APARECE COMO `flow-root` NO VALOR
+     CALCULADO, e isso NÃO é defeito — eu quase "consertei" o que
+     estava certo.
+     Um varredor novo meu (18/09/2026) acusou "corte de linha sem
+     efeito" nos 15 cartões, porque ele exigia `display:-webkit-box`
+     no valor calculado. Fui olhar o PIXEL antes de acreditar: o texto
+     está cortado em duas linhas E COM O "…" no fim, como tem de ser.
+     Este Chromium mapeia o valor legado para `flow-root` e continua
+     aplicando o corte. A régua do varredor estava errada, não o site;
+     ele passou a medir o RESULTADO (a caixa tem a altura de duas
+     linhas?) em vez do mecanismo. */
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
@@ -3738,6 +3757,39 @@ textarea:focus-visible{
 .carrinho__atacado .linkish{
   display:inline-block;
   padding:12px 6px;
+}
+
+/* ---- para quem e para onde vai o pedido ----
+   Mesma caixa do resumo (fundo de cartão, borda, mesmo raio), porque as
+   duas coisas são o mesmo pedido lido de dois jeitos: o que vai e para
+   quem vai. Fica ACIMA do resumo de propósito — quem chega aqui lê de
+   cima para baixo e a última coisa antes do dedo tem de ser o total e o
+   botão, não um campo de texto. */
+.contato{
+  margin-top:22px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg);
+  padding:20px;
+  box-shadow:var(--shadow-sm);
+  display:grid;
+  gap:14px;
+}
+.contato__titulo{
+  font-family:var(--serif);
+  font-size:20px;
+  font-weight:500;
+  margin:0;
+}
+.contato__texto{
+  margin:-6px 0 2px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--muted);
+}
+
+@media (max-width:360px){
+  .carrinho .contato{padding:16px}
 }
 
 /* ---- o resumo ---- */

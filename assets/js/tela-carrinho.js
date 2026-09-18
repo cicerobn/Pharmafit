@@ -34,6 +34,58 @@
   var elVazio = document.getElementById('vazio');
   var elCheio = document.getElementById('cheio');
 
+  /* ---------- para quem e para onde ----------
+   *
+   * Os três campos que o carrinho não tinha. O que eles resolvem está
+   * escrito no `carrinho.html`, em cima do formulário.
+   *
+   * O formulário é a FONTE do nome, do WhatsApp e do endereço nesta
+   * tela. O aparelho (e a conta, quando existe) só serve para PREENCHER
+   * — quem digitou por último é quem manda, porque a pessoa pode estar
+   * comprando para outro endereço hoje. */
+  var form = document.getElementById('form-contato');
+  var cNome = document.getElementById('ct-nome');
+  var cZap = document.getElementById('ct-zap');
+  var cEndereco = document.getElementById('ct-endereco');
+
+  function valorDe(campo) {
+    return campo ? String(campo.value || '').trim() : '';
+  }
+
+  function contato() {
+    if (!form) {
+      /* sem formulário na tela, vale o que está guardado */
+      try { return (Area && Area.dados()) || {}; } catch (e) { return {}; }
+    }
+    return {
+      nome: valorDe(cNome),
+      telefone: valorDe(cZap),
+      endereco: valorDe(cEndereco)
+    };
+  }
+
+  /* Preenche o que está VAZIO, e só isso.
+   *
+   * Isto roda duas vezes: quando a página abre e de novo quando o
+   * cadastro desce da conta (`pharmafit-meus-dados`), que chega depois,
+   * pela internet. Se eu escrevesse em cima de tudo, a segunda passada
+   * apagaria o endereço que a pessoa já começou a digitar enquanto a
+   * conta respondia — o dedo perde para a rede, e a pessoa não entende
+   * por que o campo mudou sozinho. */
+  function preencherContato() {
+    if (!form) return;
+    var dados = {};
+    try { dados = (Area && Area.dados()) || {}; } catch (e) { dados = {}; }
+
+    if (cNome && !cNome.value && dados.nome) cNome.value = dados.nome;
+    if (cZap && !cZap.value && dados.telefone) {
+      cZap.value = window.PharmaFitValidacao
+        ? window.PharmaFitValidacao.mascaraTelefone(dados.telefone)
+        : dados.telefone;
+    }
+    if (cEndereco && !cEndereco.value && dados.endereco) cEndereco.value = dados.endereco;
+  }
+
   /* ---------- desenhar ---------- */
 
   async function pintar() {
@@ -215,8 +267,7 @@
 
   function montarLinkZap(conta) {
     var numero = String(cfg.WHATSAPP || '559285904669').replace(/\D+/g, '');
-    var dados = {};
-    try { dados = (Area && Area.dados()) || {}; } catch (e) { dados = {}; }
+    var dados = contato();
 
     var linhas = ['Olá! Quero fechar este pedido:', ''];
 
@@ -270,9 +321,43 @@
   var jaRegistrei = '';
 
   function registrarAoFechar(alvo) {
-    alvo.addEventListener('click', function () {
+    alvo.addEventListener('click', function (e) {
       var conta = alvo.__conta;
       var Pedido = window.PharmaFitPedido;
+
+      /* PRIMEIRO A CHECAGEM, DEPOIS O WHATSAPP.
+       *
+       * Se faltar nome, WhatsApp ou endereço, o link NÃO abre: o recado
+       * aparece embaixo do campo e o dedo volta para lá. É o mesmo que o
+       * modal de um produto faz há meses.
+       *
+       * Abrir o WhatsApp de todo jeito seria pior do que parece: a
+       * conversa começaria sem nome nem telefone, o pedido entraria na
+       * fila anônimo, e a pessoa acharia que está tudo certo. Barrar
+       * aqui é a única hora em que dá para pedir o que falta. */
+      if (form && window.PharmaFitValidacao &&
+          !window.PharmaFitValidacao.conferir(form)) {
+        e.preventDefault();
+        return;
+      }
+
+      var dados = contato();
+
+      /* O LINK É REFEITO AGORA, com o que está escrito nos campos.
+         Ele já se refaz a cada tecla, mas refazer aqui é o que garante
+         que a mensagem que abre é a da última letra digitada — inclusive
+         quando o teclado do celular termina a palavra depois do toque. */
+      if (conta) montarLinkZap(conta);
+
+      /* guarda no aparelho para a próxima compra e para "Meus pedidos",
+         e sobe para a conta quando existe conta — igual ao modal */
+      try { if (Area) Area.salvarDados(dados); } catch (err) {}
+      if (window.PharmaFitConta && window.PharmaFitConta.salvarCadastro) {
+        window.PharmaFitConta.salvarCadastro({
+          nome: dados.nome, telefone: dados.telefone, endereco: dados.endereco
+        }).catch(function () {});
+      }
+
       if (!conta || !conta.itens || !conta.itens.length || !Pedido) return;
 
       /* a assinatura do carrinho: mesmos itens e quantidades = mesmo
@@ -282,9 +367,6 @@
       }).join('|');
       if (assinatura === jaRegistrei) return;
       jaRegistrei = assinatura;
-
-      var dados = {};
-      try { dados = (Area && Area.dados()) || {}; } catch (e) { dados = {}; }
 
       conta.itens.forEach(function (i) {
         Pedido.registrar({
@@ -303,7 +385,7 @@
               quantidade: i.quantidade, endereco: dados.endereco || ''
             });
           }
-        } catch (e) {}
+        } catch (e2) {}
       });
     });
   }
@@ -374,5 +456,33 @@
      pessoa leva para a conversa do WhatsApp. */
   document.addEventListener('pharmafit-catalogo', function () { pintar(); });
   registrarAoFechar(document.getElementById('fechar'));
+
+  /* ---------- o formulário de contato, ligado ---------- */
+
+  if (form) {
+    preencherContato();
+
+    /* O cadastro da conta chega depois, pela internet. Quando chega, o
+       `minha-area.js` avisa, e aqui a gente preenche o que ainda está
+       vazio (nunca o que a pessoa já digitou). */
+    document.addEventListener('pharmafit-meus-dados', preencherContato);
+
+    /* A mensagem do WhatsApp acompanha o que está escrito. Sem isto, o
+       link guardaria o nome que existia quando a tela abriu — e quem
+       toca e segura o botão no celular para "copiar o link" levaria a
+       mensagem velha. */
+    form.addEventListener('input', function () {
+      var alvo = document.getElementById('fechar');
+      if (alvo && alvo.__conta) montarLinkZap(alvo.__conta);
+    });
+
+    /* ENTER NÃO PODE RECARREGAR A PÁGINA.
+       Um `<form>` sem botão de enviar ainda envia sozinho quando alguém
+       aperta Enter dentro de um campo — e enviar aqui significaria
+       recarregar `carrinho.html` com `?ct-nome=...` na barra de endereço,
+       perdendo o que foi digitado e pondo o telefone da pessoa no
+       histórico do navegador. */
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
+  }
 
 })();

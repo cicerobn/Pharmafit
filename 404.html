@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="/assets/css/styles.css?v=466a35f1">
+<link rel="stylesheet" href="/assets/css/styles.css?v=21ed2300">
 </head>
 <body>
 
@@ -48,7 +48,14 @@
            aparece quando há item.
            `data-voar-carrinho` é o alvo da animação de pôr no carrinho:
            a foto do produto voa até aqui. -->
-      <a class="icon-btn" href="carrinho.html" aria-label="Meu carrinho" data-voar-carrinho>
+      <!-- CAMINHO ABSOLUTO NESTA PÁGINA. O 404 é servido em QUALQUER
+           endereço: em `/produtos/algo-errado`, um `carrinho.html`
+           relativo aponta para `/produtos/carrinho.html`, que não
+           existe. O resto da página (marca, menu, barra de baixo) já
+           era absoluto; a barra de cima nova entrou relativa junto com
+           as outras 15 páginas e quebrou aqui. Quem achou foi a
+           medição `conta-site.mjs`, que cobra exatamente isto. -->
+      <a class="icon-btn" href="/carrinho.html" aria-label="Meu carrinho" data-voar-carrinho>
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>
@@ -56,7 +63,15 @@
         </svg>
         <span class="carrinho-contador" data-carrinho-contador hidden>0</span>
       </a>
-      <a class="icon-btn" href="conta.html" aria-label="Minha conta">
+      <!-- `data-conta-botao` NÃO É ENFEITE: é ele que faz o destino
+           depender de quem está usando. Sem nome guardado no aparelho,
+           este ícone leva para ENTRAR; com nome, leva para a conta, e o
+           leitor de tela anuncia "Minha conta, Brian".
+           Essa lógica já existia no `app.js` e ficou ÓRFÃ quando eu
+           troquei a barra de cima hoje: o botão que a usava saiu, o
+           código ficou, e o ícone novo mandava todo mundo para a Conta
+           — inclusive quem o site nunca viu. -->
+      <a class="icon-btn" href="/conta.html" data-conta-botao aria-label="Minha conta">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M16 20v-1.5a4 4 0 0 0-8 0V20"/><circle cx="12" cy="8" r="3.4"/>
@@ -189,7 +204,7 @@
 <script src="/assets/js/favoritos.js?v=b87b4c60"></script>
 <script src="/assets/js/paginas.js?v=3cbf8a54"></script>
 <script src="/assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="/assets/js/idioma-es.js?v=1533d2cf"></script>
+<script src="/assets/js/idioma-es.js?v=2f4da0a4"></script>
 <script src="/assets/js/idioma.js?v=84149bbd"></script>
 <script src="/assets/js/app.js?v=ed977702"></script>
 <script src="/assets/js/conta.js?v=5b35fb28"></script>
