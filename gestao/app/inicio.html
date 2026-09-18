@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=2165dfca">
+<link rel="stylesheet" href="app.css?v=70f91e2b">
 </head>
 <body>
 
@@ -60,7 +60,14 @@
         <p class="destaque__valor" data-hoje>—</p>
         <p class="destaque__delta" data-delta></p>
         <div class="destaque__barras" data-barras aria-hidden="true"></div>
-        <a class="destaque__acao" href="../relatorios.html" aria-label="Ver os relatórios">
+        <!-- ESTE BOTÃO LEVAVA PARA A TELA ANTIGA, e de lá não havia
+             volta: `../relatorios.html` é o painel velho, que não tem a
+             barra de baixo nem caminho nenhum para cá. Brian,
+             18/09/2026: "ao clicar ali naquele icone nao tem como
+             voltar". O painel novo TEM a sua própria tela de
+             relatórios, na mesma pasta — era só um `../` a mais, e ele
+             jogava a pessoa fora do aplicativo. -->
+        <a class="destaque__acao" href="relatorios.html" aria-label="Ver os relatórios">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
@@ -124,7 +131,7 @@
 <script src="../assets/auth.js?v=9db91d6d"></script>
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
-<script src="app.js?v=2d955945"></script>
+<script src="app.js?v=484ba67d"></script>
 <script src="inicio.js?v=ec3651a2"></script>
 </body>
 </html>

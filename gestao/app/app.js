@@ -102,9 +102,21 @@
       topo.innerHTML =
         '<button class="topo__botao" type="button" data-abrir-gaveta ' +
           'aria-label="Abrir o menu" aria-expanded="false">' + svg('menu', 22, 1.8) + '</button>' +
-        '<a class="topo__marca" href="inicio.html">' +
-          '<img src="../../assets/img/logo-pf-marca.png" alt="">' +
-          '<span>PHARMA FIT</span>' +
+        /* A MARCA DO PAINEL, refeita em 18/09/2026 a pedido do Brian
+         * ("melhore a logo aqui", com o recorte do topo).
+         * O que estava errado, medido: o desenho tinha 26px e o nome
+         * vinha em serifa de 16px — o texto pesava mais que a marca, e
+         * o conjunto ficava pequeno e solto no meio de uma barra de
+         * 58px. Agora o desenho tem 30, o nome usa o MESMO tratamento
+         * do site (sem serifa, 600, bem espaçado) e ganha embaixo a
+         * palavra GESTÃO: o painel deixa de parecer o site e diz, na
+         * primeira olhada, que ali é os bastidores. */
+        '<a class="topo__marca" href="inicio.html" aria-label="Pharma Fit — painel de gestão">' +
+          '<img src="../../assets/img/logo-pf-marca.png" alt="" width="30" height="30">' +
+          '<span class="topo__marca-texto">' +
+            '<span class="topo__marca-nome">PHARMA FIT</span>' +
+            '<span class="topo__marca-tag">GESTÃO</span>' +
+          '</span>' +
         '</a>' +
         '<a class="topo__botao sino" href="pedidos.html?ver=pendentes" ' +
           'aria-label="Pedidos esperando">' + svg('sino', 21, 1.7) +

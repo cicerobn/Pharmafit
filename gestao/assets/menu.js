@@ -10,6 +10,22 @@
 
   var cfg = window.PHARMAFIT_CONFIG || {};
 
+  /* O CAMINHO DE VOLTA PARA O PAINEL NOVO.
+   *
+   * Brian, 18/09/2026: "ao clicar ali naquele icone nao tem como
+   * voltar". O botão do gráfico no painel novo levava para a tela
+   * ANTIGA de relatórios — isso eu consertei no próprio botão —, mas o
+   * problema de fundo é outro e vale para as OITO telas antigas: o
+   * painel novo leva para elas (Gastos e Dashboard estão no "Mais"), e
+   * nenhuma delas tinha caminho de volta. Quem chegava aqui ficava,
+   * até fechar e digitar o endereço de novo.
+   *
+   * Este item entra PRIMEIRO e é desenhado diferente dos outros: ele
+   * não é uma seção do painel velho, é a saída dele. Fica aqui, num
+   * lugar só, porque as oito telas montam o menu por este arquivo —
+   * escrever o link em cada HTML seria oito chances de esquecer uma. */
+  var VOLTAR = { href: 'app/inicio.html', texto: 'Painel', volta: true };
+
   var ITENS = [
     { href: 'dashboard.html',  texto: 'Dashboard' },
     { href: 'index.html',      texto: 'Vendas' },
@@ -33,9 +49,16 @@
       var email = String((usuario && usuario.email) || '').toLowerCase();
       var dono = !cfg.EMAIL_DONO || email === String(cfg.EMAIL_DONO).toLowerCase();
 
-      alvo.innerHTML = ITENS
+      alvo.innerHTML = [VOLTAR].concat(ITENS)
         .filter(function (i) { return !i.sóDono || dono; })
         .map(function (i) {
+          if (i.volta) {
+            return '<a href="' + i.href + '" class="admin__link admin__link--volta" ' +
+              'aria-label="Voltar ao painel">' +
+              '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+              'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<path d="m15 5-7 7 7 7"/></svg>' + i.texto + '</a>';
+          }
           var ativo = i.href === atual ? ' class="admin__link is-active"' : ' class="admin__link"';
           return '<a href="' + i.href + '"' + ativo + '>' + i.texto + '</a>';
         }).join('');
