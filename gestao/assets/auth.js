@@ -177,9 +177,49 @@
       try {
         var r = await sb.auth.signInWithPassword({ email: email, password: senha });
         if (r.error) return { ok: false, erro: traduzErro(r.error.message) };
+
+        /* SENHA CERTA NÃO É A MESMA COISA QUE TER ACESSO.
+         *
+         * Brian, 18/09/2026: "essa conta de davis robert tem que ser a
+         * unica conta com acesso ao painel adm, mais nenhuma outra
+         * conta". Só que a porta da gestão abria para QUALQUER conta do
+         * Supabase — inclusive a de um cliente que criou conta no site
+         * para acompanhar os pedidos dele. A lista de e-mails do
+         * `config.js` está vazia de propósito (quem decide é o banco), e
+         * `exigirLogin` só olhava essa lista: o estranho entrava, o
+         * painel montava, e as telas vinham VAZIAS — porque aí sim a RLS
+         * barrava a leitura. Dado nenhum vazava, e ainda assim estava
+         * errado: quem não tem acesso tem de ouvir "não tem acesso", e
+         * não achar que o painel está quebrado.
+         *
+         * Pergunto ao banco quem é da equipe (`pf_e_equipe()`, que
+         * responde só sobre quem está perguntando). Se a resposta for um
+         * NÃO claro, eu encerro a sessão e devolvo o recado aqui mesmo,
+         * no formulário. Se a pergunta falhar (rede, função fora do ar),
+         * eu deixo passar: a proteção que vale é a do banco, e trancar
+         * por dúvida técnica trancaria o dono do lado de fora. */
+        var daEquipe = await Auth.daEquipe();
+        if (daEquipe === false) {
+          try { await sb.auth.signOut(); } catch (e2) {}
+          return { ok: false, erro: 'Sua conta não tem permissão para acessar a gestão.' };
+        }
         return { ok: true };
       } catch (e) {
         return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
+    /** É da equipe? true, false, ou null quando não deu para saber. */
+    daEquipe: async function () {
+      await pronto;
+      /* sem banco é modo demonstração: não há a quem perguntar */
+      if (!sb) return null;
+      try {
+        var r = await sb.rpc('pf_e_equipe');
+        if (!r || r.error) return null;
+        return typeof r.data === 'boolean' ? r.data : null;
+      } catch (e) {
+        return null;
       }
     },
 
@@ -219,6 +259,18 @@
         return null;
       }
       if (user.email && !emailPermitido(user.email)) {
+        await Auth.sair();
+        location.replace((destinoLogin || 'login.html') + '?erro=sem-acesso');
+        return null;
+      }
+
+      /* E A MESMA PERGUNTA EM TODA TELA, não só no login: a pessoa pode
+         ter sido tirada da equipe depois de entrar, e a sessão dura
+         dias. `Auth.sair()` ANTES de mandar para o login é o que evita
+         o pingue-pongue — a tela de login manda quem está logado direto
+         para o painel, e sem encerrar a sessão os dois ficariam se
+         empurrando para sempre. */
+      if ((await Auth.daEquipe()) === false) {
         await Auth.sair();
         location.replace((destinoLogin || 'login.html') + '?erro=sem-acesso');
         return null;
