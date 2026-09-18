@@ -127,17 +127,36 @@
 
   /* ---------- bloco de preço, igual na grade e no carrossel ---------- */
 
+  /* O BLOCO DE PREÇO, igual na grade e no carrossel.
+   *
+   * Brian, 18/09/2026: "Deixe essa parte dos precos ali mais bonita,
+   * com mais destaque" e "De mais enfase nessa promocoes ai".
+   *
+   * Ele se lê em três degraus, de cima para baixo: o que ERA (riscado,
+   * pequeno, com o selo de desconto ao lado), o que É (o número grande,
+   * o mais forte do cartão) e COMO PAGAR (a parcela, com o "3x sem
+   * juros" num chip).
+   *
+   * O selo de desconto ganhou a classe `selo-off--forte` quando o corte
+   * é de 20% ou mais: aí ele pulsa. Desconto de 5% e desconto de 30%
+   * não podem chamar o olho do mesmo jeito — se tudo pulsa, nada
+   * chama. O 20 não é chute: é o menor corte do catálogo de hoje que
+   * eu chamaria de oferta (os cortes vão de 8% a 31%).
+   */
   function blocoPreco(p) {
     var desconto = Preco.desconto(p.antes, p.venda);
 
     return (p.antes
         ? '<p class="product__antes">' +
             '<s>' + Preco.formatar(p.antes) + '</s>' +
-            (desconto ? '<span class="selo-off">-' + desconto + '%</span>' : '') +
+            (desconto
+              ? '<span class="selo-off' + (desconto >= 20 ? ' selo-off--forte' : '') + '">' +
+                  '<span>-' + desconto + '%</span></span>'
+              : '') +
           '</p>'
         : '') +
       '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
-      '<p class="product__installment">' + Preco.textoParcelas(p.venda) + '</p>';
+      '<p class="product__installment">' + Preco.htmlParcelas(p.venda) + '</p>';
   }
 
   /* ---------- grade de produtos ---------- */
@@ -180,11 +199,24 @@
             '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
             '</svg>' +
             '<span>Adicionar</span>' +
+            /* O CLARÃO QUE ATRAVESSA O BOTÃO quando o dedo chega. Brian,
+               18/09/2026: "o carrinho nos produtos ali ta muito sem
+               graca". É um elemento em vez de um `::after` porque o
+               botão já usa `::after` na animação de "no carrinho", e
+               dois desenhos no mesmo pseudo-elemento se atropelam.
+               `aria-hidden` porque é cenário: não tem nada a dizer a
+               quem ouve a tela. */
+            '<span class="btn--carrinho__luz" aria-hidden="true"></span>' +
           '</button>' +
         '</div>';
 
     return '' +
+      /* `product--promo` existe para o CSS poder tratar o cartão em
+         oferta como um conjunto: é ele que tira o preço do dourado
+         (porque ao lado do selo vermelho o dourado perde contraste) e
+         que acende o fio vermelho no alto do cartão. */
       '<article class="product' + (semEstoque(p) ? ' is-indisponivel' : '') +
+        (p.antes && !semEstoque(p) ? ' product--promo' : '') +
         '" data-category="' + chave(p.categoria) + '" data-produto="' + esc(p.nome) + '"' +
         ' data-preco="' + Number(p.venda || 0) + '"' +
         ' data-promo="' + (p.antes ? 1 : 0) + '"' +
@@ -440,7 +472,21 @@
     var select = document.querySelector('[data-ordenar]');
     if (!select) return;
 
+    /* A PÍLULA MOSTRA O QUE ESTÁ ESCOLHIDO. O `select` de verdade está
+       invisível por cima dela (é ele que abre a roda do sistema no
+       celular), então sem esta linha a pílula ficaria muda. Escrevo o
+       texto da opção escolhida, não o valor dela: o cliente lê "Menor
+       preço", não "menor-preco". */
+    var valor = document.querySelector('[data-ordenar-valor]');
+    function mostrarEscolha() {
+      if (!valor) return;
+      var op = select.options[select.selectedIndex];
+      valor.textContent = op ? op.textContent : '';
+    }
+    mostrarEscolha();
+
     select.addEventListener('change', function () {
+      mostrarEscolha();
       ordenarGrade(select.value);
     });
   }

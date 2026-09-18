@@ -504,6 +504,11 @@ window.PHARMAFIT_ES_PADROES = [
      alguém — padrão que sobra não custa nada; frase sem tradução
      aparece em português na tela do cliente paraguaio. */
   { pt: /^ou (\d+)x sem juros de (.+)$/, es: "o $1 cuotas sin interés de $2" },
+  /* A PARCELA DO CARTÃO VIROU DOIS PEDAÇOS (18/09/2026), para o "3x
+     sem juros" poder ficar em destaque: o tradutor casa frase inteira
+     por nó de texto, então cada pedaço precisa do seu padrão. */
+  { pt: /^(\d+)x sem juros$/, es: "$1 cuotas sin interés" },
+  { pt: /^de (R\$ .+)$/, es: "de $1" },
   { pt: /^ou até (\d+)x sem juros de (.+)$/, es: "o hasta $1 cuotas sin interés de $2" },
   { pt: /^ou em até (\d+)x sem juros de (.+)$/, es: "o en hasta $1 cuotas sin interés de $2" },
   { pt: /^Bom dia, (.+)$/, es: "Buenos días, $1" },

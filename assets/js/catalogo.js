@@ -214,6 +214,30 @@ window.PharmaFitPreco = {
       window.PharmaFitPreco.formatar(window.PharmaFitPreco.parcela(valor, vezes));
   },
 
+  /**
+   * A MESMA PARCELA, EM HTML, COM O "3x sem juros" EM DESTAQUE.
+   *
+   * Brian, 18/09/2026: "ali onde fala da parcela tambem deixe mais
+   * bonito". A linha era a menor letra do cartão, cinza e corrida.
+   *
+   * POR QUE UMA SEGUNDA FUNÇÃO em vez de pôr `<b>` na de cima: a de
+   * cima é usada com `textContent` na página do produto — ali o `<b>`
+   * apareceria escrito na tela, letra por letra. E há um motivo mais
+   * fundo: o tradutor do site casa FRASE INTEIRA por nó de texto, e
+   * partir "ou 3x sem juros de R$ 366,33" em pedaços faria a frase
+   * inteira deixar de casar. Por isso cada pedaço aqui é uma frase
+   * fechada, com o seu próprio padrão em `idioma-es.js`:
+   *   "3x sem juros"  ·  "de R$ 366,33"
+   */
+  htmlParcelas: function (valor, vezes) {
+    vezes = vezes || 3;
+    var P = window.PharmaFitPreco;
+    return '<span class="parcela">' +
+        '<span class="parcela__chip">' + vezes + 'x sem juros</span>' +
+        '<span class="parcela__valor">de ' + P.formatar(P.parcela(valor, vezes)) + '</span>' +
+      '</span>';
+  },
+
   /** Desconto em % entre o preço antigo e o atual (0 se não houver). */
   desconto: function (antes, venda) {
     if (!antes || antes <= venda) return 0;
