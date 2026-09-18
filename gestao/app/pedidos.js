@@ -122,13 +122,44 @@
     conta.textContent = lista.length + (lista.length === 1 ? ' pedido' : ' pedidos') +
       ' · ' + moeda(soma);
 
+    /* O QUE FOI PEDIDO, E NÃO SÓ QUANTO.
+     *
+     * A linha mostrava número, nome e valor — e mais nada. Medido em
+     * 18/09/2026 com uma compra de três produtos feita pelo carrinho:
+     * a fila ficou com três linhas iguais de ler,
+     *   "#t-0 Compra de Tres R$ 0,00 Pendente Hoje, 16:36"
+     * três vezes, sem dizer em nenhuma o que a pessoa comprou. Para
+     * responder no WhatsApp a equipe tinha de abrir uma por uma.
+     * O produto entra na mesma linha do valor, que já corta com "…"
+     * quando não cabe (nome comprido em celular estreito). */
+    function resumoDaLinha(p) {
+      var valor = Number(p.valor || 0);
+      var q = Number(p.quantidade || 0);
+      var produto = p.produto
+        ? p.produto + (q > 1 ? ' · ' + q + ' un.' : '')
+        : '';
+
+      /* A ORDEM IMPORTA, e eu descobri isso medindo em 320px: a linha
+         corta com "…" quando não cabe, então o que vem por último é o
+         que desaparece no celular estreito.
+           · pedido JÁ FECHADO: o valor vem na frente. Ele é o número
+             que a equipe procura, e num iPhone SE ele estava sendo
+             cortado fora por um nome de produto comprido;
+           · pedido PENDENTE: o valor é R$ 0,00 (quem preça é a equipe,
+             na hora de confirmar). Mostrar zero não diz nada, e o
+             produto diz tudo — então na fila de espera o produto vem
+             sozinho. */
+      if (valor > 0) return produto ? moeda(valor) + ' · ' + produto : moeda(valor);
+      return produto || moeda(valor);
+    }
+
     alvo.innerHTML = lista.map(function (p) {
       return '<li><a class="item" href="../index.html?pedido=' + encodeURIComponent(p.id) + '">' +
         '<span class="item__icone">' + Moldura.svg('caixa', 19, 1.6) + '</span>' +
         '<span class="item__corpo">' +
           '<span class="item__numero">' + esc(numeroDe(p)) + '</span>' +
           '<span class="item__nome">' + esc(p.cliente || 'Sem nome') + '</span>' +
-          '<span class="item__linha">' + moeda(p.valor) + '</span>' +
+          '<span class="item__linha">' + esc(resumoDaLinha(p)) + '</span>' +
         '</span>' +
         '<span class="item__lado">' +
           etiqueta(p.status) +
