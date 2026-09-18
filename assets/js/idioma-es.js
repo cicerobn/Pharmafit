@@ -246,6 +246,11 @@ window.PHARMAFIT_ES ={
   "Para quando precisa?": "¿Para cuándo lo necesita?",
   "Para quem já fez tratamento antes": "Para quien ya hizo tratamiento antes",
   "Paraguai": "Paraguay",
+  /* as três frases do cartão da gestão, na Conta. Ele só aparece para
+     quem é da equipe, mas o site tem dois idiomas e a regra não abre
+     exceção: meio traduzido é pior que sem tradução. */
+  "Acesso da equipe": "Acceso del equipo",
+  "Abrir o painel": "Abrir el panel",
   "Painel de gestão": "Panel de gestión",
   "Pedidos, produtos, clientes e relatórios": "Pedidos, productos, clientes e informes",
   "Pedidos": "Pedidos",

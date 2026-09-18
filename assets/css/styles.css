@@ -3056,57 +3056,127 @@ textarea:focus-visible{
 
 .vazio-bloco--enxuto{padding:26px 20px;margin-top:0}
 
-/* ---------- o atalho da gestão, na Conta ----------
-   Ele é a única coisa daquela tela que NÃO é do cliente: é a porta dos
-   bastidores para quem é da equipe. Por isso ele não usa o branco dos
-   cartões de cliente — é escuro, com o dourado da casa, e se distingue
-   à primeira olhada de tudo o mais que está ali.
-   Nasce escondido no HTML; quem o acende é o banco. */
-.painel-atalho{
+/* ---------- a porta da gestão, na Conta ----------
+   Este cartão é a única coisa daquela tela que NÃO é do cliente: é a
+   porta dos bastidores para quem é da equipe. Nasce escondido no HTML;
+   quem o acende é o banco.
+
+   ELE JÁ FOI UMA TARJA PRETA, e o Brian reclamou (18/09/2026: "muito
+   feio"). O recorte dele era de computador, e o número explica: 1024px
+   de largura por 71px de altura, o texto encostado na esquerda e a
+   setinha sozinha a 660px de distância. Some a isso ser o único bloco
+   escuro entre dois cartões brancos numa página creme — parecia faixa
+   de propaganda colada no site.
+
+   O CONSERTO TEM DUAS PARTES, e as duas são medíveis:
+     1. ELE PASSOU A PERTENCER. Branco como os vizinhos, com um fio
+        dourado e um leve banho de dourado no fundo. O que diz "aqui é
+        outra coisa" agora é o dourado, não o preto.
+     2. O LADO DIREITO GANHOU PESO. Em vez da seta perdida, um botão de
+        verdade — "Abrir o painel". Em tela larga ele segura a ponta
+        direita do cartão; em celular ele desce e ocupa a linha inteira,
+        que é alvo maior para o dedo do que uma seta de 17px. */
+.porta-gestao{
+  display:block;
+  margin:14px 0 22px;
+  padding:18px;
+  border-radius:var(--radius-lg);
+  background:
+    linear-gradient(135deg,rgba(176,140,74,.07),rgba(176,140,74,.02)),
+    var(--card);
+  border:1px solid var(--gold-soft);
+  box-shadow:var(--shadow-sm);
+  color:var(--ink);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+.porta-gestao:hover{
+  transform:translateY(-1px);
+  border-color:var(--gold-2);
+  box-shadow:var(--shadow-md);
+}
+
+.porta-gestao__topo{
   display:flex;
   align-items:center;
-  gap:13px;
-  margin:14px 0 0;
-  padding:14px 16px;
-  border-radius:var(--radius);
-  background:linear-gradient(135deg,#1b1a17,#2b2723);
-  color:#fff;
-  box-shadow:0 8px 22px rgba(12,10,6,.22);
-  transition:transform .16s ease,box-shadow .16s ease;
+  gap:14px;
 }
-.painel-atalho:hover{
-  transform:translateY(-1px);
-  box-shadow:0 12px 26px rgba(12,10,6,.28);
-}
-.painel-atalho__ico{
+
+.porta-gestao__selo{
   flex:none;
-  width:40px;height:40px;
+  width:46px;height:46px;
   display:grid;place-items:center;
-  border-radius:13px;
+  border-radius:14px;
   background:linear-gradient(135deg,var(--gold-2),var(--gold));
   color:#fff;
-  /* um fio claro por dentro e uma sombra curta por fora: é o que
-     separa "quadrado dourado com um desenho" de um selo feito de
-     propósito. Sobre o cartão escuro, sem isso ele fica chapado. */
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22),
-             0 2px 8px rgba(176,140,74,.35);
+  /* um fio claro por dentro e uma sombra curta por fora: é o que separa
+     "quadrado dourado com um desenho" de um selo feito de propósito */
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),
+             0 3px 10px rgba(176,140,74,.30);
 }
-.painel-atalho__texto{display:flex;flex-direction:column;gap:2px;min-width:0}
-.painel-atalho__titulo{
-  font-size:15px;
-  font-weight:600;
-  letter-spacing:.01em;
+
+.porta-gestao__texto{display:flex;flex-direction:column;gap:3px;min-width:0}
+.porta-gestao__tag{
+  font-size:9.5px;
+  font-weight:700;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--gold);
+  line-height:1;
 }
-.painel-atalho__pe{
+.porta-gestao__titulo{
+  font-family:var(--serif);
+  font-size:18px;
+  font-weight:500;
+  line-height:1.2;
+  letter-spacing:-.01em;
+}
+.porta-gestao__pe{
   font-size:12.5px;
-  color:rgba(255,255,255,.66);
-  /* o pé é longo e a tela é estreita: ele corta com "…" em vez de
-     empurrar a seta para fora */
+  color:var(--muted);
+  /* o pé é longo e a tela é estreita: corta com "…" em vez de empurrar
+     o botão para fora */
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
 }
-.painel-atalho__seta{flex:none;margin-left:auto;color:var(--gold-3)}
+
+/* O FIO E A LINHA DE BAIXO, como no cartão de cima desta página.
+   Com o botão ao lado do texto, no computador o cartão media 1024 × 90:
+   onze vezes mais largo do que alto, ou seja, ainda uma tarja. Em linha
+   própria ele fica na proporção dos vizinhos, e o botão ganha a ponta
+   direita para si. */
+.porta-gestao__acao{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:15px;
+  padding-top:15px;
+  border-top:1px solid var(--line);
+}
+
+.porta-gestao__botao{
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  height:42px;
+  padding:0 16px;
+  border-radius:999px;
+  background:var(--gold);
+  color:#fff;
+  font-size:13.5px;
+  font-weight:600;
+  white-space:nowrap;
+  box-shadow:0 4px 12px rgba(176,140,74,.28);
+  transition:background .16s ease;
+}
+.porta-gestao:hover .porta-gestao__botao{background:#9c7a3e}
+
+/* No celular o botão ocupa a largura toda: numa tela de 320px um pílula
+   de 142px encostada na direita é alvo pequeno e fica desequilibrada. */
+@media (max-width:520px){
+  .porta-gestao__botao{width:100%}
+}
 
 /* =========================================================
    Ajuste fino para telas estreitas (iPhone SE, 12 mini…)

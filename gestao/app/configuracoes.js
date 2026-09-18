@@ -4,17 +4,17 @@
    Feita a partir da foto do 595 Imports: cartão do negócio no topo,
    depois as seções Geral e Sistema, cada linha com ícone e seta.
 
-   O QUE MUDA EM RELAÇÃO À FOTO, E POR QUÊ
+   O QUE A FOTO TEM E ESTA TELA NÃO TEM
 
-   A foto tem sete linhas. A Pharma Fit tem tela de verdade para
-   quatro. As outras três — Usuários, Formas de pagamento, Frete e
-   envios, Relatórios automáticos — não existem em lugar nenhum do
-   painel hoje.
+   A foto tem sete linhas; a Pharma Fit tem tela de verdade para
+   quatro. As outras — Usuários, Formas de pagamento, Frete e envios,
+   Relatórios automáticos — não existem no painel, e por isso não
+   estão aqui: a regra é "ou funciona, ou não aparece na tela".
 
-   A regra do Brian é "ou funciona, ou não aparece na tela". Então
-   essas linhas NÃO foram desenhadas bonitas para abrir o vazio: elas
-   estão no fim da tela, escritas, dizendo o que falta. Assim ele
-   escolhe qual quer que eu faça, em vez de descobrir clicando.
+   Eu tinha escrito um cartão no fim da tela listando essas quatro com
+   o motivo de cada uma. Brian, 18/09/2026: "Tire isso aqui". A tela
+   de configuração é para configurar, não para eu conversar com ele —
+   o que falta fica no meu relatório.
 
    E o CNPJ da foto não está aqui de propósito: eu não tenho o CNPJ da
    Pharma Fit. Número de documento inventado numa tela de cadastro é o
@@ -72,33 +72,6 @@
     }
   ];
 
-  /* ---------- o que a foto pede e ainda não existe ---------- */
-
-  var FALTA = [
-    {
-      nome: 'Usuários',
-      porque: 'hoje quem entra no painel é quem está na tabela da equipe, e ' +
-              'pôr alguém lá é comando no banco. Para virar tela eu preciso do ' +
-              'e-mail de cada pessoa e de decidir quem pode o quê.'
-    },
-    {
-      nome: 'Formas de pagamento',
-      porque: 'o painel já registra como cada pedido foi pago, mas não existe ' +
-              'lugar para cadastrar a lista. Enquanto o PIX não estiver ligado, ' +
-              'essa tela mandaria pouco.'
-    },
-    {
-      nome: 'Frete e envios',
-      porque: 'a entrega hoje é combinada no WhatsApp, caso a caso. Uma tela de ' +
-              'frete só serve depois que houver regra de preço por região.'
-    },
-    {
-      nome: 'Relatórios automáticos',
-      porque: 'depende de enviar e-mail sozinho, que é função de servidor. ' +
-              'Dá para fazer, e é um pedido seu, não meu.'
-    }
-  ];
-
   function linhas(lista) {
     return lista.map(function (i) {
       return '<li><a class="item" href="' + esc(i.href) + '">' +
@@ -146,16 +119,6 @@
 
     document.querySelector('[data-geral]').innerHTML = linhas(GERAL);
     document.querySelector('[data-sistema]').innerHTML = linhas(SISTEMA);
-
-    var caixaFalta = document.querySelector('[data-bloco-falta]');
-    if (FALTA.length) {
-      caixaFalta.hidden = false;
-      document.querySelector('[data-falta]').innerHTML = FALTA.map(function (f) {
-        return '<li class="falta__item">' +
-          '<b>' + esc(f.nome) + '</b> — ' + esc(f.porque) +
-        '</li>';
-      }).join('');
-    }
 
     document.querySelector('[data-sair-aqui]').addEventListener('click', async function () {
       try { await Auth.sair(); } catch (e) {}
