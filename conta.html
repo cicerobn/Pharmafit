@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=3384520b">
+<link rel="stylesheet" href="assets/css/styles.css?v=8c7f6031">
 </head>
 <body>
 
@@ -124,30 +124,53 @@
          Leva para a ENTRADA da gestão, não direto para o painel: são
          duas sessões diferentes (a do site e a da gestão), e a entrada
          encaminha sozinha quando já existe sessão lá. -->
-    <a class="painel-atalho" data-painel-equipe href="gestao/login.html" hidden>
-      <!-- O DESENHO É UM PAINEL DE QUADROS, e não uma janelinha com
-           barra de título. Brian, 18/09/2026: "melhore esse icone que
-           leva pro painel de gestao". A janelinha podia ser qualquer
-           coisa — navegador, cartão, tabela; quatro quadros de tamanhos
-           diferentes é o desenho que o mundo usa para "painel", e é
-           também o que ele vai ver do outro lado. -->
-      <span class="painel-atalho__ico" aria-hidden="true">
-        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3.2" y="3.2" width="8" height="8.6" rx="1.8"/>
-          <rect x="12.8" y="3.2" width="8" height="5" rx="1.8"/>
-          <rect x="12.8" y="9.8" width="8" height="11" rx="1.8"/>
-          <rect x="3.2" y="13.4" width="8" height="7.4" rx="1.8"/>
-        </svg>
+    <!-- O DESENHO DESTE CARTÃO, e por que ele mudou de novo.
+         Brian, 18/09/2026: "Nao estou gostando de como essa barra ta
+         ficando, muito feio". Ele mandou o recorte de um computador, e
+         é ali que o defeito aparece: medido, o cartão ficava com 1024px
+         de largura e 71px de altura — uma tarja preta comprida, com o
+         texto encostado na esquerda e a setinha sozinha a 660px de
+         distância. E preto era a única coisa escura entre dois cartões
+         brancos numa página creme: parecia faixa de propaganda, não
+         parte do site.
+         Agora ele é um cartão da mesma família dos vizinhos — branco,
+         com fio dourado —, e o que segura o lado direito em tela larga
+         é um botão de verdade ("Abrir o painel"), não uma seta perdida.
+         O selo dourado com os quatro quadros continua: é o desenho que
+         o mundo usa para "painel", e é o que ele vê do outro lado. -->
+    <a class="porta-gestao" data-painel-equipe href="gestao/login.html" hidden>
+      <span class="porta-gestao__topo">
+        <span class="porta-gestao__selo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3.2" y="3.2" width="8" height="8.6" rx="1.8"/>
+            <rect x="12.8" y="3.2" width="8" height="5" rx="1.8"/>
+            <rect x="12.8" y="9.8" width="8" height="11" rx="1.8"/>
+            <rect x="3.2" y="13.4" width="8" height="7.4" rx="1.8"/>
+          </svg>
+        </span>
+        <span class="porta-gestao__texto">
+          <!-- esta etiqueta faz o cartão se explicar: ele não aparece
+               para cliente nenhum, e quem o vê entende por quê -->
+          <span class="porta-gestao__tag">Acesso da equipe</span>
+          <span class="porta-gestao__titulo">Painel de gestão</span>
+          <span class="porta-gestao__pe">Pedidos, produtos, clientes e relatórios</span>
+        </span>
       </span>
-      <span class="painel-atalho__texto">
-        <span class="painel-atalho__titulo">Painel de gestão</span>
-        <span class="painel-atalho__pe">Pedidos, produtos, clientes e relatórios</span>
+      <!-- O BOTÃO EM LINHA PRÓPRIA, DEPOIS DE UM FIO: é a mesma anatomia
+           do cartão de cima nesta página (bloco, fio, linha de baixo).
+           Foi o que fez o cartão parar de ser tarja: com o botão ao lado,
+           no computador ele media 1024 × 90 — 11 vezes mais largo do que
+           alto. Assim ele fica com a proporção dos vizinhos. -->
+      <span class="porta-gestao__acao">
+        <span class="porta-gestao__botao">
+          <span>Abrir o painel</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9 5 7 7-7 7"/>
+          </svg>
+        </span>
       </span>
-      <svg class="painel-atalho__seta" width="17" height="17" viewBox="0 0 24 24" fill="none"
-           stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="m9 5 7 7-7 7"/>
-      </svg>
     </a>
 
     <!-- OS PEDIDOS.
