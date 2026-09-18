@@ -248,8 +248,8 @@
        no chip, a 15px, os traços sumiam e sobravam quatro pontos
        soltos. O anel fechado aguenta o tamanho pequeno. */
     'Retatrutida':
-      '<path d="M10.2 8.6 14.4 11v4.8l-4.2 2.4-4.2-2.4V11z"/>' +
-      '<path d="m14.4 11 2.5-1.4"/><circle cx="18.4" cy="8.6" r="1.7"/>',
+      '<path d="M9.2 8.1 13.4 10.5v4.8l-4.2 2.4-4.2-2.4v-4.8z"/>' +
+      '<path d="m13.4 10.5 2.5-1.4"/><circle cx="17.4" cy="8.1" r="1.7"/>',
     /* peptídeos: a corrente de aminoácidos — três contas ligadas, que é
        literalmente o que um peptídeo é. A gota que estava aqui é o
        desenho de qualquer líquido, e não dizia nada deste produto. */
