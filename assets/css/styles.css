@@ -622,16 +622,69 @@ body:has(.hero__art--foto) .topbar{
 }
 .categoria:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
 .categoria:active{transform:translateY(-1px)}
-.categoria__ico{color:var(--gold);line-height:0}
+
+/* O ÍCONE MORA NUM DISCO CHEIO DE COR, e não solto sobre o branco.
+
+   Brian, 18/09/2026, com a foto de uma loja concorrente: "deixe os
+   icones da parte inicial assim, so mude os icones".
+
+   O que aquela foto tem e o cartão daqui não tinha é o disco: um
+   círculo de cor cheia com o desenho branco dentro. Solto, o desenho
+   era um risco dourado fino no meio de um cartão branco — do tamanho
+   que ele tem no celular (23px), quase não se via. O disco dá ao
+   desenho um fundo com que ele contrasta, e dá ao cartão uma âncora
+   que o olho pega antes de ler o nome.
+
+   A COR É A DA CASA, não a da foto. Lá são vermelho, verde e azul
+   puros; aqui são os mesmos quatro tons quebrados que já pintam os
+   chips da lista de produtos (`--cat1..4`), pelo mesmo índice. Cor
+   pura ao lado do dourado briga, e a mesma categoria mudar de cor
+   entre a página inicial e a lista faria a cor não significar nada.
+
+   `--c`/`--c2` caem no dourado quando nenhum `data-cor` vem — melhor
+   um disco dourado que um disco transparente. */
+.categoria{--c:var(--gold);--c2:var(--gold-2)}
+.categoria[data-cor="1"]{--c:var(--cat1);--c2:var(--cat1-2)}
+.categoria[data-cor="2"]{--c:var(--cat2);--c2:var(--cat2-2)}
+.categoria[data-cor="3"]{--c:var(--cat3);--c2:var(--cat3-2)}
+.categoria[data-cor="4"]{--c:var(--cat4);--c2:var(--cat4-2)}
+
+.categoria__ico{
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:0;
+  color:#fff;
+  background:linear-gradient(160deg,var(--c2) 0,var(--c) 100%);
+  /* A sombra é da COR do disco, não cinza: por baixo do disco o creme
+     da página continua aparecendo, e uma sombra cinza ali suja o tom
+     em vez de assentar o círculo. */
+  box-shadow:0 7px 16px color-mix(in srgb,var(--c) 30%,transparent);
+  transition:transform .2s ease;
+}
+/* O disco cresce um tiquinho junto com o cartão que sobe — o toque
+   responde no lugar onde o dedo estava mirando. */
+.categoria:hover .categoria__ico{transform:scale(1.06)}
+
 .categoria__nome{
   font-size:12px;
   line-height:1.25;
-  font-weight:600;
+  font-weight:700;
   color:var(--ink);
   max-width:100%;
   overflow-wrap:break-word;
 }
 .categoria__conta{font-size:10.5px;line-height:1.2;color:var(--muted)}
+
+/* Onde `color-mix` não existe, a sombra colorida vira a sombra de
+   sempre da casa: o disco continua com cor e volume, só não pinta o
+   creme embaixo dele. */
+@supports not (background:color-mix(in srgb,red 10%,transparent)){
+  .categoria__ico{box-shadow:var(--shadow-sm)}
+}
 
 /* ---------- seções ---------- */
 
@@ -1873,6 +1926,10 @@ body:has(.hero__art--foto) .topbar{
 
   .categorias{gap:18px;padding-top:36px}
   .categoria{padding:24px 14px}
+  /* Na tela grande o cartão tem o dobro do respiro; o disco acompanha,
+     senão ele vira um botão pequeno perdido no meio de um cartão. */
+  .categoria__ico{width:56px;height:56px}
+  .categoria__ico svg{width:28px;height:28px}
   .categoria__nome{font-size:13.5px}
   .categoria__conta{font-size:12px}
 
@@ -3090,7 +3147,10 @@ textarea:focus-visible{
      mesma regra da faixa do cartão. */
   .categorias{grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:7px;padding-inline:14px}
   .categoria{padding:14px 5px 12px;gap:7px;border-radius:14px}
-  .categoria__ico svg{width:23px;height:23px}
+  /* O disco encolhe junto com o cartão, mas menos que ele: com 84px de
+     cartão ainda sobram 5px de respiro de cada lado do círculo. */
+  .categoria__ico{width:40px;height:40px}
+  .categoria__ico svg{width:21px;height:21px}
   .categoria__nome{font-size:10.5px;line-height:1.2}
   .categoria__conta{font-size:9.5px}
 
