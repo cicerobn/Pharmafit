@@ -42,6 +42,76 @@
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
     'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>';
 
+  /* ---------- as etiquetas da vitrine ----------
+
+     Brian, 18/09/2026: "Deixe que essas barras de 'mais vendido,
+     promocao' esteja so em alguns produtos especificos que eu
+     selecionar no painel".
+
+     ANTES NENHUMA DAS DUAS ERA ESCOLHIDA POR ALGUÉM.
+
+     · `MAIS PROCURADO` ia no primeiro cartão do carrossel — `i === 0`.
+       Não era o mais procurado: era o de cima. Mudar a ordem do
+       catálogo mudava qual produto a loja anunciava como campeão, e
+       nada na tela dizia isso.
+     · `PROMOÇÃO` aparecia sozinha em todo produto com preço antigo.
+       Sete dos onze têm preço antigo — a etiqueta que devia chamar o
+       olho estava em sete cartões de onze, e ao lado de um preço
+       riscado que já dizia a mesma coisa.
+
+     Agora ela vem da coluna `destaque` do produto, que só a equipe
+     escreve, no painel. Produto sem escolha não tem etiqueta.
+
+     SÃO DOIS VALORES, E NÃO TEXTO LIVRE. A etiqueta manda na cor e na
+     animação: só existe desenho para estes dois. Texto livre deixaria
+     entrar um "QUEIMA DE ESTOQUE" que apareceria como um retângulo sem
+     estilo na vitrine. O banco recusa o que não está aqui (migração
+     12), e este mapa recusa de novo — se um valor estranho chegar por
+     qualquer caminho, o cartão fica SEM etiqueta em vez de ficar feio. */
+
+  var ETIQUETAS = {
+    'mais-vendido': {
+      texto: 'MAIS VENDIDO',
+      classe: 'vendido',
+      /* a estrela */
+      desenho: '<path d="m6 .8 1.5 3.1 3.4.5-2.5 2.4.6 3.4L6 8.6 2.9 10.2l.6-3.4L1 4.4l3.4-.5z"/>'
+    },
+    'promocao': {
+      texto: 'PROMOÇÃO',
+      classe: 'promo',
+      /* o sinal de por cento: dois anéis e a barra. Desenhado com
+         PREENCHIMENTO, e não com traço, porque estes ícones vão dentro
+         de um `fill="currentColor"` — um desenho de traço sairia
+         invisível ali. */
+      desenho:
+        '<path d="M3 1.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8zm0 1.2a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4z"/>' +
+        '<path d="M9 7.1a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8zm0 1.2a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4z"/>' +
+        '<path d="M9.2 1 10.6 2 2.8 11 1.4 10z"/>'
+    }
+  };
+
+  /**
+   * A etiqueta do produto, ou nada.
+   *
+   * `base` é a classe do cartão onde ela vai: `product__badge` na
+   * lista, `badge` no carrossel. As duas formas são diferentes (uma é
+   * faixa de canto, a outra é pílula sobre a foto), e por isso cada uma
+   * tem a sua classe — mas a COR e a ANIMAÇÃO vêm do mesmo lugar no
+   * CSS, pelo sufixo `--promo` / `--vendido`. Assim não existe o caso
+   * de a promoção ser vermelha num cartão e dourada no outro.
+   */
+  function etiquetaHtml(p, base) {
+    var e = ETIQUETAS[String((p && p.destaque) || '')];
+    if (!e) return '';
+
+    return '<span class="' + base + ' ' + base + '--' + e.classe + '">' +
+      '<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">' +
+        e.desenho +
+      '</svg>' +
+      '<span>' + e.texto + '</span>' +
+    '</span>';
+  }
+
   /* ---------- bloco de preço, igual na grade e no carrossel ---------- */
 
   function blocoPreco(p) {
@@ -68,16 +138,11 @@
     var grade = document.querySelector('[data-grade]');
     if (!grade) return;
 
-    grade.innerHTML = visiveis().map(function (p) {
-      var etiqueta = p.antes ? 'PROMOÇÃO' : p.destaque;
-
-      return cartao(p, etiqueta);
-    }).join('');
+    grade.innerHTML = visiveis().map(cartao).join('');
   }
 
   /** Cartão de produto usado na grade e na página de favoritos. */
-  function cartao(p, etiqueta) {
-    if (etiqueta === undefined) etiqueta = p.antes ? 'PROMOÇÃO' : p.destaque;
+  function cartao(p) {
 
     /* Fora de estoque não ganha botão de carrinho: pôr no carrinho o que
        não pode ser entregue só empurra a decepção para o fim da compra. */
@@ -112,8 +177,8 @@
         ' data-promo="' + (p.antes ? 1 : 0) + '"' +
         ' data-ordem="' + catalogo.indexOf(p) + '">' +
         (semEstoque(p)
-          ? '<span class="product__badge product__badge--off">SEM ESTOQUE</span>'
-          : (etiqueta ? '<span class="product__badge">' + esc(etiqueta) + '</span>' : '')) +
+          ? '<span class="product__badge product__badge--off"><span>SEM ESTOQUE</span></span>'
+          : etiquetaHtml(p, 'product__badge')) +
         coracaoHtml +
         '<div class="product__media">' +
           '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
@@ -130,6 +195,12 @@
   }
 
   window.PharmaFitCartao = cartao;
+
+  /* A PÁGINA DE UM PRODUTO usa a mesma função para desenhar a etiqueta
+     dela. Sem isto ela teria a sua própria cópia da regra, e no dia em
+     que uma mudasse (cor, nome, um terceiro valor) as duas telas
+     mostrariam etiquetas diferentes para o mesmo produto. */
+  window.PharmaFitEtiqueta = etiquetaHtml;
 
   /* ---------- os ícones das categorias, na página inicial ----------
 
@@ -169,6 +240,23 @@
     '<path d="M9.8 3.4h4.4v3.2l2.8 3.6v9.2a1.2 1.2 0 0 1-1.2 1.2H8.2A1.2 1.2 0 0 1 7 19.4v-9.2l2.8-3.6z"/>' +
     '<path d="M7 12.6h10"/>';
 
+  /* O "Todos" também ganha desenho: quatro quadradinhos, que é o
+     símbolo de "tudo junto". Sem ele, a fila de categorias ficaria com
+     um botão sem ícone na frente de todos os outros com ícone — e o
+     único sem desenho parece o que faltou terminar, não o especial. */
+  var DESENHO_TODOS =
+    '<rect x="3.6" y="3.6" width="7" height="7" rx="2"/>' +
+    '<rect x="13.4" y="3.6" width="7" height="7" rx="2"/>' +
+    '<rect x="3.6" y="13.4" width="7" height="7" rx="2"/>' +
+    '<rect x="13.4" y="13.4" width="7" height="7" rx="2"/>';
+
+  /** O desenho de uma categoria, em SVG, no tamanho pedido. */
+  function svgCategoria(desenho, tamanho, classe) {
+    return '<svg class="' + classe + '" width="' + tamanho + '" height="' + tamanho + '" ' +
+      'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + desenho + '</svg>';
+  }
+
   function montarCategoriasIniciais() {
     var caixa = document.querySelector('[data-categorias-home]');
     if (!caixa) return;
@@ -188,6 +276,11 @@
 
     caixa.innerHTML = vistas.map(function (v) {
       var desenho = DESENHO_CATEGORIA[v.nome] || DESENHO_RESERVA;
+      /* ESTE `svg` ESCRITO À MÃO NÃO VIROU `svgCategoria()` de
+         propósito: aqui o traço é 1.4 e o desenho é grande, dentro de
+         um círculo; no chip ele é 1.5 e pequeno. Juntar os dois numa
+         função com dois parâmetros de aparência só mudaria o lugar
+         onde a diferença mora. */
       /* `#chave` no endereço: a lista de produtos lê isso e já abre
          filtrada (ver `app.js`). Sem isso o ícone levaria para a lista
          inteira e a pessoa teria de filtrar de novo na mão — o toque
@@ -216,25 +309,90 @@
       if (categorias.indexOf(p.categoria) === -1) categorias.push(p.categoria);
     });
 
-    /* "Todos" vem primeiro e nasce marcado. Antes o primeiro chip de
-       categoria vinha marcado, e a página abria já filtrada em Tirzepatida —
-       quem chegava não via o resto do catálogo e não tinha como voltar a ver
-       tudo, porque não existia botão para isso. O filtro em app.js já sabia
-       tratar 'todos'; faltava só o botão existir. */
-    var botoes = ['<button class="chip is-active" type="button" ' +
-      'data-chip="todos" aria-pressed="true">Todos</button>'];
+    /* O CHIP AGORA TEM TRÊS PEDAÇOS, E CADA UM TEM MOTIVO.
+
+       Brian, 18/09/2026: "onde tem as barras de categoria, deixe uma
+       coisa mais bonita, com os icones de cada categoria e de uma forma
+       bonita, que ao trocar de uma pra outra tambem tenha uma animacao
+       legal".
+
+       1. `chip__fundo` — a pílula colorida, num elemento próprio em vez
+          de ser o fundo do botão. É ela que desliza de um chip para o
+          outro quando você troca de categoria (o CSS dá a ela um
+          `view-transition-name`, e o navegador move a pílula em vez de
+          apagá-la aqui e acendê-la lá). Com o fundo no próprio botão
+          isso não dá: o botão também carrega o texto, e o texto de uma
+          categoria viraria o da outra no meio do caminho.
+       2. o desenho da categoria, o MESMO da página inicial — a lista
+          vem do catálogo e o desenho do mapa lá de cima. Dois lugares
+          desenhando a mesma categoria diferente é a doença dos menus.
+       3. o nome.
+
+       O ponto colorido que existia antes saiu: ele era um substituto
+       de ícone, e agora existe o ícone de verdade.
+
+       "Todos" vem primeiro e nasce marcado. Antes o primeiro chip de
+       categoria vinha marcado, e a página abria já filtrada em
+       Tirzepatida — quem chegava não via o resto do catálogo e não
+       tinha como voltar a ver tudo, porque não existia botão para isso.
+       O filtro em app.js já sabia tratar 'todos'; faltava só o botão
+       existir. */
+
+    function botao(rotulo, valor, desenho, cor) {
+      var marcado = valor === 'todos';
+      return '<button class="chip' + (marcado ? ' is-active' : '') + '" type="button" ' +
+        (cor ? 'data-cor="' + cor + '" ' : '') +
+        'data-chip="' + valor + '" aria-pressed="' + (marcado ? 'true' : 'false') + '">' +
+        '<span class="chip__fundo" aria-hidden="true"></span>' +
+        svgCategoria(desenho, 15, 'chip__ico') +
+        '<span class="chip__nome">' + esc(rotulo) + '</span>' +
+      '</button>';
+    }
+
+    var botoes = [botao('Todos', 'todos', DESENHO_TODOS, 0)];
 
     /* Cada categoria leva um numero de cor, e o CSS decide qual cor e.
        Por indice e nao por nome: renomear "Peptideos" nao deve trocar a
        cor de lugar. O rodizio de 4 garante que a quinta categoria ainda
        receba uma cor definida, em vez de nascer sem nenhuma. */
     categorias.forEach(function (c, i) {
-      botoes.push('<button class="chip" type="button" ' +
-        'data-cor="' + ((i % 4) + 1) + '" ' +
-        'data-chip="' + chave(c) + '" aria-pressed="false">' + esc(c) + '</button>');
+      botoes.push(botao(c, chave(c), DESENHO_CATEGORIA[c] || DESENHO_RESERVA, (i % 4) + 1));
     });
 
     barra.innerHTML = botoes.join('');
+    marcarCortes(barra);
+  }
+
+  /* ---------- a barra de categorias que não cabe na tela ----------
+
+     A fila de chips rola de lado, e no celular ela quase nunca cabe: na
+     foto que o Brian mandou o "Peptídeos" estava cortado no meio, sem
+     nada dizendo que havia mais coisa à direita. Corte seco parece
+     defeito; desbotado parece continuação.
+
+     O esmaecido entra SÓ QUANDO SOBRA CONTEÚDO daquele lado — medido,
+     não adivinhado. Numa tela larga, onde os quatro chips cabem, ele
+     não aparece (senão o último chip ficaria apagado sem razão), e ao
+     chegar no fim da rolagem o da direita sai. */
+
+  function marcarCortes(barra) {
+    if (!barra) return;
+
+    function medir() {
+      var sobra = barra.scrollWidth - barra.clientWidth;
+      /* 2px de folga: navegador arredonda medida de rolagem, e sem a
+         folga a barra fica acendendo e apagando o esmaecido sozinha. */
+      barra.classList.toggle('is-corta-esquerda', barra.scrollLeft > 2);
+      barra.classList.toggle('is-corta-direita', sobra > 2 && barra.scrollLeft < sobra - 2);
+    }
+
+    medir();
+    barra.addEventListener('scroll', medir, { passive: true });
+    window.addEventListener('resize', medir);
+    /* A fonte de letra chega depois do HTML e muda a largura dos chips
+       — sem esta segunda medida, uma barra que passou a caber continua
+       esmaecida. */
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(medir);
   }
 
   /* ---------- ordenação da vitrine ---------- */
@@ -296,9 +454,7 @@
        quer a lista toda vai em Produtos, na barra de baixo. */
     var destaques = visiveis().slice(0, 3);
 
-    trilho.innerHTML = destaques.map(function (p, i) {
-      var etiqueta = i === 0 ? 'MAIS PROCURADO' : (p.antes ? 'PROMOÇÃO' : '');
-
+    trilho.innerHTML = destaques.map(function (p) {
       return '' +
         /* O CARTÃO INTEIRO É UM LINK PARA O PRODUTO.
            Brian, 17/09/2026: "Tem que dar pra clicar no produto e ver
@@ -308,12 +464,7 @@
            do tamanho do cartão. */
         '<a class="protocol" href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
           '<div class="protocol__media">' +
-            (etiqueta
-              ? '<span class="badge">' +
-                  '<svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">' +
-                    '<path d="m6 .8 1.5 3.1 3.4.5-2.5 2.4.6 3.4L6 8.6 2.9 10.2l.6-3.4L1 4.4l3.4-.5z"/>' +
-                  '</svg>' + etiqueta + '</span>'
-              : '') +
+            etiquetaHtml(p, 'badge') +
             '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
           '</div>' +
           '<div class="protocol__body">' +

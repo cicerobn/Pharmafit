@@ -78,7 +78,13 @@ window.PHARMAFIT_CATALOGO = [
       { nome: 'Atacado +', de: 10,         preco: 999  }
     ],
     imagem: 'assets/img/prod-caneta.svg',
-    destaque: 'MAIS VENDIDO',
+    /* A ETIQUETA DA VITRINE É ESCOLHA DA EQUIPE, NO PAINEL.
+       Só existem dois valores, `mais-vendido` e `promocao`, porque são
+       os dois que o site sabe desenhar — cada um tem cor e animação
+       própria. O que está escrito aqui é só o ponto de partida: o
+       painel grava na coluna `destaque` de `pf_produtos` e o que vale
+       no ar é o do painel. Tirar a etiqueta lá tira do site. */
+    destaque: 'mais-vendido',
     estoque: null
   },
   {
@@ -137,7 +143,13 @@ window.PHARMAFIT_CATALOGO = [
     descricao: 'Retatrutida 120 mg, linha ZPHC.',
     venda: 3249, antes: 0,
     imagem: 'assets/img/prod-frasco.svg',
-    destaque: 'LINHA PREMIUM',
+    /* AQUI HAVIA `destaque: 'LINHA PREMIUM'`.
+       Saiu porque ela não é uma das duas etiquetas que a equipe pode
+       escolher no painel: ficaria para sempre nesse produto, sem
+       ninguém conseguir tirar pela tela, e sem cor nem animação
+       próprias — um retângulo dourado escrito "LINHA PREMIUM".
+       Brian: se você quiser uma terceira etiqueta, eu faço; ela precisa
+       de nome, cor e de entrar na lista do painel. */
     estoque: null
   },
 

@@ -448,15 +448,14 @@
       aviso.querySelector('[data-limpar-filtros]').addEventListener('click', function () {
         var campo = document.querySelector('[data-search-field]');
         if (campo) campo.value = '';
-        document.querySelectorAll('[data-chip]').forEach(function (c) {
-          c.classList.remove('is-active');
-          c.setAttribute('aria-pressed', 'false');
-        });
-        document.querySelectorAll('[data-category]').forEach(function (card) {
-          card.classList.remove('is-hidden');
-        });
-        animarEntrada(document.querySelector('[data-grade]'));
-        conferirVitrine();
+        /* "Ver tudo" deixava a fila de categorias SEM NENHUM marcado —
+           nem o "Todos". A lista voltava a mostrar tudo e a barra em
+           cima não dizia o que estava mostrando. Agora ele passa pelo
+           mesmo caminho do toque em "Todos": marca o chip, esquece a
+           categoria escolhida e refaz o filtro.
+           Limpar na mão, como era aqui, deixava a categoria ESCOLHIDA
+           na memória — e ela voltava sozinha no próximo redesenho. */
+        escolherCategoria('todos');
       });
     }
 
@@ -502,51 +501,126 @@
     });
   }
 
-  /* ---------- filtro de categorias ---------- */
-  var chips = document.querySelectorAll('[data-chip]');
-  var products = document.querySelectorAll('[data-category]');
+  /* =========================================================
+     FILTRO DE CATEGORIA E BUSCA
 
-  if (chips.length && products.length) {
-    chips.forEach(function (chip) {
-      chip.addEventListener('click', function () {
-        var target = chip.getAttribute('data-chip');
+     PERGUNTAR PELOS ELEMENTOS NA HORA DE USAR — NUNCA GUARDAR A LISTA.
 
-        chips.forEach(function (other) {
-          var active = other === chip;
-          other.classList.toggle('is-active', active);
-          other.setAttribute('aria-pressed', String(active));
-        });
+     Aqui morava `var chips = querySelectorAll(...)` e
+     `var products = querySelectorAll(...)`, lidos UMA vez, no
+     carregamento, com um `addEventListener` em cada chip.
 
-        /* A TROCA DE CATEGORIA, ANIMADA PELO NAVEGADOR.
-           Brian pediu animação também aqui. A entrada escalonada dos
-           cartões já existia (`animarEntrada`), mas ela só faz os
-           novos APARECEREM — os que ficaram na tela saltavam de
-           posição. `startViewTransition` faz o navegador mover os que
-           ficaram para o lugar novo, e o resultado parece a lista se
-           reorganizando em vez de se redesenhar.
-           Onde não existe, cai no caminho de sempre: o filtro acontece
-           igual, só sem o deslizamento. */
-        function filtrar() {
-          products.forEach(function (card) {
-            var cats = (card.getAttribute('data-category') || '').split(' ');
-            var show = target === 'todos' || cats.indexOf(target) !== -1;
-            card.classList.toggle('is-hidden', !show);
-          });
-        }
+     E a vitrine é redesenhada depois disso. Quando o banco responde
+     (`pharmafit-catalogo`), `loja.js` monta de novo a barra de chips e
+     a grade de produtos: os elementos que estavam nestas duas listas
+     deixam de existir, e os novos nascem SEM o clique preso neles.
 
-        if (!MENOS_MOVIMENTO && document.startViewTransition) {
-          document.startViewTransition(function () {
-            filtrar();
-            conferirVitrine();
-          });
-        } else {
-          filtrar();
-          animarEntrada(document.querySelector('[data-grade]'));
-          conferirVitrine();
-        }
-      });
+     O tamanho do estrago, medido em 18/09/2026 em produtos.html:
+
+       · sem banco (que é como as minhas medições rodavam): tocar em
+         "Retatrutida" filtra — 1 produto na tela;
+       · com o banco respondendo, que é o site NO AR: tocar em qualquer
+         categoria não faz nada. Nada. Os 11 produtos ficam, o chip não
+         marca;
+       · e a BUSCA POR TEXTO também morre, pelo mesmo motivo: digitar
+         "Klow" deixava os 11 na tela.
+
+     Ninguém vê erro: o dedo toca, o site pisca e continua igual. É o
+     pior tipo de defeito, e estava no ar.
+
+     Duas mudanças consertam a classe inteira do problema:
+
+       1. o clique é ouvido no DOCUMENTO, não em cada chip. Documento
+          não é redesenhado;
+       2. a lista de produtos é lida DENTRO de cada função, no momento
+          do uso.
+
+     E, como a barra renasce marcando "Todos", a escolha da pessoa é
+     reaplicada depois do redesenho — senão o banco respondendo no meio
+     do caminho desfazia o filtro que ela acabou de escolher.
+     ========================================================= */
+
+  function osChips() { return document.querySelectorAll('[data-chip]'); }
+  function osProdutos() { return document.querySelectorAll('[data-category]'); }
+
+  var categoriaEscolhida = 'todos';
+
+  function marcarChip(valor) {
+    osChips().forEach(function (c) {
+      var ativo = c.getAttribute('data-chip') === valor;
+      c.classList.toggle('is-active', ativo);
+      c.setAttribute('aria-pressed', String(ativo));
     });
   }
+
+  /* UM FILTRO SÓ, COM AS DUAS CONTAS JUNTAS.
+     A categoria e a busca mexiam no mesmo `is-hidden`, cada uma por
+     sua conta, e a última a rodar apagava a outra: com "Retatrutida"
+     marcado, procurar "Klow" (que é um peptídeo) mostrava o Klow — e o
+     chip continuava dizendo Retatrutida. O chip mentia.
+     Agora um cartão aparece se passar nas DUAS, e quando nada passa o
+     aviso "Nada encontrado" explica, com o botão de ver tudo. */
+  function aplicarFiltro() {
+    var busca = document.querySelector('[data-search-field]');
+    var termo = busca ? busca.value.trim().toLowerCase() : '';
+
+    osProdutos().forEach(function (card) {
+      var cats = (card.getAttribute('data-category') || '').split(' ');
+      var daCategoria = categoriaEscolhida === 'todos' ||
+        cats.indexOf(categoriaEscolhida) !== -1;
+      var daBusca = termo === '' ||
+        card.textContent.toLowerCase().indexOf(termo) !== -1;
+      card.classList.toggle('is-hidden', !(daCategoria && daBusca));
+    });
+  }
+
+  /* MARCAR O CHIP ENTRA NA MESMA ANIMAÇÃO QUE FILTRAR.
+
+     Isto acontecia antes de a animação começar — e a animação funciona
+     tirando um retrato do "antes" e outro do "depois". Marcado antes,
+     os dois retratos já saíam com a pílula colorida no chip novo: ela
+     trocava de lugar num quadro só, e apenas a lista se movia.
+
+     Dentro da animação, o "antes" tem a pílula no chip velho, o
+     "depois" tem no novo, e o navegador cruza as duas — é essa a
+     animação da troca de categoria que o Brian pediu.
+
+     `startViewTransition` também MOVE os cartões que ficaram para o
+     lugar novo, em vez de eles saltarem de posição. Onde ele não
+     existe, cai na cascata de sempre (`animarEntrada`). */
+  function escolherCategoria(valor) {
+    categoriaEscolhida = valor;
+
+    function agora() {
+      marcarChip(valor);
+      aplicarFiltro();
+      conferirVitrine();
+    }
+
+    if (!MENOS_MOVIMENTO && document.startViewTransition) {
+      document.startViewTransition(agora);
+    } else {
+      agora();
+      animarEntrada(document.querySelector('[data-grade]'));
+    }
+  }
+
+  /* O clique vive no documento: chip redesenhado continua funcionando. */
+  document.addEventListener('click', function (e) {
+    var chip = e.target.closest ? e.target.closest('[data-chip]') : null;
+    if (!chip) return;
+    escolherCategoria(chip.getAttribute('data-chip'));
+  });
+
+  /* Depois de o banco redesenhar a vitrine, a escolha da pessoa volta.
+     `loja.js` registra o ouvinte dele antes deste arquivo, então
+     quando este roda a grade nova já está na tela. */
+  document.addEventListener('pharmafit-catalogo', function () {
+    if (!osProdutos().length) return;
+    marcarChip(categoriaEscolhida);
+    aplicarFiltro();
+    conferirVitrine();
+  });
 
   /* ---------- chegar já filtrado por categoria ----------
 
@@ -568,7 +642,7 @@
      e não existia. */
 
   function aplicarCategoriaDoEndereco() {
-    if (!chips.length || !products.length) return;
+    if (!osChips().length || !osProdutos().length) return;
 
     var pedida = String(location.hash || '').replace(/^#/, '').trim().toLowerCase();
     if (!pedida) return;
@@ -591,18 +665,18 @@
   /* ---------- busca por texto nos produtos ---------- */
   var searchField = document.querySelector('[data-search-field]');
 
-  if (searchField && products.length) {
-    /* A busca NAO anima, de proposito. Ela dispara a cada letra: animar
+  if (searchField) {
+    /* O CAMPO é do HTML e não é redesenhado, então o ouvinte dele
+       sobrevive. Quem morria era a LISTA de produtos que ele varria —
+       está tudo dentro de `aplicarFiltro()` agora, que lê a grade na
+       hora.
+
+       A busca NAO anima, de proposito. Ela dispara a cada letra: animar
        aqui faria a grade tremer enquanto a pessoa digita, o que atrapalha
        exatamente quem esta procurando algo. Movimento na troca de
        categoria ajuda a entender que a lista mudou; na busca, estorva. */
     searchField.addEventListener('input', function () {
-      var term = searchField.value.trim().toLowerCase();
-      products.forEach(function (card) {
-        var text = card.textContent.toLowerCase();
-        card.classList.toggle('is-hidden', term !== '' && text.indexOf(term) === -1);
-      });
-
+      aplicarFiltro();
       conferirVitrine();
     });
   }

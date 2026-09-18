@@ -45,20 +45,23 @@
     return i === -1;
   }
 
-  function toast(msg) {
-    var el = document.getElementById('toast-site');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'toast-site';
-      el.className = 'toast';
-      el.setAttribute('role', 'status');
-      document.body.appendChild(el);
-    }
-    el.textContent = msg;
-    el.classList.add('is-visible');
-    clearTimeout(el._t);
-    el._t = setTimeout(function () { el.classList.remove('is-visible'); }, 2800);
-  }
+  /* A TARJA PRETA DO FAVORITO SAIU DAQUI.
+
+     Brian, 18/09/2026, com a foto dela na tela: "tire isso".
+
+     Ela dizia "Lipoless 15 mg — 4 ampolas salvo nos favoritos." num
+     retângulo preto por cima da vitrine, quase três segundos, a cada
+     toque no coração — e cobria os cartões de cima justamente quando a
+     pessoa está percorrendo a lista marcando o que gosta.
+
+     O aviso não foi perdido, ele já existia em dois lugares melhores:
+     o coração daquele cartão fica preenchido na hora, e o número ao
+     lado do coração no menu sobe. Os dois ficam na tela, em vez de
+     aparecer e sumir, e nenhum cobre nada.
+
+     A tarja continua existindo no site para o que ela serve: coisa que
+     acabou de acontecer e NÃO tem marca na tela — "Lembrete criado",
+     "Histórico apagado", "Aplicação registrada". */
 
   /* ---------- reflete o estado na tela ---------- */
 
@@ -114,7 +117,18 @@
     if (!nome) return;
 
     var salvou = alternar(nome);
-    toast(salvou ? nome + ' salvo nos favoritos.' : nome + ' saiu dos favoritos.');
+
+    /* A batida do coração, só ao SALVAR: ao tirar, o coração esvazia e
+       (na página de favoritos) o cartão sai da lista — festejar o que
+       a pessoa acabou de desistir seria estranho. */
+    if (salvou) {
+      botao.classList.remove('is-batendo');
+      void botao.offsetWidth;   /* obriga o navegador a reiniciar a animação */
+      botao.classList.add('is-batendo');
+      botao.addEventListener('animationend', function () {
+        botao.classList.remove('is-batendo');
+      }, { once: true });
+    }
 
     /* na página de favoritos, some da lista na hora */
     if (document.querySelector('[data-favoritos-grade]') && !salvou) montarPagina();

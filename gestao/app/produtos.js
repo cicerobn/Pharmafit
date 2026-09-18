@@ -118,6 +118,18 @@
     return '<span class="marca marca--ativo">Ativo</span>';
   }
 
+  /* A etiqueta escolhida, ao lado da situação, na lista. */
+  var NOME_ETIQUETA = {
+    'mais-vendido': { texto: 'Mais vendido', classe: 'vendido' },
+    'promocao': { texto: 'Promoção', classe: 'promo' }
+  };
+
+  function etiquetaDoProduto(p) {
+    var e = NOME_ETIQUETA[String(p.destaque || '')];
+    if (!e) return '';
+    return ' <span class="marca marca--' + e.classe + '">' + esc(e.texto) + '</span>';
+  }
+
   function montarCategorias() {
     var vistas = [];
     estado.produtos.forEach(function (p) {
@@ -209,7 +221,7 @@
              de compra é o que faz o lucro do relatório sair por cima
              do real. */
           (verCusto ? lucroDoProduto(p, preco) : '') +
-          '<p class="prod__marca">' + situacao(p) + '</p>' +
+          '<p class="prod__marca">' + situacao(p) + etiquetaDoProduto(p) + '</p>' +
         '</div>' +
         /* AS TRÊS BOLINHAS ABREM O MENU DO PRODUTO.
            Antes eram um link para `../index.html?produto=…`: saía do
@@ -260,6 +272,21 @@
   var editando = null;
   var fotoNova = null;      /* {blob, url} escolhida mas ainda não salva */
   var fotoTirar = false;    /* pediu para voltar ao desenho padrão */
+
+  /* A ETIQUETA DA VITRINE SEGUE A MESMA REGRA DA FOTO.
+   *
+   * Ela mora na coluna `destaque` de `pf_produtos` (migração 12). A
+   * chave existir na linha é a prova de que a coluna existe — o
+   * PostgREST devolve todas as colunas da tabela. Se um dia a coluna
+   * for embora, o campo desaparece da folha em vez de dar erro na cara
+   * da equipe ao salvar.
+   *
+   * Diferente da foto, aqui não exijo banco de verdade: no modo
+   * demonstração a escolha é gravada no próprio navegador e a vitrine
+   * de demonstração mostra a etiqueta. Funciona, então aparece. */
+  function podeEtiquetar(p) {
+    return !!p && Object.prototype.hasOwnProperty.call(p, 'destaque');
+  }
 
   function podeTrocarFoto(p) {
     var sb = window.PharmaFitAuth && window.PharmaFitAuth.cliente
@@ -361,6 +388,26 @@
               'placeholder="vazio = sem controle">' +
             '<p class="campo__erro" data-erro hidden></p>' +
           '</div>' +
+        '</div>' +
+
+        /* A ETIQUETA QUE O CLIENTE VÊ NO CARTÃO.
+           Brian, 18/09/2026: "Deixe que essas barras de 'mais vendido,
+           promocao' esteja so em alguns produtos especificos que eu
+           selecionar no painel".
+           São três opções fixas e não texto livre porque cada uma tem
+           cor e animação próprias no site: escrever "QUEIMA DE
+           ESTOQUE" aqui apareceria na vitrine como um retângulo sem
+           estilo. O banco recusa o que não está nesta lista. */
+        '<div class="campo" data-campo="destaque" hidden>' +
+          '<label class="campo__rotulo" for="ed-destaque">Etiqueta na vitrine</label>' +
+          '<select id="ed-destaque" data-destaque>' +
+            '<option value="">Nenhuma</option>' +
+            '<option value="mais-vendido">Mais vendido (dourada)</option>' +
+            '<option value="promocao">Promoção (vermelha)</option>' +
+          '</select>' +
+          '<p class="campo__nota">Aparece em cima da foto, no cartão do site. ' +
+            'Use em poucos produtos: etiqueta em tudo não destaca nada.</p>' +
+          '<p class="campo__erro" data-erro hidden></p>' +
         '</div>' +
 
         '<div class="campo" data-campo="descricao">' +
@@ -607,6 +654,7 @@
     var descricao = String(folha.querySelector('#ed-descricao').value || '').trim();
     var categoria = folha.querySelector('[data-categoria]').value;
     var ativo = folha.querySelector('[data-ativo]').checked;
+    var destaque = String(folha.querySelector('[data-destaque]').value || '');
 
     var ruim = false;
     if (nome.length < 2) { erroNo('nome', 'Escreva o nome do produto.'); ruim = true; }
@@ -630,6 +678,18 @@
                       'desconto que o cliente vê. Deixe 0 se não há promoção.');
       ruim = true;
     }
+    /* ETIQUETA DE PROMOÇÃO SEM DESCONTO NÃO SAI DAQUI.
+       Uma tarja vermelha escrita PROMOÇÃO num produto que está pelo
+       preço normal é propaganda enganosa — e é o tipo de coisa que dá
+       problema de verdade, não só de gosto. O desconto do site nasce do
+       preço antigo; sem ele, não existe promoção para anunciar. */
+    if (destaque === 'promocao' &&
+        !(antes !== null && antes > 0 && preco !== null && !isNaN(preco) && antes > preco)) {
+      erroNo('destaque', 'Para anunciar PROMOÇÃO o produto precisa de um preço antigo maior ' +
+                         'que o de venda — é ele que forma o desconto. Preencha "Preço antigo" ' +
+                         'ou escolha outra etiqueta.');
+      ruim = true;
+    }
     if (ruim) return;
 
     var botao = folha.querySelector('[data-salvar]');
@@ -647,6 +707,12 @@
         descricao: descricao,
         ativo: ativo
       };
+
+      /* A etiqueta só entra no que vai para o banco quando a coluna
+         existe. Mandar um campo que não existe faz o PostgREST recusar
+         o salvar INTEIRO — a equipe perderia a mudança de preço por
+         causa de uma coluna que falta. */
+      if (podeEtiquetar(editando)) campos.destaque = destaque || null;
 
       var urlVelha = editando.imagem || '';
       if (podeTrocarFoto(editando)) {
@@ -703,6 +769,12 @@
     desc.value = p.descricao || '';
     folha.querySelector('[data-conta-descricao]').textContent = desc.value.length;
     folha.querySelector('[data-ativo]').checked = p.ativo !== false;
+
+    /* A etiqueta, quando a coluna existe. `|| ''` cai em "Nenhuma", que
+       é o que o banco guarda como vazio. */
+    var caixaEtiqueta = folha.querySelector('[data-campo="destaque"]');
+    caixaEtiqueta.hidden = !podeEtiquetar(p);
+    folha.querySelector('[data-destaque]').value = String(p.destaque || '');
 
     /* Atendente não vê o preço de compra: o campo sai da folha, e a
        linha de lucro com ele. Campo escondido também não é enviado no

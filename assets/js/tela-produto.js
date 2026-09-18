@@ -101,14 +101,23 @@
     foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
     foto.alt = produto.nome + ' — Pharma Fit';
 
+    /* A ETIQUETA VEM DE `loja.js`, A MESMA DA VITRINE.
+
+       Aqui havia a regra escrita de novo — `produto.antes ? 'PROMOÇÃO'
+       : produto.destaque` —, uma segunda cópia da decisão. Com duas
+       cópias, hoje mesmo a lista mostraria a etiqueta nova e esta
+       página a antiga, para o mesmo produto.
+
+       O elemento no HTML virou um invólucro sem estilo: quem tem a
+       classe, a cor e a animação é o `<span>` que a função devolve.
+       Vazio, nada é desenhado — e é isso que tira o selo do produto que
+       DEIXOU de estar em promoção (antes ele ficava na tela para
+       sempre, porque só existia o caminho que ESCREVE o selo). */
     var selo = achar('selo');
-    var textoSelo = semEstoque ? 'SEM ESTOQUE' : (produto.antes ? 'PROMOÇÃO' : produto.destaque);
-    /* `hidden` nas duas direções: antes era só `if (textoSelo)`, então um
-       produto que DEIXASSE de estar em promoção continuaria com o selo
-       "PROMOÇÃO" na tela depois da atualização. */
-    selo.hidden = !textoSelo;
-    selo.textContent = textoSelo || '';
-    selo.classList.toggle('product__badge--off', semEstoque);
+    var Etiqueta = window.PharmaFitEtiqueta;
+    selo.innerHTML = semEstoque
+      ? '<span class="product__badge product__badge--off"><span>SEM ESTOQUE</span></span>'
+      : (Etiqueta ? Etiqueta(produto, 'product__badge') : '');
   }
 
   aplicarProduto();

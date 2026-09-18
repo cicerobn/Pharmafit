@@ -97,6 +97,23 @@
          sem o campo. */
       if (b.descricao) p.descricao = b.descricao;
       if (b.imagem) p.imagem = b.imagem;
+
+      /* A ETIQUETA DA VITRINE (MAIS VENDIDO / PROMOÇÃO).
+       *
+       * A conta é ao contrário das duas de cima: aqui o VAZIO do banco
+       * vale. "Nenhuma etiqueta" é escolha da equipe tanto quanto "mais
+       * vendido" — se o vazio não apagasse, tirar a etiqueta no painel
+       * não tiraria nada do site, e o painel estaria mentindo.
+       *
+       * Mas só quando a COLUNA existe. Enquanto a migração 12 não
+       * tivesse rodado, a vitrine viria sem esse campo e o `|| ''`
+       * apagaria a etiqueta que o catálogo do código traz: o site
+       * perderia etiqueta por causa de uma coluna que falta, sem erro
+       * nenhum na tela. Com a pergunta, coluna que falta é ignorada. */
+      if (Object.prototype.hasOwnProperty.call(b, 'destaque')) {
+        p.destaque = b.destaque || '';
+      }
+
       mudou = true;
     });
 
@@ -113,7 +130,8 @@
         antes: b.antes || 0, estoque: b.estoque,
         /* a foto que a equipe subiu; sem ela, o frasco genérico, que é
            melhor que um retângulo vazio do tamanho de uma foto */
-        imagem: b.imagem || 'assets/img/prod-frasco.svg'
+        imagem: b.imagem || 'assets/img/prod-frasco.svg',
+        destaque: b.destaque || ''
       });
       mudou = true;
     });

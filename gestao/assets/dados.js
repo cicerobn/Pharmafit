@@ -59,6 +59,12 @@
       /* A imagem ia junto a partir daqui: sem ela, o painel novo mostrava
          os onze produtos com a mesma foto. */
       imagem: p.imagem || null,
+      /* A etiqueta da vitrine (mais-vendido / promocao), para o modo
+         demonstração ter o campo também. O painel só mostra a escolha
+         quando a linha do produto TEM esta chave — é assim que ele sabe
+         que a coluna existe no banco de verdade. Sem esta linha, o
+         painel de demonstração esconderia um campo que funciona. */
+      destaque: p.destaque || '',
       ativo: true
     };
   });

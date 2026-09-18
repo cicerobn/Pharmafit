@@ -809,11 +809,24 @@ body:has(.hero__art--foto) .topbar{
      casa; cada categoria recebe a sua em data-cor, logo abaixo. */
   --c:var(--gold);
   --c2:var(--gold-2);
-  border:1px solid var(--c);
-  color:var(--c);
-  background:transparent;
+  /* `relative` + `isolation` por causa da pílula colorida: ela é um
+     elemento dentro do botão, atrás do texto (`z-index:-1`), e o
+     isolamento prende esse "atrás" ao próprio chip. Sem ele, a pílula
+     iria para trás do fundo da página e sumiria. */
+  position:relative;
+  isolation:isolate;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  border:1px solid color-mix(in srgb,var(--c) 30%,transparent);
+  color:color-mix(in srgb,var(--c) 84%,#1c1a17);
+  /* Um véu da própria cor no chip NÃO marcado.
+     Antes era transparente, e a fila virava contorno vazio sobre
+     creme — na foto do Brian ela parecia uma linha de campos de
+     formulário, não uma escolha. */
+  background:color-mix(in srgb,var(--c) 7%,#fff);
   border-radius:999px;
-  padding:9px 16px;
+  padding:8px 15px;
   font-size:13.5px;
   white-space:nowrap;
   /* border-color e box-shadow entraram na lista: sem eles, a borda e a
@@ -824,6 +837,44 @@ body:has(.hero__art--foto) .topbar{
              transform .12s ease;
 }
 
+/* O DESENHO DA CATEGORIA, DENTRO DO CHIP.
+   É o mesmo desenho dos ícones da página inicial, vindo do mesmo mapa
+   em `loja.js` — a mesma categoria não pode ter dois desenhos no
+   mesmo site. */
+.chip__ico{flex:none;opacity:.9;transition:opacity .2s ease,transform .26s ease}
+.chip.is-active .chip__ico{opacity:1}
+.chip__nome{min-width:0}
+
+/* A PÍLULA COLORIDA DO CHIP MARCADO.
+   Ela é um elemento próprio, e não o fundo do botão, por um motivo
+   prático: `linear-gradient` não é animável, então trocar o fundo do
+   botão acontecia de um quadro para o outro, por mais `transition` que
+   houvesse na regra. Num elemento separado eu animo a OPACIDADE dele,
+   que o navegador interpola — e as duas pílulas (a que sai e a que
+   entra) se cruzam no meio, junto com a cor das duas letras.
+   Também dá o "pop" de entrada, com escala: o chip marcado dá um
+   pequeno salto que o olho segue de um botão para o outro. */
+.chip__fundo{
+  position:absolute;
+  /* -1px cobre a borda do botão, senão fica um fio da cor antiga em
+     volta da pílula */
+  inset:-1px;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--c2),var(--c));
+  box-shadow:0 8px 18px color-mix(in srgb,var(--c) 34%,transparent);
+  opacity:0;
+  z-index:-1;
+  transition:opacity .26s ease;
+}
+.chip.is-active .chip__fundo{
+  opacity:1;
+  animation:chipPop .3s cubic-bezier(.3,1.5,.5,1);
+}
+@keyframes chipPop{
+  from{transform:scale(.82)}
+  to{transform:scale(1)}
+}
+
 /* A cor entra por indice, e nao pelo nome da categoria: assim voce pode
    renomear "Peptideos" amanha sem que a cor troque de lugar. */
 .chip[data-cor="1"]{--c:var(--cat1);--c2:var(--cat1-2)}
@@ -831,41 +882,53 @@ body:has(.hero__art--foto) .topbar{
 .chip[data-cor="3"]{--c:var(--cat3);--c2:var(--cat3-2)}
 .chip[data-cor="4"]{--c:var(--cat4);--c2:var(--cat4-2)}
 
-/* Um ponto da cor antes do texto, so no chip NAO marcado: e o que deixa a
-   fila de botoes legivel como "categorias diferentes" antes de clicar em
-   nada. No marcado ele sai, porque ali a cor ja e o fundo inteiro. */
-.chip::before{
-  content:"";
-  display:inline-block;
-  width:7px;height:7px;
-  border-radius:50%;
-  background:var(--c);
-  margin-right:8px;
-  vertical-align:1px;
-  transition:opacity .2s ease,width .2s ease,margin .2s ease;
-}
-.chip[data-chip="todos"]::before,
-.chip.is-active::before{
-  opacity:0;
-  width:0;
-  margin-right:0;
-}
+/* AQUI HAVIA UM PONTO COLORIDO antes do texto, escondido no chip
+   marcado. Ele existia como substituto de ícone, para a fila ser
+   legível como "categorias diferentes" antes de tocar em nada. Saiu
+   porque agora existe o ícone de verdade: ponto e desenho juntos eram
+   duas marcas dizendo a mesma coisa, e o chip ficava comprido. */
 
-.chip:hover{background:color-mix(in srgb,var(--c) 12%,transparent)}
+.chip:hover{background:color-mix(in srgb,var(--c) 14%,#fff)}
 .chip:active{transform:scale(.97)}
 
 .chip.is-active{
-  background:linear-gradient(135deg,var(--c2),var(--c));
   color:#fff;
   border-color:transparent;
-  box-shadow:0 10px 22px color-mix(in srgb,var(--c) 34%,transparent);
+  background:transparent;   /* a cor agora é a pílula, logo acima */
 }
 
 /* color-mix e recente. Onde nao existir, cai para um cinza-dourado
-   discreto em vez de ficar sem nada. */
+   discreto em vez de ficar sem nada — e o chip marcado precisa da cor
+   CHEIA de volta, porque ali a pílula é que tinha a cor. */
 @supports not (background:color-mix(in srgb,red 10%,transparent)){
+  .chip{background:#fff;border-color:rgba(120,100,60,.3);color:#3a3630}
   .chip:hover{background:rgba(176,140,74,.1)}
-  .chip.is-active{box-shadow:0 10px 22px rgba(40,30,10,.22)}
+  .chip__fundo{box-shadow:0 8px 18px rgba(40,30,10,.22)}
+}
+
+/* ---------- a fila que não cabe na tela ----------
+
+   Na foto que o Brian mandou, o "Peptídeos" estava cortado no meio da
+   palavra pela borda da tela, sem nada dizendo que havia mais coisa à
+   direita: parece defeito, e não fila que rola.
+
+   As classes vêm de `loja.js`, por MEDIDA: `is-corta-direita` só entra
+   quando de fato sobra conteúdo para aquele lado. Numa tela larga,
+   onde os quatro chips cabem, nenhuma das duas aparece — se o
+   esmaecido fosse fixo, o último chip ficaria apagado sem razão. */
+.chips.is-corta-direita{
+  mask-image:linear-gradient(to right,#000 calc(100% - 34px),transparent);
+  -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 34px),transparent);
+}
+.chips.is-corta-esquerda{
+  mask-image:linear-gradient(to right,transparent,#000 34px);
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 34px);
+}
+.chips.is-corta-esquerda.is-corta-direita{
+  mask-image:linear-gradient(to right,transparent,#000 34px,
+    #000 calc(100% - 34px),transparent);
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 34px,
+    #000 calc(100% - 34px),transparent);
 }
 
 .promo{
@@ -959,13 +1022,101 @@ body:has(.hero__art--foto) .topbar{
 .product__badge{
   position:absolute;
   top:0;left:0;
+  /* Este dourado é o padrão de quem não tem sufixo: hoje só o
+     "SEM ESTOQUE", que repinta de cinza logo abaixo. */
   background:linear-gradient(135deg,var(--gold-2),var(--gold));
   color:#fff;
+  /* `inline-flex` e `gap` entraram com o ícone. Antes era texto solto
+     num retângulo; agora tem a estrela (mais vendido) ou o sinal de
+     por cento (promoção) na frente, e sem isto os dois ficariam
+     colados e desalinhados na vertical. */
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
   font-size:9px;
   font-weight:700;
-  letter-spacing:.1em;
-  padding:6px 12px;
+  letter-spacing:.08em;
+  padding:6px 11px;
   border-radius:0 0 12px 0;
+}
+.product__badge svg{width:9px;height:9px;flex:none}
+
+/* =========================================================
+   AS DUAS ETIQUETAS: COR E MOVIMENTO
+
+   Brian, 18/09/2026: "deixe a de promocao mais chamativa e vermelha
+   tambem, a de mais vendido em um dourado com animacao em destaque".
+
+   As duas formas de etiqueta do site — a pílula sobre a foto, no
+   carrossel (`.badge`), e a faixa de canto, na lista
+   (`.product__badge`) — recebem cor e movimento NO MESMO LUGAR, pelo
+   sufixo. Sem isso a promoção seria vermelha num cartão e dourada no
+   outro, e ninguém perceberia até um cliente perguntar.
+
+   O MOVIMENTO SÓ USA `transform` E `opacity`, de propósito: são as
+   duas coisas que o navegador anima sem recalcular a página. Animar
+   cor ou sombra faria a vitrine repintar num laço infinito, e num
+   celular modesto isso aparece como a lista engasgando ao rolar.
+
+   E ESTE BLOCO MORA AQUI, DEPOIS DE `.product__badge`, POR CAUSA DA
+   ORDEM. Ele estava trezentas linhas acima, junto do `.badge` do
+   carrossel, e a etiqueta de promoção saía DOURADA na lista de
+   produtos: `.product__badge` tem o dourado padrão e vem depois, e
+   entre duas regras de mesmo peso o navegador obedece a última. No
+   carrossel funcionava, porque lá a ordem calhava de ser a outra — o
+   defeito aparecia numa tela só. Medido em 18/09/2026, antes de o
+   Brian ver: `rgb(201, 168, 99)` onde eu esperava vermelho.
+   ========================================================= */
+
+/* O conteúdo sobe acima do brilho, que é desenhado no `::after`. */
+.badge svg,.badge span,
+.product__badge svg,.product__badge span{position:relative;z-index:1}
+
+/* O brilho é recortado pela forma da etiqueta. */
+.badge,.product__badge{overflow:hidden}
+
+/* ---------- promoção: vermelha ---------- */
+.badge--promo,
+.product__badge--promo{
+  background:linear-gradient(135deg,#e5493b,#b01608);
+  box-shadow:0 4px 14px rgba(176,22,8,.42);
+}
+/* O clarão branco que atravessa a etiqueta de vez em quando. Ela fica
+   parada 70% do tempo: piscar sem parar vira enfeite de loja barata, e
+   o olho aprende a ignorar o que pisca sempre. */
+.badge--promo::after,
+.product__badge--promo::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:#fff;
+  opacity:0;
+  animation:etiquetaPisca 3.4s ease-in-out infinite;
+}
+@keyframes etiquetaPisca{
+  0%,70%,100%{opacity:0}
+  82%{opacity:.3}
+}
+
+/* ---------- mais vendido: dourada, com o brilho passando ---------- */
+.badge--vendido,
+.product__badge--vendido{
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  box-shadow:0 4px 14px rgba(120,88,30,.42);
+}
+.badge--vendido::after,
+.product__badge--vendido::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(100deg,
+    transparent 34%,rgba(255,255,255,.6) 50%,transparent 66%);
+  transform:translateX(-130%);
+  animation:etiquetaBrilho 3.4s ease-in-out infinite;
+}
+@keyframes etiquetaBrilho{
+  0%,62%{transform:translateX(-130%)}
+  100%{transform:translateX(130%)}
 }
 
 /* O CARTÃO DA VITRINE, MENOR.
@@ -1401,6 +1552,14 @@ body:has(.hero__art--foto) .topbar{
   .product.is-entrando{animation:none}
   .chip{transition:none}
   .chip:active{transform:none}
+  .chip__fundo{transition:none;animation:none}
+  /* As etiquetas param de piscar e de brilhar. A COR fica: ela é
+     informação (vermelho = promoção), não movimento. */
+  .badge--promo::after,.product__badge--promo::after,
+  .badge--vendido::after,.product__badge--vendido::after{
+    animation:none;
+    opacity:0;
+  }
 }
 [hidden]{display:none !important}
 
@@ -1608,6 +1767,23 @@ body:has(.hero__art--foto) .topbar{
 }
 .fav:hover{color:var(--gold);transform:scale(1.06)}
 .fav.is-salvo{color:#c0392b}
+
+/* A BATIDA DO CORAÇÃO AO SALVAR.
+   Ela entrou no lugar da tarja preta que o Brian mandou tirar ("tire
+   isso", 18/09/2026, com a foto do "salvo nos favoritos" cobrindo a
+   vitrine). O coração já ficava vermelho na hora, mas uma cor que muda
+   sem movimento passa desapercebida no canto de um cartão pequeno; a
+   batida faz o olho ir até lá — e acontece NO PRÓPRIO cartão, sem
+   cobrir nada. */
+.fav.is-batendo{animation:favBate .42s cubic-bezier(.3,1.5,.5,1)}
+@keyframes favBate{
+  0%{transform:scale(1)}
+  38%{transform:scale(1.3)}
+  100%{transform:scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  .fav.is-batendo{animation:none}
+}
 
 .fav-contador{
   position:absolute;

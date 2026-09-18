@@ -766,6 +766,15 @@ a{color:inherit;text-decoration:none}
 .marca--ativo{color:var(--st-pago);background:var(--st-pago-bg)}
 .marca--off{color:var(--muted);background:var(--line-2)}
 
+/* AS DUAS ETIQUETAS DA VITRINE, VISTAS DA LISTA DO PAINEL.
+   O Brian escolhe a etiqueta produto por produto; sem uma marca aqui,
+   descobrir QUAIS estão etiquetados exigiria abrir os onze, um por um
+   — e "use em poucos produtos" é impossível de obedecer sem ver
+   quantos já estão. As cores são as mesmas do site de propósito:
+   dourado é mais vendido, vermelho é promoção, nas duas telas. */
+.marca--vendido{color:#6b4e08;background:#fdf1d6}
+.marca--promo{color:#a3170a;background:#fdeae7}
+
 /* ---------------------------------------------------------
    Botão no canto do título
    --------------------------------------------------------- */
