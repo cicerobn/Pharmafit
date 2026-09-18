@@ -332,10 +332,25 @@
        escrito duas vezes envelhece diferente.
        ------------------------------------------------------- */
     foco: {
-      /** Antes de abrir: lembra quem estava com o foco. */
-      guardar: function () {
+      /** Antes de abrir: lembra quem estava com o foco.
+       *
+       *  `reserva` (opcional) é para onde o foco vai quando quem abriu
+       *  não puder mais receber foco na hora de fechar. Aceita seletor
+       *  em texto, resolvido só no fechamento — a lista pode ter sido
+       *  redesenhada com a janela aberta, e aí o elemento antigo já não
+       *  é o que está na tela.
+       *
+       *  POR QUE ISTO EXISTE (18/09/2026): abrindo a folha de editar
+       *  produto PELO MENU das três bolinhas, quem estava com o foco era
+       *  o botão "Editar" DE DENTRO do menu. O menu fecha antes da folha
+       *  abrir, e um elemento dentro de um painel fechado não recebe
+       *  foco: `focus()` não faz nada, sem erro nenhum, e o foco cai no
+       *  `body`. Quem usa teclado fechava a folha do sétimo produto e
+       *  voltava para o começo da página. Medido por `teclado-folha`. */
+      guardar: function (reserva) {
         var a = document.activeElement;
         quemAbriu = a && a !== document.body ? a : null;
+        quemAbriuReserva = reserva || null;
       },
 
       /** Ao abrir: leva o foco para dentro da janela.
@@ -352,10 +367,14 @@
        *  teclado recomeça do topo da página, e quem fechou a
        *  ficha do décimo cliente tem de descer tudo de novo. */
       devolver: function () {
-        if (quemAbriu && document.contains(quemAbriu)) {
-          quemAbriu.focus({ preventScroll: true });
+        if (!tentarFocar(quemAbriu)) {
+          var r = typeof quemAbriuReserva === 'string'
+            ? document.querySelector(quemAbriuReserva)
+            : quemAbriuReserva;
+          tentarFocar(r);
         }
         quemAbriu = null;
+        quemAbriuReserva = null;
       }
     }
   };
@@ -374,6 +393,22 @@
                  'select:not([disabled]), textarea:not([disabled]), ' +
                  '[tabindex]:not([tabindex="-1"])';
   var quemAbriu = null;
+  var quemAbriuReserva = null;
+
+  /* ESTAR NO DOCUMENTO NÃO É PODER RECEBER FOCO, e adivinhar POR QUE um
+     elemento não recebe é onde eu errei duas vezes hoje: um botão dentro
+     de um painel fechado continua no documento, ainda TEM caixa (a folha
+     fechada só desce com `transform`) e mesmo assim `focus()` nele não
+     faz nada — silenciosamente, porque a folha fechada leva
+     `visibility:hidden`, e `getClientRects()` não sabe disso.
+     Então eu paro de prever e MEÇO: tento focar e pergunto ao navegador
+     quem ficou com o foco. Se não foi quem eu pedi, a tentativa falhou,
+     qualquer que seja o motivo. */
+  function tentarFocar(el) {
+    if (!(el && el.focus && document.contains(el))) return false;
+    try { el.focus({ preventScroll: true }); } catch (e) { return false; }
+    return document.activeElement === el;
+  }
 
   /* o papel de quem entrou, e a promessa em voo enquanto ele é lido —
      sem ela, três telas perguntando ao mesmo tempo fariam três

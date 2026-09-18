@@ -748,9 +748,12 @@
   }
 
   function abrir(p) {
-    /* Guardo quem estava com o foco (as três bolinhas do produto) para
-       devolver o foco ali quando a folha fechar. */
-    Moldura.foco.guardar();
+    /* Guardo quem estava com o foco para devolver o foco ali quando a
+       folha fechar — e, como reserva, as TRÊS BOLINHAS deste produto.
+       A reserva não é luxo: quando a folha é aberta pelo menu, quem
+       estava com o foco era o "Editar" de dentro do menu, que fecha
+       antes da folha abrir e deixa de poder receber foco. */
+    Moldura.foco.guardar('[data-acoes="' + String(p.id).replace(/"/g, '') + '"]');
     montarFolha();
     editando = p;
     fotoNova = null;
