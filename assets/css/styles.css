@@ -590,19 +590,30 @@ body:has(.hero__art--foto) .topbar{
    viram duas fileiras, e nenhuma fica estreita demais para o nome
    caber. */
 
+/* ---- a faixa dos dois países, logo abaixo do topo ----
+
+   A EMENDA DO DEGRADÊ MUDOU DE DONO, e é a única coisa que esta faixa
+   tirou de alguém. O degradê de branco para creme era o `.categorias`
+   que carregava, porque ele era o primeiro bloco depois da foto do
+   topo. Agora quem vem primeiro é esta faixa — se o degradê tivesse
+   ficado lá, apareceria uma linha branca entre a foto e a faixa e um
+   segundo degradê começando no meio do caminho.
+
+   Continua em pixels fixos (46px a partir do alto deste bloco) e não em
+   porcentagem: nenhuma conta dependendo de quantas linhas o texto do
+   topo tem. Foi isso que fez errar duas vezes quando o degradê nasceu. */
+.rota{
+  padding:14px 20px 0;
+  background:linear-gradient(180deg,#fdfdfd 0,var(--cream) 46px);
+}
+
 .categorias{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:10px;
-  padding:26px 20px 6px;
-  /* A PASSAGEM DO BRANCO DO TOPO PARA O CREME DA PÁGINA MORA AQUI.
-     Em pixels fixos, e não em porcentagem: 46px de degradê a partir do
-     alto deste bloco. Nenhuma conta dependendo de quantas linhas o
-     texto do topo tem — foi isso que me fez errar duas vezes.
-     Isto veio junto de propósito: o degradê é a emenda entre a foto do
-     topo e o creme da página, e trocar a seção sem trazer a emenda
-     deixaria uma linha branca visível ali. */
-  background:linear-gradient(180deg,#fdfdfd 0,var(--cream) 46px);
+  /* 14px em cima, e não os 26px de antes: a faixa acima já dá o
+     respiro que separava isto da foto do topo. */
+  padding:14px 20px 6px;
 }
 
 .categoria{
@@ -809,11 +820,19 @@ body:has(.hero__art--foto) .topbar{
   gap:4px;
   flex:1;
 }
+/* MESMA LETRA DO NOME NA LISTA DE PRODUTOS, e por isso mudou junto.
+   Quando o cartão da lista trocou a serifada por texto normal
+   (18/09/2026, "texto normal"), este ficou para trás — e os dois
+   aparecem na MESMA tela: o carrossel de "Em destaque" logo abaixo das
+   categorias, e a lista a um toque dali. Dois nomes de produto em
+   letras diferentes, na mesma página, parece defeito mesmo quando cada
+   um está certo sozinho. */
 .protocol__name{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--sans);
+  font-weight:600;
   font-size:12px;
-  line-height:1.2;
+  line-height:1.25;
+  letter-spacing:-.01em;
   margin:0;
   min-width:0;
   overflow-wrap:break-word;
@@ -1991,7 +2010,11 @@ body:has(.hero__art--foto) .topbar{
   :root{--shell:1120px}
 
   .shell{box-shadow:none}
-  .wrap,.hero,.categorias,.section-head,.carousel,.grid-products,.chips,.page-head{padding-inline:48px}
+  /* `.rota` entrou nesta lista junto com a faixa dos dois países: sem
+     ela, a faixa ficaria com 20px de margem enquanto as categorias
+     logo abaixo teriam 48, e o desalinhamento entre duas caixas
+     empilhadas é do tipo que se vê sem saber nomear. */
+  .wrap,.hero,.rota,.categorias,.section-head,.carousel,.grid-products,.chips,.page-head{padding-inline:48px}
   .promo{margin-inline:48px}
 
   .hero{padding-top:24px}
@@ -2813,6 +2836,59 @@ body:has(.hero__art--foto) .topbar{
   box-shadow:0 0 0 1px rgba(0,0,0,.08);
 }
 .atend-pais__bandeira svg{display:block;width:100%;height:100%}
+
+/* ---- o mesmo cartão, na página inicial: dois países em vez de um ----
+
+   `--rota` muda três coisas, e só elas:
+
+   1. `align-items:center` — com duas bandeiras e a seta, o grupo da
+      direita fica alto; alinhado ao topo, ele encostava no título e
+      sobrava um vão embaixo. Na página de Atendimento o cartão continua
+      alinhado ao topo, onde o texto tem três linhas e é isso que se
+      quer.
+   2. a sombra no lugar da borda — este cartão pousa sobre o degradê da
+      entrada, e ali um traço de 1px lê como risco na tela; no
+      Atendimento ele pousa sobre o creme chapado, onde a borda define.
+   3. `margin-top:0` — quem dá o respiro aqui é o `.rota`, acima.
+
+   O resto (o escudo, os tamanhos de letra, o raio, as cores) vem da
+   classe compartilhada. É de propósito: mudar o cartão é mudar num
+   lugar só. */
+.atend-pais--rota{
+  align-items:center;
+  margin-top:0;
+  border-color:transparent;
+  box-shadow:var(--shadow-sm);
+}
+
+.atend-pais__rota{
+  flex:none;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  /* O tracinho que separa o texto das bandeiras, como na foto. Ele é
+     `border-left` e não um elemento: uma linha não precisa de caixa. */
+  padding-left:11px;
+  border-left:1px solid var(--line);
+  color:var(--muted);
+}
+.atend-pais__seta{flex:none}
+
+/* NO CELULAR ESTREITO, TUDO ENCOLHE MENOS O TEXTO.
+   Num aparelho de 390px o cartão tem 322px por dentro, e o escudo, o
+   tracinho e as duas bandeiras comiam 156 deles — sobravam 166 para a
+   frase, que quebrava em cinco linhas. Aqui o que é enfeite cede
+   espaço para o que é palavra: o escudo cai para 30px, as bandeiras
+   para 24, e os respiros apertam. O texto não muda de tamanho — é ele
+   que a pessoa lê. */
+@media (max-width:430px){
+  .atend-pais--rota{gap:9px;padding:12px}
+  .atend-pais--rota .atend-pais__ico{width:30px;height:30px;border-radius:9px}
+  .atend-pais--rota .atend-pais__ico svg{width:17px;height:17px}
+  .atend-pais--rota .atend-pais__bandeira{width:24px;height:17px}
+  .atend-pais__rota{gap:4px;padding-left:8px}
+  .atend-pais__seta{width:11px;height:11px}
+}
 
 /* ---- os três passos ---- */
 
