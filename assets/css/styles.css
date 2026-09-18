@@ -366,9 +366,22 @@ body:has(.hero__art--foto) .topbar{
   position:relative;
   overflow:hidden;
   background:#fdfdfd;
+  /* O TEXTO FICA NO MEIO DA ALTURA, e não colado no alto.
+     Brian, 18/09/2026: "Melhore essas letras ali do lado, pra nao ficar
+     esse espaco em branco ali".
+     O vão nasceu de duas coisas boas: o parágrafo de apoio saiu do topo
+     (pedido dele) e o bloco ganhou altura para a foto caber inteira
+     (também pedido dele). Sobrou o título encostado no alto e, medido
+     num celular de 390px, 103px de branco embaixo dele.
+     Centrar na vertical transforma aquele vão de "faltou algo no fim"
+     em margem nas duas pontas — que é o que equilibra o título com a
+     foto ao lado. O resto do vão eu tiro aumentando a letra, logo
+     abaixo. */
+  display:flex;
+  align-items:center;
 }
 
-.hero__grid{display:block}
+.hero__grid{display:block;width:100%;min-width:0}
 
 .hero__title{
   font-family:var(--serif);
@@ -379,7 +392,17 @@ body:has(.hero__art--foto) .topbar{
      ele deixa a palavra VAZAR, e ela ia por cima do arco dourado do
      anel. Medido nos pixels: o fundo atrás daquelas duas linhas caía
      de 254 para 189. Com 21px ela mede 120px e cabe. */
-  font-size:clamp(21px,6.6vw,28px);
+  /* E O TAMANHO SUBIU, com a régua da própria foto.
+     Medi onde a foto COMEÇA de verdade, escondendo o texto e varrendo
+     o pixel da esquerda para a direita em catorze alturas: num celular
+     de 390px o ponto mais apertado é a ponta da agulha, a 186px; em
+     320px é 153px; em 430px é 203px. Tirando os 20px de margem e uma
+     folga de 8, o título tem 158px em 390.
+     "performance" media 127px em 25,7px de letra. Em 30,4px ela mede
+     150 e ainda sobra folga para a agulha — e o título cresce 18% sem
+     tocar na foto. O teto de 31px é onde ela para de caber nos 158px
+     do `max-width` abaixo. */
+  font-size:clamp(23px,7.3vw,40px);
   /* 1,02 SAIU DA FOTO DELE. As quatro linhas do título dele estão a
      61px uma da outra numa tela de 900 — 26,4px num celular de 390,
      com fonte de 26px. Entrelinha 1,02, bem mais fechada que a 1,14
@@ -402,7 +425,38 @@ body:has(.hero__art--foto) .topbar{
      Por isso a fonte encolheu junto: em 30px "performance" não cabe em
      38% de largura e o título viraria seis linhas. No desenho dele são
      quatro. */
-  max-width:min(40%,158px);
+  /* A LARGURA AGORA VEM DA RÉGUA DA FOTO, e não de uma porcentagem da
+     coluna. `40%` parecia 158px e não era: 40% de uma coluna de 350
+     (390 menos as margens) dá 140 — e com a letra maior o título
+     passou a quebrar em SEIS linhas em vez de quatro, o que foi o
+     primeiro resultado desta mudança.
+     Medido escondendo o texto e varrendo o pixel: a foto começa em
+     47,5% da largura da tela (153px em 320, 186 em 390, 203 em 430).
+     Tirando os 20px de margem e 8 de folga para a agulha, sobra
+     `47vw - 28px`. O teto de 220px é porque a coluna do site para em
+     520px: acima disso a tela cresce e a foto não. */
+  /* A LARGURA VEM DA RÉGUA DA FOTO, e é PORCENTAGEM DA COLUNA — não
+     `vw`, e não `40%`.
+     · `40%` parecia 158px e não era: 40% de uma coluna de 350 (390
+       menos as margens) dá 140, e com a letra maior o título passou a
+       quebrar em SEIS linhas em vez de quatro. Foi o primeiro
+       resultado desta mudança.
+     · `vw` acerta no celular e erra depois: a coluna do site para em
+       520px, então acima disso a tela cresce e a foto não — a conta em
+       `vw` deixaria o título invadir a agulha entre 560 e 900px.
+     Medido escondendo o texto e varrendo o pixel: a foto começa em
+     47,5% da largura do bloco (153px num bloco de 320, 186 em 390, 203
+     em 430). Em porcentagem da coluna isso é 47% menos a folga para a
+     agulha — e vale em toda largura, porque a coluna e a foto crescem
+     juntas.
+     A FOLGA É DE 13px, E O NÚMERO FOI MEDIDO DUAS VEZES: com 9px a
+     conta fechava em todas as telas menos a menor — num celular de
+     320px sobravam 2px entre o "performance" e a ponta da agulha, que
+     é dentro da margem de erro do próprio desenho da foto. Com 13 a
+     folga vai a 6px ali e a 13 num celular comum. O piso da letra
+     desceu de 24 para 23px junto, senão "performance" não caberia
+     nessa largura menor e o título quebraria em cinco linhas. */
+  max-width:calc(47% - 13px);
   position:relative;
   z-index:2;
 }
