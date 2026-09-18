@@ -71,6 +71,23 @@ jobs:
         with:
           node-version: 22
 
+      # A MAIN ENTRA NA BRANCH ANTES DE A BRANCH ENTRAR NA MAIN, e esta ordem
+      # foi comprada com a primeira falha desta automação: os dezenove
+      # conferidores passaram e o merge parou em DEZESSEIS páginas conflitadas,
+      # porque a `main` tinha andado com outro trabalho enquanto este corria.
+      # Nenhum dos dois havia encostado no que o outro escreveu — o conflito
+      # era só a marca de versão, que muda em toda página sempre que qualquer
+      # CSS ou script muda. Duas branches vivas conflitam sempre, por desenho.
+      #
+      # `juntar-main.mjs` resolve exatamente esse caso e recusa qualquer outro;
+      # o que ele aceita e o que ele se recusa a tocar está escrito lá dentro.
+      # Quando ele para, este job para junto, e a `main` fica intacta.
+      - name: Trazer a main para dentro da branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          node juntar-main.mjs
+
       - name: Marcar a versão, e commitar se mudou
         run: |
           node marcar-versao.mjs
@@ -80,10 +97,18 @@ jobs:
             exit 0
           fi
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -u -- '*.html'
           git commit -m 'Marcas de versão em dia, para o navegador receber o arquivo novo'
+
+      # Um push só, depois dos dois passos acima: qualquer um deles pode ter
+      # commitado (o merge da main, a marca recalculada), e empurrar em cada um
+      # seria empurrar duas vezes a mesma branch por nada.
+      - name: Empurrar a branch, se ela andou
+        run: |
+          if [ -z "$(git log '@{u}..HEAD' --oneline 2>/dev/null)" ]; then
+            echo "A branch não andou: nada a empurrar."
+            exit 0
+          fi
           git push origin HEAD:'${{ github.ref }}'
 
       # Os mesmos conferidores do `conferir-site.yml`, pelos mesmos motivos —
@@ -167,14 +192,24 @@ jobs:
 
       - name: Juntar na main e publicar
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
           git fetch origin main
           git checkout main
+
+          # Depois do passo que trouxe a main para dentro da branch, esta junção
+          # não tem o que reconciliar. `--no-ff` mesmo assim, para a `main`
+          # guardar de qual branch cada publicação veio: sem isso os commits
+          # entram soltos e, no dia de achar quando uma mudança foi ao ar, não
+          # há nada marcando a costura.
           git merge --no-ff '${{ github.ref_name }}' \
             -m 'Publica ${{ github.ref_name }}: passou nos conferidores'
+
+          # Se a main andou DE NOVO enquanto os conferidores rodavam, este push
+          # é recusado e o job falha — sem tocar na main, como todo o resto
+          # deste arquivo. O próximo push da branch refaz o caminho já com a
+          # main nova dentro. Falhar e repetir é mais seguro que forçar.
           git push origin main
+
+          echo "No ar: a Hostinger publica a main."
 
           echo "No ar: a Hostinger publica a main."
 
