@@ -26,7 +26,11 @@
   --line:#ebe5da;
   --line-2:#f2ece2;
 
-  --serif:"Playfair Display","Times New Roman",Georgia,serif;
+  /* A fonte dos títulos — a mesma Inter do corpo, em peso 600. Era a
+     Playfair Display; saiu a pedido do Brian em 19/09/2026 ("Onde tiver
+     essa fonte troque, nao gosto dela"). O porquê de a variável não ter
+     sido apagada está no `styles.css`, ao lado da irmã dela. */
+  --titulo:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
   --sans:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
 
   /* As cores de situação. Cada estado do pedido tem a sua, e é
@@ -204,9 +208,9 @@ a{color:inherit;text-decoration:none}
 .pagina{padding:18px 18px 0}
 
 .pagina__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:27px;
-  font-weight:500;
+  font-weight:600;
   margin:0;
   letter-spacing:-.01em;
 }
@@ -340,7 +344,9 @@ a{color:inherit;text-decoration:none}
   margin:0;
 }
 .destaque__valor{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   /* acompanha a largura: "R$ 154.320,00" em tamanho fixo não cabe em
      tela estreita, e dinheiro cortado no meio não é informação */
   font-size:clamp(26px,8.4vw,34px);
@@ -416,7 +422,8 @@ a{color:inherit;text-decoration:none}
   margin:0;
 }
 .numero__valor{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:clamp(19px,5.6vw,23px);
   line-height:1.15;
   margin:6px 0 0;
@@ -910,7 +917,8 @@ a{color:inherit;text-decoration:none}
   margin:4px 0 0;
 }
 .prod__preco{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:19px;
   margin:7px 0 0;
 }
@@ -963,7 +971,8 @@ a{color:inherit;text-decoration:none}
 }
 .vazio svg{color:var(--gold-soft);margin-bottom:10px}
 .vazio__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:18px;
   color:var(--ink);
   margin:0 0 5px;
@@ -1259,9 +1268,9 @@ body.travado{overflow:hidden}
    deixa o texto encolher em vez de empurrar a seta fora da tela. */
 .empresa__corpo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .empresa__nome{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:18px;
-  font-weight:500;
+  font-weight:600;
 }
 .empresa__linha{font-size:13px;color:var(--muted)}
 .empresa__dado{
@@ -1327,7 +1336,7 @@ body.travado{overflow:hidden}
 .rosca-area{display:flex;flex-direction:column;align-items:center;gap:14px}
 .rosca{flex:none;width:132px;height:132px}
 .rosca__fatia{transition:opacity .2s ease}
-.rosca__meio{fill:var(--ink);font-family:var(--serif);font-size:13px;text-anchor:middle}
+.rosca__meio{fill:var(--ink);font-family:var(--titulo);font-weight:600;font-size:13px;text-anchor:middle}
 .rosca__meio-pe{fill:var(--muted-2);font-family:var(--sans);font-size:6.5px;text-anchor:middle}
 
 /* min-width:0 para o nome comprido encolher em vez de estourar a linha */
@@ -1416,7 +1425,7 @@ body.travado{overflow:hidden}
 .folha__titulo{
   flex:1;min-width:0;
   margin:0;
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:17px;font-weight:600;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
