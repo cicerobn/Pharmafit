@@ -154,6 +154,45 @@ for (const pag of paginas) {
       }
     }
   }
+
+  /* ---------- e todos eles com `defer` ----------
+   *
+   * Brian, 19/09/2026: "ta menos lento, mas quando abre ta lento
+   * tambem". A página do produto carrega 465 KB de JavaScript em 18
+   * tags, e nenhuma delas tinha `defer`.
+   *
+   * O QUE EU ACHEI QUE ERA, E NÃO ERA. Escrevi aqui primeiro que as
+   * dezoito baixavam em fila, uma de cada vez. Fui medir antes de
+   * acreditar e estava errado: o navegador tem um leitor adiantado
+   * que acha todas as tags e baixa TODAS em paralelo desde sempre. O
+   * que estava em fila era a EXECUÇÃO — a leitura da página para em
+   * cada script até ele rodar.
+   *
+   * O QUE A MEDIDA DEU, com 80ms de ida e volta por arquivo, até a
+   * foto do produto ganhar endereço: 401ms em fila contra 349ms com
+   * `defer`. 13%. É ganho de verdade e não custa nada, mas é bem menos
+   * do que o parágrafo errado prometia — e comentário que promete o
+   * que não entrega é pior que comentário nenhum.
+   *
+   * O PESO É QUE É O ASSUNTO, e ele continua aqui: 465 KB, dos quais
+   * 213 são a biblioteca do Supabase. Nenhum `defer` conserta isso.
+   *
+   * ISTO É CONFERIDO, e não só corrigido de uma vez, porque página
+   * nova nasce do esqueleto de uma pronta: sem esta regra, a primeira
+   * página que alguém copiar de um exemplo antigo volta a enfileirar
+   * tudo, e ninguém vê — não dá erro em tela nenhuma, só fica lento.
+   *
+   * `defer` depois do `src` e não antes: é assim que o casamento lá em
+   * cima acha o nome do arquivo. */
+  for (const s of html.matchAll(/<script\s+src="([^"]+)"([^>]*)>/g)) {
+    const arquivo = s[1].split(/[?#]/)[0].split('/').pop();
+    if (!/\bdefer\b/.test(s[2])) {
+      problemas.push(
+        `${pag}: ${arquivo} carrega SEM defer — o navegador para a página ` +
+        `para baixar e rodar este script antes de seguir`
+      );
+    }
+  }
 }
 
 console.log(`  ${paginas.length} páginas · ${precisa.size} script(s) com dependência · ` +
