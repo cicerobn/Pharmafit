@@ -327,42 +327,40 @@ window.PharmaFitPreco = {
         var media = [0, 1, 2].map(function (k) {
           return Math.round(cantos.reduce(function (t, c) { return t + c[k]; }, 0) / cantos.length);
         });
-        /* AQUI EU MEDIA O QUANTO OS CANTOS DISCORDAVAM, e havia duas
-           regras penduradas nessa medida. As duas saíram hoje, e a
-           conta saiu com elas — número calculado que ninguém lê é
-           código que promete uma decisão que não existe mais.
+        /* OS QUATRO CANTOS PRECISAM CONCORDAR. VOLTEI ATRÁS NISTO.
+         *
+         * Brian, 19/09/2026, com o cartão do Gluconex numa moldura
+         * verde-oliva: "Volte atras disso aqui".
+         *
+         * ONTEM EU TIREI ESTA EXIGÊNCIA e mandei pintar a média dos
+         * cantos SEMPRE, concordando eles ou não. O raciocínio era que
+         * uma diferença de tom incomoda menos que um retângulo de cor
+         * errada. A foto dele mostrou o furo: com a foto APROXIMADA,
+         * os cantos deixam de ser fundo e viram PRODUTO. A média de
+         * azul, dourado e branco deu verde-oliva, e o cartão ficou com
+         * uma moldura de uma cor que não existe na foto.
+         *
+         * "Média de cores que discordam" não é uma cor aproximada: é
+         * uma cor nova, que não está em lugar nenhum da imagem. Pior
+         * que a emenda que ela tentava esconder.
+         *
+         * Cantos discordando = não dá para saber qual é o fundo. Então
+         * a moldura fica como estava (o creme claro do cartão) e a
+         * emenda volta a ser os 5 a 8 tons de sempre — o pior caso é o
+         * que já existia, e ninguém inventa cor. */
+        var espalha = Math.max.apply(null, [0, 1, 2].map(function (k) {
+          var vs = cantos.map(function (c) { return c[k]; });
+          return Math.max.apply(null, vs) - Math.min.apply(null, vs);
+        }));
+        if (espalha > 26) return;
 
-           A PRIMEIRA TENTATIVA: PREENCHER A MOLDURA, E FOI PIOR.
-           Quando os quatro cantos discordam não existe cor certa para
-           a moldura, então eu mandei a foto crescer até cobrir a caixa
-           (`cover`). Não tem emenda, de fato — mas corta as beiradas, e
-           na foto do Lipoland a beirada é o RÓTULO: o corte comeu
-           "VENTA BAJO RECETA MEDICA" no pé da caixa. Brian, 19/09/2026:
-           "Ruim ainda". Cortar o produto é pior que a emenda que o
-           corte evita, e a ideia foi embora.
+        /* E AQUI MORAVA A REGRA QUE CRIOU A RECLAMAÇÃO DE ONTEM: fundo
+           mais escuro que 120 de 255 não pintava a moldura. Essa NÃO
+           volta. Ela era o que deixava a foto de fundo preto (Lipoland)
+           dentro de uma moldura branca, com um retângulo de beirada
+           dura no meio do cartão. Fundo preto lido com os quatro cantos
+           concordando é fundo preto de verdade, e a moldura acompanha. */
 
-           O que ficou: a moldura toma a média dos quatro cantos SEMPRE,
-           concordando eles ou não. Quando concordam (foto de catálogo,
-           fundo liso — a maioria) a cor é exata e não há emenda nenhuma.
-           Quando discordam, a média é o mais perto que dá de todos os
-           lados ao mesmo tempo: sobra uma diferença de tom, que é muito
-           menos visível que um retângulo de cor errada — e a foto
-           continua inteira, que é o que não se pode perder. */
-
-        /* E AQUI MORAVA A REGRA QUE CRIOU A RECLAMAÇÃO DE ONTEM.
-           Ela dizia: fundo mais escuro que 120 de 255 não pinta a
-           moldura. A intenção era boa — moldura escura dentro de um
-           cartão branco chama atenção. O resultado foi pior: a foto do
-           Lipoland tem fundo PRETO, a moldura ficou branca, e sobrou um
-           retângulo preto de beirada dura no meio do cartão. Brian,
-           19/09/2026, com a foto dos dois cartões lado a lado: "Resolva
-           isso de uma vez por todas".
-
-           Uma moldura preta atrás de uma foto preta não tem emenda
-           NENHUMA: o bloco inteiro vira uma peça só, e é isso que se
-           lê como proposital. O retângulo com beirada é que parece
-           defeito — porque é. A cor do fundo da foto manda, clara ou
-           escura, sem exceção. */
         caixa.style.setProperty('--fundo-foto',
           'rgb(' + media[0] + ',' + media[1] + ',' + media[2] + ')');
       } catch (e) {
