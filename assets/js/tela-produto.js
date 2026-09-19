@@ -97,8 +97,29 @@
       bene.hidden = !htmlBene;
     }
 
+    /* A FOTO GRANDE TAMBÉM PEDE O TAMANHO DA TELA.
+       Brian, 19/09/2026: "ta menos lento, mas quando abre ta lento
+       tambem". A vitrine já pedia a foto medida; esta página não, e
+       continuava baixando o arquivo de 1200px que o painel guarda.
+
+       700px, e o número tem régua: o CSS desta página limita a foto a
+       340px (`.ficha__foto img{max-width:340px}`), então 700 é o dobro
+       — o suficiente para tela retina e nada além disso.
+
+       `data-foto-inteira` é o plano B, o mesmo dos cartões: se o
+       redimensionador não responder, o ouvinte que mora em `loja.js`
+       devolve o arquivo inteiro. `data-foto` (sem sufixo) NÃO serve
+       aqui: ele já é o marcador que esta página usa para achar este
+       próprio `<img>`. */
     var foto = achar('foto');
-    foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
+    var fotoInteira = produto.imagem || 'assets/img/prod-frasco.svg';
+    var fotoPedida = window.PharmaFitFoto
+      ? window.PharmaFitFoto(fotoInteira, 700)
+      : fotoInteira;
+
+    if (fotoPedida !== fotoInteira) foto.setAttribute('data-foto-inteira', fotoInteira);
+    else foto.removeAttribute('data-foto-inteira');
+    foto.src = fotoPedida;
 
     /* A MOLDURA DA FOTO GRANDE TOMA A COR DO FUNDO DELA.
        Aqui a moldura é creme com 22px de respiro em volta: com uma foto
