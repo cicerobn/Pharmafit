@@ -865,7 +865,10 @@ body:has(.hero__art--foto) .topbar{
 .protocol__media{
   position:relative;
   aspect-ratio:1 / 1;
-  background:linear-gradient(180deg,#f7f4ef,#efeae1);
+  /* o mesmo branco da moldura da vitrine, pelo mesmo motivo: foto de
+     produto vem com fundo branco. Ver `.product__media`. */
+  background:#fff;
+  border-bottom:1px solid #f2ece2;
   display:grid;
   place-items:center;
   padding:8px;
@@ -1216,20 +1219,52 @@ body:has(.hero__art--foto) .topbar{
    continua caber inteiro, porque a imagem é `object-fit` centralizada.
    Brian, 18/09/2026: "Aqui esta muito grande o cards... deixe menor". */
 .product__media{
-  background:linear-gradient(180deg,#f7f4ef,#efeae1);
-  aspect-ratio:1/.66;
+  /* BRANCA, E NÃO CREME, DESDE QUE EXISTEM FOTOS DE VERDADE.
+     Brian, 19/09/2026: "As fotos tao ficando bugadas".
+     Parte do "bugado" era isto: foto de produto vem com FUNDO BRANCO
+     (é assim que se fotografa catálogo), e a moldura era um creme
+     degradê. Cada foto virava uma ilha branca dentro da moldura, com a
+     emenda visível em volta — foi o que apareceu no recorte dele, no
+     cartão do TG.
+     Com a moldura branca a foto não tem emenda nenhuma. Os desenhos
+     que os produtos sem foto usam continuam certos: eles têm fundo
+     transparente e uma sombra cinza clara por baixo, que sobre branco
+     fica igual ou melhor do que sobre creme.
+     O fio embaixo devolve a estrutura que o creme dava ao cartão: sem
+     ele, foto e texto viram um bloco branco só. */
+  background:#fff;
+  border-bottom:1px solid #f2ece2;
+  /* 1/0,8 E NÃO 1/0,66, e os 14px que o cartão cresce foram pesados.
+     As fotos de produto que o Brian subiu são retratos de estúdio, ou
+     seja, quadrados ou quase. Numa moldura de 1/0,66 (168×111) uma foto
+     quadrada é limitada pela ALTURA e sai com 91px, deixando 28px de
+     creme de cada lado — o produto fica pequeno no meio de sobra.
+     Em 1/0,8 (168×134) a mesma foto sai com 122px: 34% maior, com 23px
+     a mais de cartão. Não vai a 1/1 porque ali a moldura sozinha teria
+     168px e o cartão passaria de 375 de altura — ele pediu cartões
+     menores em 18/09, e isso vale mais que a foto crescer 20%. */
+  aspect-ratio:1/.8;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:10px;
+  /* 6px e não 10: com a moldura mais alta, o respiro sobra */
+  padding:6px;
   min-height:0;
   overflow:hidden;
 }
+/* O ENCAIXE NÃO PODE DEPENDER DO TAMANHO DO ARQUIVO.
+   Era `width:auto;height:auto;max-width:100%;max-height:100%`: uma foto
+   MENOR que a moldura ficava no tamanho original dela, então duas fotos
+   do mesmo produto em tamanhos de arquivo diferentes apareciam em
+   tamanhos diferentes na tela. Medido: um arquivo de 220×220 saía com
+   91px, do mesmo jeito que um de 1000×1000 — por coincidência, porque
+   os dois batiam no mesmo limite de altura; um de 150×150 sairia com
+   150 e estouraria.
+   Com 100%/100% e `contain`, a moldura manda e o arquivo só decide a
+   nitidez. */
 .product__media img{
-  width:auto;
-  height:auto;
-  max-width:100%;
-  max-height:100%;
+  width:100%;
+  height:100%;
   object-fit:contain;
 }
 
