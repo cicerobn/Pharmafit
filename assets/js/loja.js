@@ -108,6 +108,21 @@
         if (url && outra.src !== url) outra.src = url;
       }
     );
+
+    /* E A COR DO FUNDO DA MOLDURA TEM DE SER LIDA DE NOVO.
+       Esta é a costura entre os dois consertos desta noite: a moldura
+       toma a cor do fundo da foto (para não sobrar borda em volta), e
+       essa leitura já rodou — falhando, porque o endereço redimensionado
+       não existia. Sem apagar a marca de "já lido", a moldura ficaria
+       branca para sempre e a borda voltaria justamente no projeto que
+       não tem redimensionador. */
+    if (window.PharmaFitFundoDaFoto) {
+      Array.prototype.forEach.call(
+        document.querySelectorAll('[data-fundo-da-foto]'),
+        function (caixa) { delete caixa.dataset.fundoLido; }
+      );
+      window.PharmaFitFundoDaFoto(document);
+    }
   }, true);
 
   function chave(texto) {
