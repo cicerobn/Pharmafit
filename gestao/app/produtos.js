@@ -339,6 +339,17 @@
                    MESMA conta do recorte e deixa pronta para salvar. */
                 '<button class="botao" type="button" data-aproximar-foto hidden>Aproximar no produto</button>' +
               '</div>' +
+              /* A BARRINHA DO ZOOM.
+                 Brian, 19/09/2026: "Quero que tenha tipo uma barrinha
+                 que vou puxando e vai dando um zoom, se eu puxo pra
+                 direita da mais zoom, se puxo pra esquerda da menos".
+                 Em centésimos (100 a 400) porque `range` trabalha com
+                 número inteiro; a conta usa 1,00 a 4,00. */
+              '<div class="foto-zoom" data-zoom-caixa hidden>' +
+                '<input class="foto-zoom__barra" type="range" min="100" max="500" step="1" ' +
+                  'value="100" data-zoom-foto aria-label="Zoom da foto">' +
+                '<span class="foto-zoom__valor" data-zoom-valor>1,0×</span>' +
+              '</div>' +
               '<p class="campo__nota" data-foto-nota>JPG, PNG ou WEBP. Eu reduzo e converto ' +
                 'antes de enviar, para a página do cliente não ficar pesada.</p>' +
             '</div>' +
@@ -477,14 +488,20 @@
      * uma foto escolhida à mão, e só vai para o ar quando o dono
      * apertar Salvar. Trocar a foto de um produto sem ele mandar seria
      * mexer no site dele pelas costas. */
+    /* O BOTÃO AGORA É UM ATALHO DA BARRINHA, e não mais um caminho
+     * separado. Ele carrega a foto que está no ar e põe a barrinha no
+     * zoom que a conta sugere — dali em diante quem manda é a mão.
+     *
+     * A foto é lida com `crossOrigin` porque mora no Supabase; sem isso
+     * o navegador recusa ler os pixels dela. É a mesma leitura que a
+     * vitrine já faz para achar a cor do fundo, então o cabeçalho
+     * existe. Falhando, a tela diz e nada é alterado. */
     folha.querySelector('[data-aproximar-foto]').addEventListener('click', function () {
       var botao = this;
       var url = folha.querySelector('[data-foto-vista]').src;
       if (!url) return;
 
       botao.disabled = true;
-      folha.querySelector('[data-foto-nota]').textContent = 'Aproximando…';
-
       var img = new Image();
       img.crossOrigin = 'anonymous';
       img.onerror = function () {
@@ -492,30 +509,25 @@
         dizer('não consegui ler essa foto para aproximar', 'ruim');
       };
       img.onload = function () {
+        botao.disabled = false;
         try {
-          var pronta = window.PharmaFitPrepararFoto(img, 1200);
-          paraWebp(pronta.tela, function (blob) {
-            if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
-            fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
-            fotoTirar = false;
-            folha.querySelector('[data-foto-vista]').src = fotoNova.url;
-            folha.querySelector('[data-tirar-foto]').hidden = false;
-            botao.disabled = false;
-            folha.querySelector('[data-foto-nota]').textContent =
-              pronta.recortou
-                ? 'É assim que ela vai aparecer na loja. Aproximei no produto e tirei a ' +
-                  'sobra em volta — aperte Salvar para valer no site.'
-                : 'Esta foto já está no talho certo: não havia sobra para tirar.';
-          }, function (e) {
-            botao.disabled = false;
-            dizer(String((e && e.message) || e), 'ruim');
-          });
+          usarFonte(img, window.PharmaFitZoom(img).zoomAuto);
+          gravarZoom(Number(folha.querySelector('[data-zoom-foto]').value) / 100);
         } catch (e) {
-          botao.disabled = false;
           dizer('não consegui aproximar essa foto', 'ruim');
         }
       };
       img.src = url;
+    });
+
+    folha.querySelector('[data-zoom-foto]').addEventListener('input', function () {
+      var z = Number(this.value) / 100;
+      folha.querySelector('[data-zoom-valor]').textContent =
+        z.toFixed(1).replace('.', ',') + '×';
+      pintarPrevia(z);
+    });
+    folha.querySelector('[data-zoom-foto]').addEventListener('change', function () {
+      gravarZoom(Number(this.value) / 100);
     });
 
     folha.querySelector('[data-tirar-foto]').addEventListener('click', function () {
@@ -527,6 +539,10 @@
          talho certo, e o botão ali só daria um caminho que não leva a
          lugar nenhum. */
       folha.querySelector('[data-aproximar-foto]').hidden = true;
+      /* Sem foto não há o que aproximar nem o que arrastar. */
+      folha.querySelector('[data-zoom-caixa]').hidden = true;
+      fonteFoto = null;
+      medidaFoto = null;
       dizer('A foto sai quando você salvar. O produto volta a mostrar o desenho.', 'bom');
     });
   }
@@ -570,6 +586,82 @@
    * 1200px no maior lado e WEBP com qualidade 0,82: na tela não se vê
    * diferença e o arquivo cai para uns 80KB. Se ainda passar de 2,8MB
    * (foto gigante e cheia de detalhe), cai a qualidade até caber. */
+  /* ---------- a foto em edição, e a barrinha que manda nela ----------
+   *
+   * `fonteFoto` é a imagem CRUA com que se está trabalhando — o arquivo
+   * que a pessoa acabou de escolher, ou a foto que já estava no ar. Ela
+   * fica guardada porque a barrinha redesenha a cada arrastada, e
+   * redesenhar exige a foto original: partir do resultado anterior
+   * perderia qualidade a cada toque, como fotocópia de fotocópia.
+   *
+   * `medidaFoto` é o que a conta descobriu sobre ela (cor do fundo,
+   * centro do produto, zoom sugerido). Também fica guardado: é a parte
+   * cara, e ela não muda enquanto a foto for a mesma.
+   */
+  var fonteFoto = null;
+  var medidaFoto = null;
+
+  /* O tamanho do quadradinho da prévia, em pixels de verdade (o dobro
+     dos 104 do CSS, para não borrar em tela retina). Pequeno de
+     propósito: ele é redesenhado a cada pixel que a barrinha anda. */
+  var LADO_PREVIA = 208;
+
+  /** Redesenha só a PRÉVIA, no zoom atual. Roda a cada arrastada. */
+  function pintarPrevia(zoom) {
+    if (!fonteFoto) return;
+    var tela = window.PharmaFitFotoComZoom(fonteFoto, LADO_PREVIA, zoom, medidaFoto);
+    folha.querySelector('[data-foto-vista]').src = tela.toDataURL('image/webp', 0.9);
+  }
+
+  /** O arquivo de verdade, no zoom atual. Roda quando a mão solta. */
+  function gravarZoom(zoom) {
+    if (!fonteFoto) return;
+
+    /* O TAMANHO DO ARQUIVO SEGUE O ZOOM, e isto foi um erro meu pego no
+       teste: eu gravava 1200px sempre. Dando zoom, isso AMPLIA pixels
+       que não existem — arquivo maior, nitidez nenhuma, e a loja
+       baixando peso à toa.
+       No zoom `z` a parte da foto que aparece tem `base/z` pixels de
+       verdade. Gravar exatamente isso (com teto de 1200) desenha a foto
+       no tamanho original dela, sem inventar nem jogar fora. O piso de
+       320 existe para zoom muito fechado não virar selo. */
+    var lado = Math.round(medidaFoto.base / zoom);
+    lado = Math.max(320, Math.min(1200, lado));
+
+    var tela = window.PharmaFitFotoComZoom(fonteFoto, lado, zoom, medidaFoto);
+    paraWebp(tela, function (blob) {
+      if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
+      fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
+      fotoTirar = false;
+      folha.querySelector('[data-tirar-foto]').hidden = false;
+      var kb = Math.round(blob.size / 1024);
+      /* Avisa quando o zoom apertou tanto que a foto vai sair pequena:
+         na prévia de 104px isso não aparece, e na vitrine aparece. */
+      folha.querySelector('[data-foto-nota]').textContent =
+        'É assim que ela vai aparecer na loja (' + kb + ' KB). ' +
+        (tela.width < 500
+          ? 'Nesse zoom ela fica com ' + tela.width + 'px e pode sair um pouco ' +
+            'borrada — puxe a barrinha para a esquerda se quiser mais nitidez. '
+          : '') +
+        'Aperte Salvar para valer no site.';
+    }, function (e) {
+      dizer(String((e && e.message) || e), 'ruim');
+    });
+  }
+
+  /** Põe uma imagem na bancada: mede, liga a barrinha e desenha. */
+  function usarFonte(img, zoomInicial) {
+    fonteFoto = img;
+    medidaFoto = window.PharmaFitZoom(img);
+    var z = zoomInicial || 1;
+    var barra = folha.querySelector('[data-zoom-foto]');
+    barra.value = String(Math.round(z * 100));
+    folha.querySelector('[data-zoom-valor]').textContent =
+      z.toFixed(1).replace('.', ',') + '×';
+    folha.querySelector('[data-zoom-caixa]').hidden = false;
+    pintarPrevia(z);
+  }
+
   /* O canvas vira arquivo WEBP, caindo a qualidade até caber no balde
      (3MB). Era um trecho dentro de `reduzir()`; virou função quando o
      botão "Aproximar no produto" passou a precisar da mesma conversão —
@@ -585,46 +677,20 @@
     tentar(0.82);
   }
 
-  function reduzir(arq) {
+  /* O arquivo escolhido vira uma `Image` carregada. Só isso: o recorte,
+     o quadrado e o zoom são conta da barrinha, em `medir-foto.js`.
+     (Aqui morava `reduzir()`, que media e recortava sozinha. Ela saiu
+     quando o zoom passou a ser decisão de quem olha a foto — código que
+     decide no lugar do dono, depois de existir uma barrinha para ele
+     decidir, é código que só pode discordar dele.) */
+  function imagemDoArquivo(arq) {
     return new Promise(function (ok, falhou) {
       var leitor = new FileReader();
       leitor.onerror = function () { falhou(new Error('não consegui ler o arquivo')); };
       leitor.onload = function () {
         var img = new Image();
         img.onerror = function () { falhou(new Error('esse arquivo não parece uma imagem')); };
-        img.onload = function () {
-          /* A FOTO É RECORTADA E QUADRADA ANTES DE SUBIR, e a conta
-           * inteira mora em `../assets/medir-foto.js`.
-           *
-           * O QUE ELA FAZ, em uma linha cada:
-           *  · acha a cor do fundo pelos quatro cantos;
-           *  · varre as bordas para achar onde o produto começa;
-           *  · recorta a sobra, deixa 6% de respiro e devolve um
-           *    QUADRADO preenchido com a cor do fundo da própria foto.
-           *
-           * POR QUE QUADRADO (17/09/2026, "As fotos tao ficando
-           * bugadas"): a vitrine mostra todas na mesma moldura, e foto
-           * deitada, em pé e quadrada apareciam em tamanhos
-           * diferentes — medido, 69%, 44% e 24% da moldura.
-           *
-           * POR QUE RECORTADA (19/09/2026, "tenta dar um zoom na
-           * imagem, deixe isso ao adicionar o produto"): a foto de
-           * catálogo já vem com margem, e o quadrado somava a dele por
-           * cima. Duas margens, produto pequeno no meio.
-           *
-           * POR QUE A CONTA MORA LÁ E NÃO AQUI: aqui ela ficaria atrás
-           * do login, de um `FileReader` e de um `Image.onload` — e
-           * recorte e escala é onde um sinal trocado estraga a foto de
-           * todos os produtos. Lá ela é uma função que recebe uma
-           * imagem e devolve um canvas, e o teste do navegador confere
-           * o que ela devolve. */
-          var LADO = 1200;
-          var pronta = window.PharmaFitPrepararFoto(img, LADO);
-          var tela = pronta.tela;
-          var recortou = pronta.recortou;
-
-          paraWebp(tela, function (blob) { ok({ blob: blob, recortou: recortou }); }, falhou);
-        };
+        img.onload = function () { ok(img); };
         img.src = leitor.result;
       };
       leitor.readAsDataURL(arq);
@@ -634,27 +700,13 @@
   async function escolheuFoto(arq) {
     calar();
     try {
-      var feita = await reduzir(arq);
-      var blob = feita.blob;
-      var recortou = feita.recortou;
-      if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
-      fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
-      fotoTirar = false;
-      folha.querySelector('[data-foto-vista]').src = fotoNova.url;
-      folha.querySelector('[data-tirar-foto]').hidden = false;
-      /* Foto recém-escolhida já passou pelo recorte nesta mesma função:
-         oferecer "Aproximar" aqui seria oferecer o que acabou de ser
-         feito. Ele volta a aparecer quando o produto for reaberto. */
-      folha.querySelector('[data-aproximar-foto]').hidden = true;
-      var kb = Math.round(blob.size / 1024);
-      /* A PRÉVIA JÁ É O ARQUIVO FINAL, e por isso ela pode prometer.
-         `reduzir()` devolve a foto recortada, quadrada e no tamanho que
-         vai subir — o que está no quadradinho ao lado é exatamente o
-         que o cliente vai ver na vitrine, não uma aproximação. */
-      folha.querySelector('[data-foto-nota]').textContent =
-        'É assim que ela vai aparecer na loja. ' +
-        (recortou ? 'Aproximei no produto e tirei a sobra em volta. ' : '') +
-        'Pronta (' + kb + ' KB), sobe quando você salvar.';
+      var img = await imagemDoArquivo(arq);
+      /* A barrinha NASCE no zoom que a conta sugere — o produto já
+         enquadrado — e dali ele ajusta. O automático deixou de decidir
+         e passou a dar o ponto de partida. */
+      var z = window.PharmaFitZoom(img).zoomAuto;
+      usarFonte(img, z);
+      gravarZoom(z);
     } catch (e) {
       dizer(String((e && e.message) || e), 'ruim');
     }
@@ -912,6 +964,34 @@
     if (!bloco.hidden) {
       folha.querySelector('[data-foto-vista]').src = fotoDe(p);
       folha.querySelector('[data-tirar-foto]').hidden = !p.imagem;
+
+      /* A BANCADA COMEÇA VAZIA a cada produto aberto: sem isto, a foto
+         do produto anterior continuaria sendo a fonte da barrinha, e
+         arrastar aqui gravaria a foto do outro. */
+      fonteFoto = null;
+      medidaFoto = null;
+      folha.querySelector('[data-zoom-caixa]').hidden = true;
+
+      /* E A FOTO QUE JÁ ESTÁ NO AR VIRA FONTE SOZINHA, para a barrinha
+         funcionar assim que a folha abre — sem precisar apertar nada.
+         Ela começa em 1,0×, que é a foto COMO ELA ESTÁ HOJE: abrir e
+         salvar sem tocar na barrinha não muda foto nenhuma.
+         Se a leitura falhar (foto de outro endereço sem o cabeçalho de
+         CORS), a barrinha simplesmente não aparece e o resto da folha
+         continua funcionando. */
+      if (p.imagem) {
+        var fonte = new Image();
+        fonte.crossOrigin = 'anonymous';
+        fonte.onload = function () {
+          /* SÓ SE AINDA FOR ESTE PRODUTO. Abrir um produto e trocar
+             para outro antes da foto chegar faria a foto do primeiro
+             virar a fonte da barrinha do segundo — e um arrasto ali
+             gravaria a foto errada no produto errado. */
+          if (editando !== p) return;
+          try { usarFonte(fonte, 1); } catch (e) { /* sem barrinha */ }
+        };
+        fonte.src = fotoDe(p);
+      }
       /* "Aproximar" só faz sentido com foto DE VERDADE: o desenho
          genérico já vem no talho certo, e não há nada para recortar. */
       folha.querySelector('[data-aproximar-foto]').hidden = !p.imagem;
