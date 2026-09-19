@@ -175,7 +175,7 @@
       /* A LINHA DO PRODUTO É UMA GRADE, E NÃO TRÊS CAIXAS EM FILA.
        *
        * Em fila, a coluna do preço não tinha para onde ir: "R$ 2.198,00"
-       * em 19px de serifa pede 112px e não encolhe (é um número, não dá
+       * em 19px pedia 112px e não encolhe (é um número, não dá
        * para quebrar), então ele e o "tirar" saíam pela borda direita da
        * tela num celular de 390 — está na foto que o Brian mandou, com o
        * preço cortado no meio.

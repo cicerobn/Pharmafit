@@ -57,8 +57,8 @@
 .auth__brand img{width:44px;height:44px}
 
 .auth__title{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:30px;
   line-height:1.1;
   margin:0;
@@ -224,8 +224,8 @@
 
 .admin__head{margin-bottom:20px}
 .admin__title{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:32px;
   margin:0;
 }
@@ -276,7 +276,9 @@
 }
 .kpi__label svg{color:var(--gold)}
 .kpi__value{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   /* Acompanha a largura da tela em vez de um tamanho fixo: 26px num celular
      estreito nao cabe em meia tela, e dinheiro cortado no meio e pior que
      dinheiro pequeno.
@@ -312,8 +314,8 @@
   border-bottom:1px solid var(--line);
 }
 .card-block__title{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:20px;
   margin:0;
 }
@@ -534,8 +536,8 @@ td.margem{font-weight:600;color:#2c6338}
   .auth__aside-brand img{width:46px;height:46px;filter:brightness(0) invert(1)}
   .auth__aside-brand span{font-size:17px;letter-spacing:.24em;font-weight:600}
   .auth__aside-title{
-    font-family:var(--serif);
-    font-weight:500;
+    font-family:var(--titulo);
+    font-weight:600;letter-spacing:-.02em;
     font-size:44px;
     line-height:1.1;
     margin:0 0 14px;
@@ -1137,7 +1139,9 @@ td.col-titulo b{font-size:14.5px}
 .ficha__id{min-width:0}
 
 .ficha__nome{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   font-size:26px;
   line-height:1.15;
   margin:0;
