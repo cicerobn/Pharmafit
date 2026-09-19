@@ -43,16 +43,76 @@
 
   document.getElementById('carregando').hidden = true;
 
-  if (!produto) {
+  function mostrarNaoAchei() {
+    document.getElementById('carregando').hidden = true;
     var caixa = document.getElementById('nao-achei');
     caixa.hidden = false;
     document.getElementById('nao-achei-texto').textContent = pedido
       ? '“' + pedido + '” não está no catálogo. Ele pode ter saído de linha.'
       : 'O endereço veio sem o nome do produto.';
     achar('caminho-nome').textContent = 'Não encontrado';
+  }
+
+  /* ---------- NÃO ACHAR NA PRIMEIRA OLHADA NÃO É NÃO EXISTIR ----------
+   *
+   * Brian, 19/09/2026, com a tela de "Não achamos este produto" aberta
+   * no Gluconex: "Resolva isso".
+   *
+   * O QUE ACONTECIA. Esta página procura o produto pelo nome no
+   * catálogo. O catálogo tem duas fontes: a lista escrita no código
+   * (`catalogo.js`), que chega junto com a página, e o BANCO, que chega
+   * um instante depois. Quando a equipe renomeia um produto no painel —
+   * ou cadastra um novo — ele existe só no banco.
+   *
+   * A página olhava UMA vez, na lista do código, não achava, escrevia
+   * "não está no catálogo" e DAVA RETURN. O `return` matava o resto do
+   * arquivo, incluindo o ouvinte que redesenha quando o banco responde.
+   * Ou seja: ela desistia antes da resposta chegar e não tinha como
+   * voltar atrás. Todo produto renomeado pelo painel ficava inacessível
+   * na loja, com o cartão da vitrine linkando para uma página de erro.
+   *
+   * AGORA ELA ESPERA. Se não achou de primeira, continua mostrando
+   * "carregando" e fica ouvindo o banco. Quando ele responde, procura
+   * de novo: achou, a página monta inteira; não achou, aí sim é porque
+   * o produto não existe mesmo.
+   *
+   * E SE O BANCO NUNCA RESPONDER (sem internet, banco fora do ar), o
+   * prazo de 8 segundos mostra o "não achamos" — porque "carregando"
+   * para sempre é pior que uma resposta errada: pelo menos a página de
+   * erro tem um botão para a lista de produtos. */
+  function esperarOBanco() {
+    var desistir = setTimeout(mostrarNaoAchei, 8000);
+
+    document.addEventListener('pharmafit-catalogo', function aoChegar() {
+      produto = C.doCatalogo(pedido);
+      if (!produto) {
+        /* O banco respondeu e ele não está lá: agora é definitivo. */
+        clearTimeout(desistir);
+        document.removeEventListener('pharmafit-catalogo', aoChegar);
+        mostrarNaoAchei();
+        return;
+      }
+      clearTimeout(desistir);
+      document.removeEventListener('pharmafit-catalogo', aoChegar);
+      document.getElementById('carregando').hidden = true;
+      iniciar();
+    });
+  }
+
+  if (!produto) {
+    /* Continua em "carregando": a resposta do banco ainda vem. */
+    document.getElementById('carregando').hidden = false;
+    esperarOBanco();
     return;
   }
 
+  iniciar();
+
+  /* Tudo o que monta a página vive aqui dentro, e não solto no arquivo,
+     porque agora ele pode rodar em DOIS momentos: agora, quando o
+     produto já está na lista do código, ou depois, quando o banco
+     trouxe ele. */
+  function iniciar() {
   document.getElementById('produto').hidden = false;
   document.title = produto.nome + ' — Pharma Fit';
 
@@ -465,4 +525,5 @@
     pintarConta();
     pintarRelacionados();
   });
+  }
 })();

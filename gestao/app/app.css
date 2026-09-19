@@ -1615,31 +1615,31 @@ body.travado{overflow:hidden}
 }
 .foto-troca__lado{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 
-/* ---- a barrinha do zoom da foto ----
-   Brian, 19/09/2026: "Quero que tenha tipo uma barrinha que vou puxando
-   e vai dando um zoom".
+/* ---- a medida que a foto precisa ter, em destaque ----
+   Brian, 19/09/2026: "deixe em destaque qual o tamanho a foto tem que
+   ter pra encaixar perfeito ali". Aqui morava a barrinha de zoom, que
+   saiu no mesmo pedido.
 
-   O número fica ao LADO e não embaixo: embaixo ele empurraria o recado
-   da prévia para fora do campo em tela estreita. `tabular-nums` para o
-   "1,0×" não dançar de largura enquanto se arrasta — número que pula
-   de lugar dá a impressão de que a barra está travando. */
-.foto-zoom{display:flex;align-items:center;gap:10px}
-.foto-zoom__barra{
-  flex:1;
-  min-width:0;
-  /* 28px de altura dão alvo de dedo na barra inteira, não só na
-     bolinha: no celular, errar a bolinha por 3px é errar o gesto. */
-  height:28px;
-  accent-color:var(--gold);
-  cursor:pointer;
+   O número é o que chama o olho — corpo grande, dourado da casa — e a
+   explicação vem miúda embaixo. Quem já sabe a medida lê só o número e
+   segue; quem não sabe lê as duas linhas. */
+.foto-medida{
+  background:var(--line-2);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
 }
-.foto-zoom__valor{
-  flex:none;
-  min-width:40px;
-  text-align:right;
-  font-size:12.5px;
-  font-weight:600;
-  font-variant-numeric:tabular-nums;
+.foto-medida__num{
+  margin:0;
+  font-size:17px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:var(--gold);
+}
+.foto-medida__txt{
+  margin:3px 0 0;
+  font-size:12px;
+  line-height:1.45;
   color:var(--muted);
 }
 .foto-troca__botoes{display:flex;gap:8px;flex-wrap:wrap}
