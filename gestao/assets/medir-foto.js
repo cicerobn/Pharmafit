@@ -127,26 +127,30 @@
     return { fundo: fundo, caixa: caixa };
   };
 
-  /* ---------- e a foto pronta para subir ----------
+  /* ---------- o zoom: quanto da foto entra no quadrado ----------
    *
-   * Recebe a imagem já carregada e devolve o canvas do jeito que o
-   * arquivo vai ser gravado: quadrado, com o produto grande e o fundo
-   * da própria foto em volta.
+   * Brian, 19/09/2026: "Quero que tenha tipo uma barrinha que vou
+   * puxando e vai dando um zoom, se eu puxo pra direita da mais zoom,
+   * se puxo pra esquerda da menos zoom".
    *
-   * ESTA PARTE MORA AQUI, E NÃO NO `produtos.js`, PELO MESMO MOTIVO DA
-   * MEDIDA: dentro do painel ela ficaria atrás de um login, de um
-   * `FileReader` e de um `Image.onload`, e a conta de recorte e escala
-   * — que é onde um sinal trocado estraga a foto de todo mundo — não
-   * teria como ser conferida. Aqui o teste passa uma imagem e mede o
-   * canvas que volta.
+   * O RECORTE DEIXA DE SER UMA DECISÃO MINHA. Antes eu achava o produto
+   * e recortava; dava certo nas fotos de catálogo e errado em algumas.
+   * Agora a conta continua, mas só para SUGERIR onde a barrinha começa
+   * — quem decide é quem está olhando a foto.
    *
-   * `lado` é o teto do arquivo final (1200 no painel).
+   * O QUE O NÚMERO SIGNIFICA:
+   *   zoom 1   = a foto INTEIRA cabe no quadrado (nada cortado);
+   *   zoom 2   = ela entra com o dobro do tamanho, e o que passar da
+   *              beirada do quadrado fica de fora.
+   *
+   * E o zoom acontece em volta do CENTRO DO PRODUTO, não do centro da
+   * foto: produto que está um pouco para o lado continua enquadrado
+   * quando se aproxima. É o que faz a barrinha parecer que "entende" a
+   * foto.
    */
-  window.PharmaFitPrepararFoto = function (img, lado) {
+  window.PharmaFitZoom = function (img) {
     var l = img.width, a = img.height;
 
-    /* A cópia achatada em branco: PNG com transparência viraria preto
-       no WEBP, e é sobre ela que tudo é medido e recortado. */
     var medida = document.createElement('canvas');
     medida.width = l; medida.height = a;
     var mctx = medida.getContext('2d');
@@ -155,29 +159,68 @@
     mctx.drawImage(img, 0, 0);
 
     var r = window.PharmaFitMedirFoto(mctx, l, a);
-    var fundo = r.fundo || [255, 255, 255];
     var c = r.caixa;
-    var recortou = (c.l < l || c.a < a);
 
-    /* A margem de respiro em volta do produto: 6% do maior lado da
-       caixa. Sem ela o produto encostaria na beirada do quadrado, e
-       na vitrine ele encosta na beirada do cartão. */
-    var margem = Math.round(Math.max(c.l, c.a) * 0.06);
-    var bruto = Math.max(c.l, c.a) + margem * 2;
-    var escala = Math.min(1, lado / bruto);
-    var fim = Math.round(bruto * escala);
+    /* `base` é o lado do quadrado no zoom 1: o maior lado da foto, que
+       é o que precisa caber para nada ficar de fora. */
+    var base = Math.max(l, a);
+
+    /* O zoom em que o produto, mais 6% de respiro de cada lado, enche o
+       quadrado. É só a SUGESTÃO de onde a barrinha começa. */
+    var maior = Math.max(c.l, c.a) * 1.12;
+    var zoomAuto = maior > 0 ? base / maior : 1;
+    if (!isFinite(zoomAuto) || zoomAuto < 1) zoomAuto = 1;
+    /* O teto da SUGESTÃO é 4×, e o da barrinha é 5× (ver produtos.js).
+       A diferença é de propósito: sugerir um zoom muito fechado é
+       sugerir uma foto borrada, e isso eu não faço por ele. Chegar lá
+       com a mão, vendo a prévia e o aviso de tamanho, é decisão dele. */
+    if (zoomAuto > 4) zoomAuto = 4;
+
+    return {
+      fundo: r.fundo || [255, 255, 255],
+      centro: { x: c.x + c.l / 2, y: c.y + c.a / 2 },
+      base: base,
+      zoomAuto: zoomAuto,
+      achouProduto: !!r.fundo && (c.l < l || c.a < a),
+      fonte: medida
+    };
+  };
+
+  /* A foto desenhada num quadrado, no zoom pedido.
+   *
+   * `lado` é o tamanho do arquivo de saída (1200 ao salvar, ~300 na
+   * prévia que acompanha a barrinha — a mesma conta, em dois tamanhos,
+   * para o que se vê arrastando ser o que vai ser gravado).
+   *
+   * Tudo é UMA escala e UM deslocamento: a foto é desenhada `escala`
+   * vezes maior e posicionada de modo que o centro do produto caia no
+   * centro do quadrado. O que passar da beirada o próprio canvas corta.
+   */
+  window.PharmaFitFotoComZoom = function (img, lado, zoom, info) {
+    info = info || window.PharmaFitZoom(img);
 
     var tela = document.createElement('canvas');
-    tela.width = fim; tela.height = fim;
+    tela.width = lado; tela.height = lado;
     var ctx = tela.getContext('2d');
-    ctx.fillStyle = 'rgb(' + fundo[0] + ',' + fundo[1] + ',' + fundo[2] + ')';
-    ctx.fillRect(0, 0, fim, fim);
+    var f = info.fundo;
+    ctx.fillStyle = 'rgb(' + f[0] + ',' + f[1] + ',' + f[2] + ')';
+    ctx.fillRect(0, 0, lado, lado);
 
-    var dl = Math.round(c.l * escala);
-    var da = Math.round(c.a * escala);
-    ctx.drawImage(medida, c.x, c.y, c.l, c.a,
-      Math.round((fim - dl) / 2), Math.round((fim - da) / 2), dl, da);
+    var escala = (lado / info.base) * zoom;
+    var dl = img.width * escala;
+    var da = img.height * escala;
+    var x = lado / 2 - info.centro.x * escala;
+    var y = lado / 2 - info.centro.y * escala;
 
-    return { tela: tela, recortou: recortou, fundo: fundo };
+    ctx.drawImage(info.fonte, x, y, dl, da);
+    return tela;
   };
+
+  /* AQUI MORAVA `PharmaFitPrepararFoto`, que media a foto e devolvia
+     ela já recortada no produto — o recorte automático de 19/09/2026.
+     Ela saiu no mesmo dia, quando o Brian pediu a barrinha: com o zoom
+     na mão dele, uma função que decide o recorte sozinha só pode
+     discordar da barrinha. O que sobrou dela — a medida e o desenho no
+     quadrado — está nas duas funções acima, e é o que a barrinha usa. */
+
 })();
