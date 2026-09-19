@@ -24,6 +24,92 @@
     });
   }
 
+  /* ---------- a foto no tamanho da TELA, não no tamanho do arquivo ----------
+   *
+   * Brian, 19/09/2026: "os produtos tao demorando uma eternidade pra
+   * aparecer — as fotos deles".
+   *
+   * O QUE ESTAVA ACONTECENDO. A foto que a equipe sobe pelo painel é
+   * reduzida para 1200px no maior lado (está explicado em
+   * `gestao/app/produtos.js`), o que é certo para a página do produto.
+   * Só que o cartão da vitrine mostra essa mesma foto num quadrado de
+   * ~150px no celular. O visitante baixava onze fotos de 1200px para
+   * ver onze miniaturas — e, como o preço e o texto vêm da consulta ao
+   * banco e chegam antes, a tela ficava pronta com onze retângulos
+   * vazios esperando as fotos. É exatamente o que a foto que ele mandou
+   * mostra: os preços do banco já na tela, as fotos não.
+   *
+   * O CONSERTO. O Supabase serve a mesma foto redimensionada quando se
+   * troca `/object/` por `/render/image/` e se pede a largura. 400px de
+   * largura (o dobro do cartão, para tela retina) custa uma fração do
+   * arquivo inteiro.
+   *
+   * E SE O PROJETO NÃO TIVER ESSE RECURSO? Redimensionar no servidor é
+   * recurso de plano pago no Supabase, e eu não consigo conferir daqui
+   * qual é o plano — a rede deste ambiente não alcança o banco. Então o
+   * código não aposta: se o endereço redimensionado falhar, o `error`
+   * lá embaixo devolve a foto inteira e desliga a tentativa para todas
+   * as outras. O pior caso é um pedido perdido, uma vez; o melhor é a
+   * vitrine abrindo numa fração do peso.
+   *
+   * Foto que não é do balde (o SVG genérico daqui, ou endereço de fora)
+   * passa intacta: não há o que redimensionar. */
+  var CAMINHO_ARQUIVO = '/storage/v1/object/public/';
+  var CAMINHO_MEDIDA = '/storage/v1/render/image/public/';
+  var semRedimensionador = false;
+
+  function fotoDoTamanho(url, largura) {
+    var u = String(url || '');
+    if (semRedimensionador || u.indexOf(CAMINHO_ARQUIVO) === -1) return u;
+    return u.replace(CAMINHO_ARQUIVO, CAMINHO_MEDIDA) +
+      '?width=' + largura + '&resize=contain&quality=70';
+  }
+
+  /** O `<img>` de uma foto de produto, já no tamanho que a tela usa. */
+  function fotoHtml(p, largura, eager) {
+    var pedida = fotoDoTamanho(p.imagem, largura);
+    var original = String(p.imagem || '');
+
+    return '<img src="' + esc(pedida) + '"' +
+      /* `data-foto` só existe quando houve troca de endereço: é ele que
+         diz ao conserto abaixo qual era a foto inteira. */
+      (pedida !== original ? ' data-foto="' + esc(original) + '"' : '') +
+      ' alt="' + esc(p.nome) + ' Pharma Fit"' +
+      ' decoding="async"' +
+      /* Os primeiros cartões da tela NÃO são preguiçosos: `lazy` neles
+         manda o navegador esperar o layout para só então pedir a foto,
+         e são justamente as fotos que a pessoa já está olhando. Do
+         quarto em diante, preguiçoso de novo — esses ela pode nem ver. */
+      (eager ? '' : ' loading="lazy"') +
+      '>';
+  }
+
+  /* O CONSERTO, SE O REDIMENSIONADOR NÃO EXISTIR.
+     `error` de imagem não sobe pela árvore, por isso o `true` no fim:
+     sem a fase de captura este ouvinte nunca seria chamado. */
+  document.addEventListener('error', function (e) {
+    var img = e.target;
+    if (!img || img.tagName !== 'IMG') return;
+
+    var inteira = img.getAttribute('data-foto');
+    /* Sem `data-foto`, ou já mostrando a foto inteira: aí o problema é
+       a foto mesmo, e não o redimensionador. Não há o que fazer. */
+    if (!inteira || img.src === inteira) return;
+
+    semRedimensionador = true;
+    img.src = inteira;
+
+    /* As outras da tela iam falhar pelo mesmo motivo. Trocar todas
+       agora evita onze pedidos perdidos em vez de um. */
+    Array.prototype.forEach.call(
+      document.querySelectorAll('img[data-foto]'),
+      function (outra) {
+        var url = outra.getAttribute('data-foto');
+        if (url && outra.src !== url) outra.src = url;
+      }
+    );
+  }, true);
+
   function chave(texto) {
     return String(texto || '')
       .toLowerCase()
@@ -171,8 +257,9 @@
     grade.innerHTML = visiveis().map(cartao).join('');
   }
 
-  /** Cartão de produto usado na grade e na página de favoritos. */
-  function cartao(p) {
+  /** Cartão de produto usado na grade e na página de favoritos.
+      `i` é a posição na fila: os primeiros pedem a foto na hora. */
+  function cartao(p, i) {
 
     /* Fora de estoque não ganha botão de carrinho: pôr no carrinho o que
        não pode ser entregue só empurra a decepção para o fim da compra. */
@@ -221,7 +308,10 @@
           : etiquetaHtml(p, 'product__badge')) +
         coracaoHtml +
         '<div class="product__media">' +
-          '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
+          /* 400px: o dobro do cartão no celular, para a tela retina não
+             borrar. Os quatro primeiros entram sem `lazy` — são os que
+             já estão na tela quando a página abre. */
+          fotoHtml(p, 400, i < 4) +
         '</div>' +
         '<div class="product__body">' +
           '<h2 class="product__name">' +
@@ -530,7 +620,9 @@
                distingue um do outro. Aqui todos os três são destaque,
                então distinguir não faz sentido. */
             etiquetaHtml({ destaque: 'mais-procurado' }, 'badge') +
-            '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
+            /* 300px: aqui o cartão tem ~110px, e os três estão no alto
+               da página inicial — nenhum deles é preguiçoso. */
+            fotoHtml(p, 300, true) +
           '</div>' +
           '<div class="protocol__body">' +
             '<h3 class="protocol__name">' + esc(p.nome) + '</h3>' +
