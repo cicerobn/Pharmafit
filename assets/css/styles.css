@@ -831,10 +831,23 @@ body:has(.hero__art--foto) .topbar{
    `aspect-ratio` e não altura fixa: os três cartões ficam com a foto
    do mesmo tamanho em qualquer largura de tela, e quem define a altura
    do cartão é o conteúdo. */
+/* A FOTO NO MESMO CREME DA VITRINE, E NÃO EM PRETO.
+   Brian, 18/09/2026, com a foto da fila "Em destaque": "Essa parte aqui
+   nao ficou legal".
+
+   O DEFEITO NÃO É DE GOSTO, É DE VER OU NÃO VER: o fundo era #0e0e0e e
+   as embalagens dos produtos SÃO caixas preta — o Tirzec Pen era uma
+   caixa preta sobre um fundo quase preto, e no cartão só aparecia a
+   caneta. Medido: o mesmo produto tem fundo creme na vitrine de
+   Produtos (um gradiente de #f7f4ef para #efeae1) e preto aqui, no
+   mesmo site e a uma rolagem de distância.
+
+   Agora é o MESMO gradiente da vitrine, escrito uma vez e usado pelos
+   dois — no dia em que um mudar, os dois mudam juntos. */
 .protocol__media{
   position:relative;
   aspect-ratio:1 / 1;
-  background:#0e0e0e;
+  background:linear-gradient(180deg,#f7f4ef,#efeae1);
   display:grid;
   place-items:center;
   padding:8px;
@@ -853,9 +866,13 @@ body:has(.hero__art--foto) .topbar{
   font-weight:700;
   letter-spacing:.04em;
   white-space:nowrap;
-  padding:3px 6px;
+  padding:3px 5px;
   border-radius:999px;
-  box-shadow:0 4px 10px rgba(0,0,0,.28);
+  /* A SOMBRA ERA PRETA E FICOU PESADA quando a foto deixou de ser
+     preta: sobre o creme, `rgba(0,0,0,.28)` desenhava um halo cinza em
+     volta da pílula. Agora ela é do próprio dourado, mais curta — ela
+     serve para a etiqueta não colar na foto, não para ela gritar. */
+  box-shadow:0 2px 6px rgba(140,104,40,.28);
 }
 .badge svg{width:7px;height:7px;flex:none}
 
@@ -883,7 +900,20 @@ body:has(.hero__art--foto) .topbar{
 .protocol__name{
   font-family:var(--sans);
   font-weight:600;
-  font-size:12px;
+  /* 12,5px E DUAS LINHAS FIXAS, e os dois números vêm da mesma
+     medição. Em 13px o nome mais longo do catálogo ("Tirzedral 15 mg —
+     4 ampolas") passou a ocupar TRÊS linhas e o cartão cresceu de 179
+     para 201px de altura — contra o que ele pediu para esta fila
+     ("um tamanho menor, quero que de ve pra ver 3 ali").
+     Com o corte em duas linhas a altura do cartão deixa de depender do
+     tamanho do nome: os três ficam iguais, com ou sem nome comprido, e
+     o nome que não cabe termina em "…" — a página do produto está a um
+     toque, com o nome inteiro. */
+  font-size:12.5px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
   line-height:1.25;
   letter-spacing:-.01em;
   margin:0;
@@ -896,7 +926,14 @@ body:has(.hero__art--foto) .topbar{
      linha e o outro duas. É o que faz a fileira parecer alinhada. */
   margin:0;
   margin-top:auto;
-  font-size:12.5px;
+  /* 15px, E NÃO 12,5. Medido lado a lado: o mesmo preço tem 18px no
+     cartão da vitrine e tinha 12,5 aqui — era a letra do rodapé
+     anunciando o produto em destaque da página inicial. A coluna do
+     cartão tem 92px e "R$ 1.099,00" pede 60 em 15px, então cabe com
+     folga. Não vai a 18 porque o cartão tem 110px de largura (ele
+     pediu três na tela) e aí o preço passaria a mandar mais que o
+     nome do produto. */
+  font-size:15px;
   font-weight:700;
   color:var(--gold);
   line-height:1.2;
