@@ -498,7 +498,10 @@
      * existe. Falhando, a tela diz e nada é alterado. */
     folha.querySelector('[data-aproximar-foto]').addEventListener('click', function () {
       var botao = this;
-      var url = folha.querySelector('[data-foto-vista]').src;
+      /* O endereço ORIGINAL, e não o `src` da prévia: depois da
+         primeira arrastada a prévia é um `data:` de 208px, e
+         reprocessar ela mandaria a miniatura para o site. */
+      var url = urlFotoOriginal;
       if (!url) return;
 
       botao.disabled = true;
@@ -600,6 +603,12 @@
    */
   var fonteFoto = null;
   var medidaFoto = null;
+  /* O ENDEREÇO DA FOTO ORIGINAL, guardado à parte. BUG QUE ISTO
+     CONSERTA: o botão "Aproximar" lia o endereço de volta do
+     `<img>` da prévia — e a prévia, depois da primeira arrastada,
+     é um `data:` de 208px. Ele estaria reprocessando a miniatura em
+     vez da foto, e o produto iria para o site borrado. */
+  var urlFotoOriginal = '';
 
   /* O tamanho do quadradinho da prévia, em pixels de verdade (o dobro
      dos 104 do CSS, para não borrar em tela retina). Pequeno de
@@ -609,8 +618,27 @@
   /** Redesenha só a PRÉVIA, no zoom atual. Roda a cada arrastada. */
   function pintarPrevia(zoom) {
     if (!fonteFoto) return;
-    var tela = window.PharmaFitFotoComZoom(fonteFoto, LADO_PREVIA, zoom, medidaFoto);
-    folha.querySelector('[data-foto-vista]').src = tela.toDataURL('image/webp', 0.9);
+    try {
+      var tela = window.PharmaFitFotoComZoom(fonteFoto, LADO_PREVIA, zoom, medidaFoto);
+      folha.querySelector('[data-foto-vista]').src = tela.toDataURL('image/webp', 0.9);
+    } catch (e) {
+      /* CANVAS SUJO. Se a foto veio de outro endereço sem o cabeçalho
+         de CORS, o navegador proíbe ler os pixels dela e `toDataURL`
+         LANÇA. Sem este try, o erro subia do ouvinte da barrinha e
+         nada acontecia na tela: arrastar não fazia nada, e nada dizia
+         por quê. Agora a barrinha some e a tela explica. */
+      desligarZoom('não consigo editar esta foto aqui (ela veio de outro ' +
+        'endereço). Escolha o arquivo de novo em "Escolher foto".');
+    }
+  }
+
+  /** Tira a barrinha do ar e diz por quê. */
+  function desligarZoom(motivo) {
+    fonteFoto = null;
+    medidaFoto = null;
+    var caixa = folha.querySelector('[data-zoom-caixa]');
+    if (caixa) caixa.hidden = true;
+    dizer(motivo, 'ruim');
   }
 
   /** O arquivo de verdade, no zoom atual. Roda quando a mão solta. */
@@ -628,7 +656,14 @@
     var lado = Math.round(medidaFoto.base / zoom);
     lado = Math.max(320, Math.min(1200, lado));
 
-    var tela = window.PharmaFitFotoComZoom(fonteFoto, lado, zoom, medidaFoto);
+    var tela;
+    try {
+      tela = window.PharmaFitFotoComZoom(fonteFoto, lado, zoom, medidaFoto);
+    } catch (e) {
+      return desligarZoom('não consigo editar esta foto aqui. Escolha o ' +
+        'arquivo de novo em "Escolher foto".');
+    }
+
     paraWebp(tela, function (blob) {
       if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
       fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
@@ -638,12 +673,19 @@
       /* Avisa quando o zoom apertou tanto que a foto vai sair pequena:
          na prévia de 104px isso não aparece, e na vitrine aparece. */
       folha.querySelector('[data-foto-nota]').textContent =
-        'É assim que ela vai aparecer na loja (' + kb + ' KB). ' +
+        'É assim que ela vai aparecer na loja (' + tela.width + 'px, ' + kb + ' KB). ' +
         (tela.width < 500
-          ? 'Nesse zoom ela fica com ' + tela.width + 'px e pode sair um pouco ' +
-            'borrada — puxe a barrinha para a esquerda se quiser mais nitidez. '
-          : '') +
-        'Aperte Salvar para valer no site.';
+          ? 'Nesse zoom ela pode sair um pouco borrada — puxe a barrinha para a ' +
+            'esquerda se quiser mais nitidez. '
+          : '');
+
+      /* E O RECADO DE CIMA DIZ O QUE FALTA, em cor, onde não dá para
+         não ver. Brian, 19/09/2026: "os produtos nao mudam aqui quando
+         eu dou zoom ou tiro zoom no painel" — o zoom muda o arquivo na
+         hora, mas o site só muda quando o produto é SALVO, e isso
+         estava dito numa linha cinza no pé do campo. */
+      dizer('Zoom ajustado. Aperte SALVAR para o site mudar — até lá a loja ' +
+        'continua mostrando a foto antiga.', 'bom');
     }, function (e) {
       dizer(String((e && e.message) || e), 'ruim');
     });
@@ -653,6 +695,20 @@
   function usarFonte(img, zoomInicial) {
     fonteFoto = img;
     medidaFoto = window.PharmaFitZoom(img);
+
+    /* A PERGUNTA FEITA AGORA, E NÃO NA PRIMEIRA ARRASTADA: dá para ler
+       os pixels desta foto?
+       Foto de outro endereço sem o cabeçalho de CORS deixa o canvas
+       "sujo", e aí `toDataURL`/`toBlob` lançam — só que isso só
+       apareceria quando ele já estivesse arrastando a barrinha, como
+       nada acontecendo. Perguntando aqui, a barrinha nem chega a
+       aparecer, e a tela diz por quê. */
+    try {
+      medidaFoto.fonte.getContext('2d').getImageData(0, 0, 1, 1);
+    } catch (e) {
+      return desligarZoom('esta foto veio de um endereço que não deixa editar ' +
+        'por aqui. Use "Escolher foto" e suba o arquivo de novo.');
+    }
     var z = zoomInicial || 1;
     var barra = folha.querySelector('[data-zoom-foto]');
     barra.value = String(Math.round(z * 100));
@@ -668,11 +724,18 @@
      duas cópias disso e um dia uma delas subiria PNG de 6MB. */
   function paraWebp(tela, ok, falhou) {
     var tentar = function (q) {
-      tela.toBlob(function (blob) {
-        if (!blob) return falhou(new Error('não consegui converter a imagem'));
-        if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
-        ok(blob);
-      }, 'image/webp', q);
+      /* `toBlob` num canvas sujo LANÇA na hora, e não pelo caminho do
+         erro. Sem este try o erro subia do ouvinte da barrinha e a
+         gravação falhava calada — nada no site, nada na tela. */
+      try {
+        tela.toBlob(function (blob) {
+          if (!blob) return falhou(new Error('não consegui converter a imagem'));
+          if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
+          ok(blob);
+        }, 'image/webp', q);
+      } catch (e) {
+        falhou(new Error('não consegui converter esta foto'));
+      }
     };
     tentar(0.82);
   }
@@ -979,6 +1042,7 @@
          Se a leitura falhar (foto de outro endereço sem o cabeçalho de
          CORS), a barrinha simplesmente não aparece e o resto da folha
          continua funcionando. */
+      urlFotoOriginal = p.imagem ? fotoDe(p) : '';
       if (p.imagem) {
         var fonte = new Image();
         fonte.crossOrigin = 'anonymous';
