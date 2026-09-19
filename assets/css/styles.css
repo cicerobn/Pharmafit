@@ -1329,30 +1329,6 @@ body:has(.hero__art--foto) .topbar{
   object-fit:contain;
 }
 
-/* FOTO SEM FUNDO UNIFORME: ELA PREENCHE, E AÍ NÃO SOBRA MOLDURA.
-   A marca é posta pelo JavaScript (`catalogo.js`) quando os quatro
-   cantos da foto discordam entre si — uma foto de ambiente, de bancada,
-   com sombra de um lado. Nesse caso NÃO EXISTE cor certa para a
-   moldura: qualquer uma erra em pelo menos um lado, e o que sobra é a
-   borda de que o Brian reclamou duas vezes.
-
-   Sem cor certa, o jeito de não ter emenda é não ter sobra. `cover`
-   cresce a foto até cobrir a caixa. Corta as beiradas, e é a troca
-   certa: numa foto sem fundo uniforme a beirada é ambiente, não é o
-   produto. Na foto de catálogo — fundo liso, que é a maioria — nada
-   disto entra em ação e a foto continua inteira, com a moldura na cor
-   do fundo dela.
-
-   DEPOIS DA REGRA ACIMA, E NÃO ANTES: as duas pesam igual na conta do
-   navegador (uma classe + um elemento), e quando o peso empata quem
-   vale é a última escrita. Eu tinha posto esta antes e o `contain` de
-   cima a anulava — o teste mostrou `contain` onde eu esperava `cover`,
-   e é por isso que ele existe. */
-[data-foto-preenche] img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
 
 .product__badge{
   position:absolute;
