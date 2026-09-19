@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=e074b58f">
+<link rel="stylesheet" href="app.css?v=632a9a6d">
 </head>
 <body>
 
@@ -93,6 +93,10 @@
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
 <script src="app.js?v=0c694996"></script>
-<script src="produtos.js?v=be7897d7"></script>
+<!-- `medir-foto.js` ANTES de `produtos.js`: é ele que responde onde o
+     produto começa dentro da foto, e `produtos.js` chama essa conta na
+     hora de adicionar. Carregado depois, a função não existiria ainda. -->
+<script src="../assets/medir-foto.js?v=3f386c45"></script>
+<script src="produtos.js?v=eca9af56"></script>
 </body>
 </html>

@@ -1588,13 +1588,30 @@ body.travado{overflow:hidden}
 
 /* ---- a foto ---- */
 .foto-troca{display:flex;align-items:center;gap:12px}
+/* A PRÉVIA MOSTRA O QUE A LOJA VAI MOSTRAR.
+   Brian, 19/09/2026: "Deixe uma previa de como vai ficar a foto do
+   produto ao adicionar um novo produto".
+
+   Ela já existia, e mentia em dois pontos:
+
+   1. `object-fit:cover` CORTAVA a foto para encher o quadradinho. A
+      vitrine usa `contain` e mostra a foto inteira — então a prévia
+      mostrava um enquadramento que o cliente nunca veria. Agora é
+      `contain`, o mesmo da loja.
+   2. 64px é miniatura de lista, não prévia: nesse tamanho não dá para
+      ver se o produto ficou pequeno no meio da sobra, que é
+      exatamente o que ele estava tentando enxergar. 104px.
+
+   O fundo é branco e não cinza: depois do recorte a foto sai com o
+   fundo dela própria em volta, e um cinza atrás acusaria uma borda que
+   na loja não existe. */
 .foto-troca__vista{
   flex:none;
-  width:64px;height:64px;
+  width:104px;height:104px;
   border:1px solid var(--line);
   border-radius:13px;
-  background:var(--line-2);
-  object-fit:cover;
+  background:#fff;
+  object-fit:contain;
 }
 .foto-troca__lado{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
 .foto-troca__botoes{display:flex;gap:8px;flex-wrap:wrap}

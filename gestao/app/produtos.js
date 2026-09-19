@@ -511,50 +511,41 @@
         var img = new Image();
         img.onerror = function () { falhou(new Error('esse arquivo não parece uma imagem')); };
         img.onload = function () {
-          /* A FOTO SAI QUADRADA, SEMPRE.
+          /* A FOTO É RECORTADA E QUADRADA ANTES DE SUBIR, e a conta
+           * inteira mora em `../assets/medir-foto.js`.
            *
-           * Brian, 19/09/2026: "As fotos tao ficando bugadas, olha como
-           * ta ficando quando adicionei as fotos".
+           * O QUE ELA FAZ, em uma linha cada:
+           *  · acha a cor do fundo pelos quatro cantos;
+           *  · varre as bordas para achar onde o produto começa;
+           *  · recorta a sobra, deixa 6% de respiro e devolve um
+           *    QUADRADO preenchido com a cor do fundo da própria foto.
            *
-           * Ele estava certo, e o defeito nascia AQUI: esta função
-           * reduzia a foto para 1200px no maior lado e guardava no
-           * FORMATO ORIGINAL. Foto de estúdio quadrada ficava quadrada,
-           * foto deitada ficava deitada, foto em pé ficava em pé — e a
-           * vitrine mostra todas na mesma moldura.
+           * POR QUE QUADRADO (17/09/2026, "As fotos tao ficando
+           * bugadas"): a vitrine mostra todas na mesma moldura, e foto
+           * deitada, em pé e quadrada apareciam em tamanhos
+           * diferentes — medido, 69%, 44% e 24% da moldura.
            *
-           * MEDIDO NO NAVEGADOR, com as quatro formas na mesma fileira:
-           * a deitada ocupava 69% da moldura, a quadrada 44% e a em pé
-           * 24%. Três produtos do mesmo tamanho real apareciam em três
-           * tamanhos diferentes na tela, e é isso que parece bug.
+           * POR QUE RECORTADA (19/09/2026, "tenta dar um zoom na
+           * imagem, deixe isso ao adicionar o produto"): a foto de
+           * catálogo já vem com margem, e o quadrado somava a dele por
+           * cima. Duas margens, produto pequeno no meio.
            *
-           * O conserto é de origem: a foto é desenhada CENTRADA num
-           * quadrado branco. Assim toda foto de produto tem o mesmo
-           * formato, e a moldura da vitrine mostra todas do mesmo
-           * tamanho — sem cortar nada da foto, que é o que aconteceria
-           * se eu preenchesse a moldura à força.
-           *
-           * O branco em volta não é invenção: foto de catálogo já vem
-           * com fundo branco, então a sobra some dentro dela. */
+           * POR QUE A CONTA MORA LÁ E NÃO AQUI: aqui ela ficaria atrás
+           * do login, de um `FileReader` e de um `Image.onload` — e
+           * recorte e escala é onde um sinal trocado estraga a foto de
+           * todos os produtos. Lá ela é uma função que recebe uma
+           * imagem e devolve um canvas, e o teste do navegador confere
+           * o que ela devolve. */
           var LADO = 1200;
-          var escala = Math.min(1, LADO / Math.max(img.width, img.height));
-          var l = Math.round(img.width * escala);
-          var a = Math.round(img.height * escala);
-          var lado = Math.max(l, a);
-          var tela = document.createElement('canvas');
-          tela.width = lado; tela.height = lado;
-          var ctx = tela.getContext('2d');
-          /* fundo branco: PNG com transparência viraria preto no WEBP
-             achatado, e foto de produto com fundo preto não é o que
-             ninguém quis. Aqui ele também é a sobra do quadrado. */
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, lado, lado);
-          ctx.drawImage(img, Math.round((lado - l) / 2), Math.round((lado - a) / 2), l, a);
+          var pronta = window.PharmaFitPrepararFoto(img, LADO);
+          var tela = pronta.tela;
+          var recortou = pronta.recortou;
 
           var tentar = function (q) {
             tela.toBlob(function (blob) {
               if (!blob) return falhou(new Error('não consegui converter a imagem'));
               if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
-              ok(blob);
+              ok({ blob: blob, recortou: recortou });
             }, 'image/webp', q);
           };
           tentar(0.82);
@@ -568,15 +559,23 @@
   async function escolheuFoto(arq) {
     calar();
     try {
-      var blob = await reduzir(arq);
+      var feita = await reduzir(arq);
+      var blob = feita.blob;
+      var recortou = feita.recortou;
       if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
       fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
       fotoTirar = false;
       folha.querySelector('[data-foto-vista]').src = fotoNova.url;
       folha.querySelector('[data-tirar-foto]').hidden = false;
       var kb = Math.round(blob.size / 1024);
+      /* A PRÉVIA JÁ É O ARQUIVO FINAL, e por isso ela pode prometer.
+         `reduzir()` devolve a foto recortada, quadrada e no tamanho que
+         vai subir — o que está no quadradinho ao lado é exatamente o
+         que o cliente vai ver na vitrine, não uma aproximação. */
       folha.querySelector('[data-foto-nota]').textContent =
-        'Pronta (' + kb + ' KB). Ela sobe quando você salvar.';
+        'É assim que ela vai aparecer na loja. ' +
+        (recortou ? 'Aproximei no produto e tirei a sobra em volta. ' : '') +
+        'Pronta (' + kb + ' KB), sobe quando você salvar.';
     } catch (e) {
       dizer(String((e && e.message) || e), 'ruim');
     }
