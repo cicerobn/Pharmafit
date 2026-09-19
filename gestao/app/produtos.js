@@ -328,6 +328,16 @@
               '<div class="foto-troca__botoes">' +
                 '<button class="botao" type="button" data-escolher-foto>Escolher foto</button>' +
                 '<button class="botao" type="button" data-tirar-foto hidden>Voltar ao desenho</button>' +
+                /* APROXIMAR A FOTO QUE JÁ ESTÁ LÁ.
+                   Brian, 19/09/2026: "os produtos ainda estao com o
+                   zoom ruim, voce fez nada ne". Ele estava certo no
+                   resultado: o recorte automático só valia para foto
+                   NOVA, e os onze produtos já cadastrados continuavam
+                   com a foto antiga. Consertar exigia subir tudo de
+                   novo, uma a uma — trabalho que o computador faz.
+                   Este botão pega a foto que já está no ar, passa pela
+                   MESMA conta do recorte e deixa pronta para salvar. */
+                '<button class="botao" type="button" data-aproximar-foto hidden>Aproximar no produto</button>' +
               '</div>' +
               '<p class="campo__nota" data-foto-nota>JPG, PNG ou WEBP. Eu reduzo e converto ' +
                 'antes de enviar, para a página do cliente não ficar pesada.</p>' +
@@ -455,11 +465,68 @@
     arquivo.addEventListener('change', function () {
       if (arquivo.files && arquivo.files[0]) escolheuFoto(arquivo.files[0]);
     });
+    /* A FOTO QUE JÁ ESTÁ NO AR, APROXIMADA SEM SUBIR NADA DE NOVO.
+     *
+     * Ela é lida com `crossOrigin` porque mora no Supabase, e sem isso
+     * o canvas fica "sujo" e o navegador recusa ler os pixels dela —
+     * é a mesma leitura que a vitrine já faz para descobrir a cor do
+     * fundo, então o cabeçalho existe. Se por algum motivo falhar, a
+     * tela diz e nada é alterado.
+     *
+     * O resultado NÃO sobe sozinho: ele fica de prévia, como se fosse
+     * uma foto escolhida à mão, e só vai para o ar quando o dono
+     * apertar Salvar. Trocar a foto de um produto sem ele mandar seria
+     * mexer no site dele pelas costas. */
+    folha.querySelector('[data-aproximar-foto]').addEventListener('click', function () {
+      var botao = this;
+      var url = folha.querySelector('[data-foto-vista]').src;
+      if (!url) return;
+
+      botao.disabled = true;
+      folha.querySelector('[data-foto-nota]').textContent = 'Aproximando…';
+
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onerror = function () {
+        botao.disabled = false;
+        dizer('não consegui ler essa foto para aproximar', 'ruim');
+      };
+      img.onload = function () {
+        try {
+          var pronta = window.PharmaFitPrepararFoto(img, 1200);
+          paraWebp(pronta.tela, function (blob) {
+            if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
+            fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
+            fotoTirar = false;
+            folha.querySelector('[data-foto-vista]').src = fotoNova.url;
+            folha.querySelector('[data-tirar-foto]').hidden = false;
+            botao.disabled = false;
+            folha.querySelector('[data-foto-nota]').textContent =
+              pronta.recortou
+                ? 'É assim que ela vai aparecer na loja. Aproximei no produto e tirei a ' +
+                  'sobra em volta — aperte Salvar para valer no site.'
+                : 'Esta foto já está no talho certo: não havia sobra para tirar.';
+          }, function (e) {
+            botao.disabled = false;
+            dizer(String((e && e.message) || e), 'ruim');
+          });
+        } catch (e) {
+          botao.disabled = false;
+          dizer('não consegui aproximar essa foto', 'ruim');
+        }
+      };
+      img.src = url;
+    });
+
     folha.querySelector('[data-tirar-foto]').addEventListener('click', function () {
       fotoNova = null;
       fotoTirar = true;
       folha.querySelector('[data-foto-vista]').src = '../../assets/img/prod-frasco.svg';
       folha.querySelector('[data-tirar-foto]').hidden = true;
+      /* Sem foto não há o que aproximar: o desenho genérico já vem no
+         talho certo, e o botão ali só daria um caminho que não leva a
+         lugar nenhum. */
+      folha.querySelector('[data-aproximar-foto]').hidden = true;
       dizer('A foto sai quando você salvar. O produto volta a mostrar o desenho.', 'bom');
     });
   }
@@ -503,6 +570,21 @@
    * 1200px no maior lado e WEBP com qualidade 0,82: na tela não se vê
    * diferença e o arquivo cai para uns 80KB. Se ainda passar de 2,8MB
    * (foto gigante e cheia de detalhe), cai a qualidade até caber. */
+  /* O canvas vira arquivo WEBP, caindo a qualidade até caber no balde
+     (3MB). Era um trecho dentro de `reduzir()`; virou função quando o
+     botão "Aproximar no produto" passou a precisar da mesma conversão —
+     duas cópias disso e um dia uma delas subiria PNG de 6MB. */
+  function paraWebp(tela, ok, falhou) {
+    var tentar = function (q) {
+      tela.toBlob(function (blob) {
+        if (!blob) return falhou(new Error('não consegui converter a imagem'));
+        if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
+        ok(blob);
+      }, 'image/webp', q);
+    };
+    tentar(0.82);
+  }
+
   function reduzir(arq) {
     return new Promise(function (ok, falhou) {
       var leitor = new FileReader();
@@ -541,14 +623,7 @@
           var tela = pronta.tela;
           var recortou = pronta.recortou;
 
-          var tentar = function (q) {
-            tela.toBlob(function (blob) {
-              if (!blob) return falhou(new Error('não consegui converter a imagem'));
-              if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
-              ok({ blob: blob, recortou: recortou });
-            }, 'image/webp', q);
-          };
-          tentar(0.82);
+          paraWebp(tela, function (blob) { ok({ blob: blob, recortou: recortou }); }, falhou);
         };
         img.src = leitor.result;
       };
@@ -567,6 +642,10 @@
       fotoTirar = false;
       folha.querySelector('[data-foto-vista]').src = fotoNova.url;
       folha.querySelector('[data-tirar-foto]').hidden = false;
+      /* Foto recém-escolhida já passou pelo recorte nesta mesma função:
+         oferecer "Aproximar" aqui seria oferecer o que acabou de ser
+         feito. Ele volta a aparecer quando o produto for reaberto. */
+      folha.querySelector('[data-aproximar-foto]').hidden = true;
       var kb = Math.round(blob.size / 1024);
       /* A PRÉVIA JÁ É O ARQUIVO FINAL, e por isso ela pode prometer.
          `reduzir()` devolve a foto recortada, quadrada e no tamanho que
@@ -833,9 +912,19 @@
     if (!bloco.hidden) {
       folha.querySelector('[data-foto-vista]').src = fotoDe(p);
       folha.querySelector('[data-tirar-foto]').hidden = !p.imagem;
-      folha.querySelector('[data-foto-nota]').textContent =
-        'JPG, PNG ou WEBP. Eu reduzo e converto antes de enviar, para a página do ' +
-        'cliente não ficar pesada.';
+      /* "Aproximar" só faz sentido com foto DE VERDADE: o desenho
+         genérico já vem no talho certo, e não há nada para recortar. */
+      folha.querySelector('[data-aproximar-foto]').hidden = !p.imagem;
+      /* O RECADO DIZ O QUE O QUADRADINHO É, e não o que ele aceita.
+         Antes falava de JPG e PNG — informação de quem vai ESCOLHER
+         uma foto, no lugar onde o dono está OLHANDO a que já existe.
+         Brian, 19/09/2026: "nao tem nada de ver como vai ficar no site
+         pros outros". Tinha a prévia, mas nada dizia que era isso. */
+      folha.querySelector('[data-foto-nota]').textContent = p.imagem
+        ? 'É assim que ela aparece na loja hoje. Se o produto estiver pequeno no ' +
+          'meio de muita sobra, toque em Aproximar no produto.'
+        : 'Sem foto: a loja mostra o desenho genérico. Toque em Escolher foto para ' +
+          'subir a do produto (JPG, PNG ou WEBP).';
     }
 
     veu.classList.add('is-aberto');
