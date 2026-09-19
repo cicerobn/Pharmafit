@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=0272577d">
+<link rel="stylesheet" href="assets/css/styles.css?v=1f198017">
 </head>
 <body>
 
@@ -97,14 +97,44 @@
   <!-- ===== categorias ===== -->
   <nav class="chips" aria-label="Categorias" data-chips></nav>
 
+  <!-- A ORDENAÇÃO VIROU UMA PÍLULA, E O RÓTULO SAIU DA TELA.
+       Brian, 18/09/2026: "Esse 'ordernar por' ta muito feio, ta no meio
+       do celular, nao gostei de como ele ta".
+       Ele está certo nas duas partes. Medido antes num celular de
+       390px: o "ORDENAR POR" ficava solto no meio da tela (a caixa
+       começava a 199px, com o texto flutuando à esquerda dela) e a
+       escolha era um `select` cru, com a setinha do sistema — a única
+       peça da vitrine que não era desenhada.
+       Agora é UM controle só, encostado na direita, da altura e do
+       feitio dos chips de categoria que estão logo acima: ícone de
+       ordenar, o que está escolhido, e o chevron da casa. O rótulo
+       continua existindo para quem ouve a tela (`aria-label` no
+       `select` e o texto em `visually-hidden`), porque tirar da tela
+       não é tirar de quem precisa dele. -->
   <div class="ordenar">
-    <label class="ordenar__rotulo" for="ordenar">Ordenar por</label>
-    <select id="ordenar" data-ordenar>
-      <option value="relevancia">Nossa seleção</option>
-      <option value="menor-preco">Menor preço</option>
-      <option value="maior-preco">Maior preço</option>
-      <option value="promocao">Promoções primeiro</option>
-    </select>
+    <label class="ordenar__pilula" for="ordenar">
+      <svg class="ordenar__ico" width="15" height="15" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 7h11M4 12h8M4 17h5"/><path d="M17.5 11.5v8M20.5 16.5l-3 3-3-3"/>
+      </svg>
+      <span class="visually-hidden">Ordenar por</span>
+      <!-- o texto do que está escolhido: o `select` por baixo é
+           invisível, então quem mostra a escolha é este pedaço, e quem
+           o escreve é o JavaScript (data-ordenar-valor) -->
+      <span class="ordenar__valor" data-ordenar-valor>Nossa seleção</span>
+      <select id="ordenar" data-ordenar aria-label="Ordenar por">
+        <option value="relevancia">Nossa seleção</option>
+        <option value="menor-preco">Menor preço</option>
+        <option value="maior-preco">Maior preço</option>
+        <option value="promocao">Promoções primeiro</option>
+      </select>
+      <svg class="ordenar__seta" width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round"
+           stroke-linejoin="round" aria-hidden="true">
+        <path d="m6 9 6 6 6-6"/>
+      </svg>
+    </label>
   </div>
 
   <!-- ===== destaque ===== -->
@@ -244,21 +274,21 @@
 </div>
 
 <script src="gestao/assets/config.js?v=55118931"></script>
-<script src="assets/js/catalogo.js?v=ccbf027b"></script>
+<script src="assets/js/catalogo.js?v=17da200b"></script>
 <script src="assets/js/nuvem.js?v=07de0bc1"></script>
-<script src="assets/js/catalogo-banco.js?v=f3e57ff1"></script>
-<script src="assets/js/loja.js?v=360b26e5"></script>
+<script src="assets/js/catalogo-banco.js?v=6c80970a"></script>
+<script src="assets/js/loja.js?v=48435311"></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb"></script>
-<script src="assets/js/idioma-es.js?v=f01a801f"></script>
+<script src="assets/js/idioma-es.js?v=bebc28fc"></script>
 <script src="assets/js/idioma.js?v=81611de9"></script>
 <script src="assets/js/app.js?v=61f1dfcd"></script>
-<script src="assets/js/favoritos.js?v=b87b4c60"></script>
+<script src="assets/js/favoritos.js?v=bb4de2ff"></script>
 <script src="assets/js/validacao.js?v=a553337f"></script>
 <script src="assets/js/formularios.js?v=785d8f81"></script>
 <script src="assets/js/avise.js?v=06cacbaa"></script>
 <script src="assets/js/modal.js?v=95fde199"></script>
 <script src="assets/js/minha-area.js?v=101981a3"></script>
 <script src="assets/js/conta.js?v=5b35fb28"></script>
-<script src="assets/js/pedido.js?v=19f67c9c"></script>
+<script src="assets/js/pedido.js?v=80e6ceae"></script>
 </body>
 </html>

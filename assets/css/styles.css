@@ -40,6 +40,15 @@
 
   --nav-h:74px;
 
+  /* A COR DO FUNDO DA FOTO DO PRODUTO, na moldura da vitrine.
+     Branco é o padrão; quem troca por cartão é o JavaScript, depois de
+     ler os quatro cantos da foto (ver `.product__media--foto`). Ela é
+     DECLARADA aqui de propósito: sem isto, `var(--fundo-foto,#fff)`
+     seria uma reserva escondendo uma variável que não existe em lugar
+     nenhum — e foi exatamente isso que o meu conferidor de CSS apontou
+     quando eu escrevi a regra sem esta linha. */
+  --fundo-foto:#fff;
+
   /* ---- uma cor para cada categoria do catalogo ----------------
      Escolhidas para conviver com o creme e o dourado da casa: sao
      tons fundos e quebrados, nao cores puras. Cor pura ao lado de
@@ -366,9 +375,22 @@ body:has(.hero__art--foto) .topbar{
   position:relative;
   overflow:hidden;
   background:#fdfdfd;
+  /* O TEXTO FICA NO MEIO DA ALTURA, e não colado no alto.
+     Brian, 18/09/2026: "Melhore essas letras ali do lado, pra nao ficar
+     esse espaco em branco ali".
+     O vão nasceu de duas coisas boas: o parágrafo de apoio saiu do topo
+     (pedido dele) e o bloco ganhou altura para a foto caber inteira
+     (também pedido dele). Sobrou o título encostado no alto e, medido
+     num celular de 390px, 103px de branco embaixo dele.
+     Centrar na vertical transforma aquele vão de "faltou algo no fim"
+     em margem nas duas pontas — que é o que equilibra o título com a
+     foto ao lado. O resto do vão eu tiro aumentando a letra, logo
+     abaixo. */
+  display:flex;
+  align-items:center;
 }
 
-.hero__grid{display:block}
+.hero__grid{display:block;width:100%;min-width:0}
 
 .hero__title{
   font-family:var(--serif);
@@ -379,7 +401,17 @@ body:has(.hero__art--foto) .topbar{
      ele deixa a palavra VAZAR, e ela ia por cima do arco dourado do
      anel. Medido nos pixels: o fundo atrás daquelas duas linhas caía
      de 254 para 189. Com 21px ela mede 120px e cabe. */
-  font-size:clamp(21px,6.6vw,28px);
+  /* E O TAMANHO SUBIU, com a régua da própria foto.
+     Medi onde a foto COMEÇA de verdade, escondendo o texto e varrendo
+     o pixel da esquerda para a direita em catorze alturas: num celular
+     de 390px o ponto mais apertado é a ponta da agulha, a 186px; em
+     320px é 153px; em 430px é 203px. Tirando os 20px de margem e uma
+     folga de 8, o título tem 158px em 390.
+     "performance" media 127px em 25,7px de letra. Em 30,4px ela mede
+     150 e ainda sobra folga para a agulha — e o título cresce 18% sem
+     tocar na foto. O teto de 31px é onde ela para de caber nos 158px
+     do `max-width` abaixo. */
+  font-size:clamp(23px,7.3vw,40px);
   /* 1,02 SAIU DA FOTO DELE. As quatro linhas do título dele estão a
      61px uma da outra numa tela de 900 — 26,4px num celular de 390,
      com fonte de 26px. Entrelinha 1,02, bem mais fechada que a 1,14
@@ -402,7 +434,38 @@ body:has(.hero__art--foto) .topbar{
      Por isso a fonte encolheu junto: em 30px "performance" não cabe em
      38% de largura e o título viraria seis linhas. No desenho dele são
      quatro. */
-  max-width:min(40%,158px);
+  /* A LARGURA AGORA VEM DA RÉGUA DA FOTO, e não de uma porcentagem da
+     coluna. `40%` parecia 158px e não era: 40% de uma coluna de 350
+     (390 menos as margens) dá 140 — e com a letra maior o título
+     passou a quebrar em SEIS linhas em vez de quatro, o que foi o
+     primeiro resultado desta mudança.
+     Medido escondendo o texto e varrendo o pixel: a foto começa em
+     47,5% da largura da tela (153px em 320, 186 em 390, 203 em 430).
+     Tirando os 20px de margem e 8 de folga para a agulha, sobra
+     `47vw - 28px`. O teto de 220px é porque a coluna do site para em
+     520px: acima disso a tela cresce e a foto não. */
+  /* A LARGURA VEM DA RÉGUA DA FOTO, e é PORCENTAGEM DA COLUNA — não
+     `vw`, e não `40%`.
+     · `40%` parecia 158px e não era: 40% de uma coluna de 350 (390
+       menos as margens) dá 140, e com a letra maior o título passou a
+       quebrar em SEIS linhas em vez de quatro. Foi o primeiro
+       resultado desta mudança.
+     · `vw` acerta no celular e erra depois: a coluna do site para em
+       520px, então acima disso a tela cresce e a foto não — a conta em
+       `vw` deixaria o título invadir a agulha entre 560 e 900px.
+     Medido escondendo o texto e varrendo o pixel: a foto começa em
+     47,5% da largura do bloco (153px num bloco de 320, 186 em 390, 203
+     em 430). Em porcentagem da coluna isso é 47% menos a folga para a
+     agulha — e vale em toda largura, porque a coluna e a foto crescem
+     juntas.
+     A FOLGA É DE 13px, E O NÚMERO FOI MEDIDO DUAS VEZES: com 9px a
+     conta fechava em todas as telas menos a menor — num celular de
+     320px sobravam 2px entre o "performance" e a ponta da agulha, que
+     é dentro da margem de erro do próprio desenho da foto. Com 13 a
+     folga vai a 6px ali e a 13 num celular comum. O piso da letra
+     desceu de 24 para 23px junto, senão "performance" não caberia
+     nessa largura menor e o título quebraria em cinco linhas. */
+  max-width:calc(47% - 13px);
   position:relative;
   z-index:2;
 }
@@ -480,11 +543,10 @@ body:has(.hero__art--foto) .topbar{
 
 .hero__cta{margin:18px 0 4px;position:relative;z-index:2}
 
-/* O RISQUINHO DOURADO DO TOPO É MAIS APERTADO QUE O DAS OUTRAS PÁGINAS.
-   Ele tem `margin:22px 0 20px` em todo o site, o que dá 45px entre o
-   título e o texto. No desenho dele são 28px. Os 17px de diferença
-   empurravam o texto para dentro da seringa. */
-.hero .rule{margin:13px 0 12px}
+/* O RISQUINHO DOURADO DO TOPO SAIU (18/09/2026, "Tire essa linha"), e
+   com ele esta regra: ela só existia para apertar a margem dele neste
+   bloco. Nas outras páginas o `.rule` continua, com a margem de
+   sempre. */
 
 /* O BOTÃO DO TOPO NÃO ATRAVESSA A TELA.
    `.btn--primary` tem `min-width:min(100%,300px)`, que é o certo no
@@ -699,8 +761,16 @@ body:has(.hero__art--foto) .topbar{
 
 /* ---------- seções ---------- */
 
+/* O BLOCO DE "EM DESTAQUE" É BRANCO, como os outros cartões da página.
+   Brian, 19/09/2026: "Deixe essa parte dos produtos em destaque branco
+   igual nas outras barras, ela esta meio bege".
+   Ele estava usando `--cream-2` (#fbf9f5), que é o quase-branco da
+   casa; os cartões vizinhos — o dos dois países e os três de categoria
+   — usam `--card` (#ffffff). Lado a lado, a diferença de 5 pontos de
+   cinza aparece, e era a única caixa grande da página que não era
+   branca. */
 .panel{
-  background:var(--cream-2);
+  background:var(--card);
   border-radius:26px 26px 0 0;
   margin-top:22px;
   padding:26px 0 0;
@@ -771,20 +841,48 @@ body:has(.hero__art--foto) .topbar{
   background:var(--card);
   border-radius:16px;
   overflow:hidden;
-  box-shadow:var(--shadow-md);
+  /* UM FIO EM VOLTA, e ele nasceu de uma conta.
+     O bloco atrás desta fila era quase-branco e virou branco puro
+     (19/09/2026, "deixe essa parte... branco igual nas outras barras").
+     Com isso o cartão — que também é branco — passou a dissolver no
+     fundo: medido no pixel, na altura do preço a maior diferença entre
+     dois pixels vizinhos na borda do cartão era 11 de 255, ou seja,
+     aresta nenhuma. Os cartões de categoria não têm este problema
+     porque estão sobre o creme da página.
+     O fio vai no `box-shadow` e não em `border` de propósito: assim
+     ele não muda o tamanho do cartão nem empurra os três na fila. */
+  box-shadow:0 0 0 1px var(--line),var(--shadow-md);
 }
 
 /* A FOTO EM CIMA, QUADRADA.
    `aspect-ratio` e não altura fixa: os três cartões ficam com a foto
    do mesmo tamanho em qualquer largura de tela, e quem define a altura
    do cartão é o conteúdo. */
+/* A FOTO NO MESMO CREME DA VITRINE, E NÃO EM PRETO.
+   Brian, 18/09/2026, com a foto da fila "Em destaque": "Essa parte aqui
+   nao ficou legal".
+
+   O DEFEITO NÃO É DE GOSTO, É DE VER OU NÃO VER: o fundo era #0e0e0e e
+   as embalagens dos produtos SÃO caixas preta — o Tirzec Pen era uma
+   caixa preta sobre um fundo quase preto, e no cartão só aparecia a
+   caneta. Medido: o mesmo produto tem fundo creme na vitrine de
+   Produtos (um gradiente de #f7f4ef para #efeae1) e preto aqui, no
+   mesmo site e a uma rolagem de distância.
+
+   Agora é o MESMO gradiente da vitrine, escrito uma vez e usado pelos
+   dois — no dia em que um mudar, os dois mudam juntos. */
 .protocol__media{
   position:relative;
   aspect-ratio:1 / 1;
-  background:#0e0e0e;
+  /* o mesmo branco da moldura da vitrine, pelo mesmo motivo: foto de
+     produto vem com fundo branco. Ver `.product__media`. */
+  background:#fff;
+  border-bottom:1px solid #f2ece2;
   display:grid;
   place-items:center;
-  padding:8px;
+  /* zero, pelo mesmo motivo da vitrine: o respiro era a faixa que
+     aparecia como borda em volta da foto */
+  padding:0;
 }
 .protocol__media img{width:100%;height:100%;object-fit:contain}
 
@@ -800,9 +898,13 @@ body:has(.hero__art--foto) .topbar{
   font-weight:700;
   letter-spacing:.04em;
   white-space:nowrap;
-  padding:3px 6px;
+  padding:3px 5px;
   border-radius:999px;
-  box-shadow:0 4px 10px rgba(0,0,0,.28);
+  /* A SOMBRA ERA PRETA E FICOU PESADA quando a foto deixou de ser
+     preta: sobre o creme, `rgba(0,0,0,.28)` desenhava um halo cinza em
+     volta da pílula. Agora ela é do próprio dourado, mais curta — ela
+     serve para a etiqueta não colar na foto, não para ela gritar. */
+  box-shadow:0 2px 6px rgba(140,104,40,.28);
 }
 .badge svg{width:7px;height:7px;flex:none}
 
@@ -830,7 +932,20 @@ body:has(.hero__art--foto) .topbar{
 .protocol__name{
   font-family:var(--sans);
   font-weight:600;
-  font-size:12px;
+  /* 12,5px E DUAS LINHAS FIXAS, e os dois números vêm da mesma
+     medição. Em 13px o nome mais longo do catálogo ("Tirzedral 15 mg —
+     4 ampolas") passou a ocupar TRÊS linhas e o cartão cresceu de 179
+     para 201px de altura — contra o que ele pediu para esta fila
+     ("um tamanho menor, quero que de ve pra ver 3 ali").
+     Com o corte em duas linhas a altura do cartão deixa de depender do
+     tamanho do nome: os três ficam iguais, com ou sem nome comprido, e
+     o nome que não cabe termina em "…" — a página do produto está a um
+     toque, com o nome inteiro. */
+  font-size:12.5px;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
   line-height:1.25;
   letter-spacing:-.01em;
   margin:0;
@@ -843,7 +958,14 @@ body:has(.hero__art--foto) .topbar{
      linha e o outro duas. É o que faz a fileira parecer alinhada. */
   margin:0;
   margin-top:auto;
-  font-size:12.5px;
+  /* 15px, E NÃO 12,5. Medido lado a lado: o mesmo preço tem 18px no
+     cartão da vitrine e tinha 12,5 aqui — era a letra do rodapé
+     anunciando o produto em destaque da página inicial. A coluna do
+     cartão tem 92px e "R$ 1.099,00" pede 60 em 15px, então cabe com
+     folga. Não vai a 18 porque o cartão tem 110px de largura (ele
+     pediu três na tela) e aí o preço passaria a mandar mais que o
+     nome do produto. */
+  font-size:15px;
   font-weight:700;
   color:var(--gold);
   line-height:1.2;
@@ -1108,20 +1230,97 @@ body:has(.hero__art--foto) .topbar{
    continua caber inteiro, porque a imagem é `object-fit` centralizada.
    Brian, 18/09/2026: "Aqui esta muito grande o cards... deixe menor". */
 .product__media{
-  background:linear-gradient(180deg,#f7f4ef,#efeae1);
-  aspect-ratio:1/.66;
+  /* BRANCA, E NÃO CREME, DESDE QUE EXISTEM FOTOS DE VERDADE.
+     Brian, 19/09/2026: "As fotos tao ficando bugadas".
+     Parte do "bugado" era isto: foto de produto vem com FUNDO BRANCO
+     (é assim que se fotografa catálogo), e a moldura era um creme
+     degradê. Cada foto virava uma ilha branca dentro da moldura, com a
+     emenda visível em volta — foi o que apareceu no recorte dele, no
+     cartão do TG.
+     Com a moldura branca a foto não tem emenda nenhuma. Os desenhos
+     que os produtos sem foto usam continuam certos: eles têm fundo
+     transparente e uma sombra cinza clara por baixo, que sobre branco
+     fica igual ou melhor do que sobre creme.
+     O fio embaixo devolve a estrutura que o creme dava ao cartão: sem
+     ele, foto e texto viram um bloco branco só. */
+  background:#fff;
+  border-bottom:1px solid #f2ece2;
+  /* a moldura desfocada mora num `::before` dentro dela */
+  position:relative;
+  /* 1/0,8 E NÃO 1/0,66, e os 14px que o cartão cresce foram pesados.
+     As fotos de produto que o Brian subiu são retratos de estúdio, ou
+     seja, quadrados ou quase. Numa moldura de 1/0,66 (168×111) uma foto
+     quadrada é limitada pela ALTURA e sai com 91px, deixando 28px de
+     creme de cada lado — o produto fica pequeno no meio de sobra.
+     Em 1/0,8 (168×134) a mesma foto sai com 122px: 34% maior, com 23px
+     a mais de cartão. Não vai a 1/1 porque ali a moldura sozinha teria
+     168px e o cartão passaria de 375 de altura — ele pediu cartões
+     menores em 18/09, e isso vale mais que a foto crescer 20%. */
+  aspect-ratio:1/.8;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:10px;
+  /* ZERO, E NÃO 6px. O respiro era uma faixa da cor da moldura em volta
+     da foto — e é justamente essa faixa que aparecia como borda quando
+     o fundo da foto não era branco puro (Brian, 19/09/2026: "Alguns
+     produtos ainda estao com a borda"). Com o fundo desfocado atrás, o
+     que sobra nas laterais é a própria foto continuando, e não há mais
+     nada para respirar. */
+  padding:0;
   min-height:0;
   overflow:hidden;
 }
+/* ---------- A MOLDURA TOMA A COR DO FUNDO DA FOTO ----------
+   Brian, 19/09/2026: "Alguns produtos ainda estao com a borda, nao
+   quero que isso aconteca nem que isso se repita".
+
+   A foto quase nunca tem o formato exato da moldura, e o que sobra nas
+   laterais (ou em cima) é a cor da moldura. Foto de catálogo tem fundo
+   branco OU QUASE branco — medi 247,247,247 numa e 252,252,250 noutra —
+   e a moldura é branca puro: dá um degrau de 5 a 8 tons numa linha reta
+   de 134px, que é pouco no número e bem visível no olho. É a borda que
+   ele viu no TG, no Gluconex e no Lipoland.
+
+   EU TENTEI PRIMEIRO PINTAR A MOLDURA COM A PRÓPRIA FOTO DESFOCADA, e
+   MEDI ANTES DE ACREDITAR: ficou pior. O desfoque é um recorte que
+   preenche a moldura, então numa foto em pé ele mostra a parte escura
+   do produto ampliada, enquanto a foto de verdade tem margem branca ao
+   lado — a emenda subiu de 8 para 191 tons. Ideia bonita, número
+   ruim, ideia fora.
+
+   O QUE RESOLVE: a moldura toma a COR DO FUNDO DA PRÓPRIA FOTO, lida
+   dos quatro cantos dela pelo JavaScript (`--fundo-foto`). A sobra fica
+   exatamente da cor do que está ao lado dela, e não existe emenda para
+   se ver — com qualquer foto, de qualquer formato, hoje e nas
+   próximas, sem ninguém subir foto de novo.
+
+   O branco continua sendo o padrão: quando a leitura não dá (foto que
+   não permite ler os pixels, ou fundo que não é uniforme), a moldura
+   fica branca e a emenda volta a ser aqueles 5 a 8 tons — o pior caso
+   é o que já existia. */
+.product__media--foto,
+.protocol__media--foto,
+/* a foto grande da página do produto e a miniatura do carrinho usam a
+   MESMA conta; a marca `data-fundo-da-foto` é posta pelo JavaScript só
+   quando a imagem é foto de verdade */
+.ficha__foto[data-fundo-da-foto],
+.carrinho__foto[data-fundo-da-foto]{
+  background:var(--fundo-foto);
+}
+
+/* O ENCAIXE NÃO PODE DEPENDER DO TAMANHO DO ARQUIVO.
+   Era `width:auto;height:auto;max-width:100%;max-height:100%`: uma foto
+   MENOR que a moldura ficava no tamanho original dela, então duas fotos
+   do mesmo produto em tamanhos de arquivo diferentes apareciam em
+   tamanhos diferentes na tela. Medido: um arquivo de 220×220 saía com
+   91px, do mesmo jeito que um de 1000×1000 — por coincidência, porque
+   os dois batiam no mesmo limite de altura; um de 150×150 sairia com
+   150 e estouraria.
+   Com 100%/100% e `contain`, a moldura manda e o arquivo só decide a
+   nitidez. */
 .product__media img{
-  width:auto;
-  height:auto;
-  max-width:100%;
-  max-height:100%;
+  width:100%;
+  height:100%;
   object-fit:contain;
 }
 
@@ -1302,9 +1501,19 @@ body:has(.hero__art--foto) .topbar{
   margin-top:6px;
 }
 .product .btn--espera svg{width:12px;height:12px}
+/* A DESCRIÇÃO COM MAIS DESTAQUE.
+   Brian, 18/09/2026: "Deixe a descricao do produto com mais destaque
+   ali". Medido antes: 11,5px, quase o tamanho do rodapé, na mesma cor
+   de qualquer texto secundário — e é ela que diz O QUE a pessoa está
+   comprando ("Caneta aplicadora de tirzepatida 15 mg, pronta para
+   uso"). Num cartão de vitrine isso não é letra miúda.
+   12,5px com entrelinha mais aberta, e duas linhas continuam sendo
+   duas: o cartão ele já pediu menor no dia 18, e três linhas o
+   devolveriam para o tamanho de que ele reclamou. A frase inteira
+   está na página do produto, a um toque daqui. */
 .product__desc{
-  font-size:11.5px;
-  line-height:1.4;
+  font-size:12.5px;
+  line-height:1.45;
   color:var(--ink-2);
   margin:0;
   /* DUAS LINHAS, E O `flex:1` TINHA DE SAIR PARA ISSO FUNCIONAR.
@@ -1333,27 +1542,30 @@ body:has(.hero__art--foto) .topbar{
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
+/* ---------- O PREÇO, COM DESTAQUE ----------
+   Brian, 18/09/2026: "Deixe essa parte dos precos ali mais bonita, com
+   mais destaque, ali onde fala da parcela tambem deixe mais bonito".
+
+   O QUE ESTAVA FRACO, medido: o preço em 16px disputava tamanho com o
+   nome do produto (13px) e perdia para a foto; a parcela em 10px era a
+   menor letra do cartão inteiro, cinza, colada no preço; e o preço
+   antigo ficava numa linha solta, com o selo de desconto do mesmo peso
+   visual que ele.
+
+   AGORA É UM BLOCO, e ele se lê de cima para baixo em três degraus:
+   o que era (pequeno, riscado, com o selo vermelho ao lado), o que é
+   (grande, 21px, o número mais forte do cartão) e como pagar (a
+   parcela, com o "3x" em destaque). */
 .product__antes{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:7px;
   flex-wrap:wrap;
-  margin:0 0 -4px;
-  font-size:12.5px;
-  color:var(--muted);
+  margin:0 0 1px;
+  font-size:11.5px;
+  color:var(--muted-2);
 }
 .product__antes s{text-decoration:line-through;text-decoration-color:#c0392b}
-
-.selo-off{
-  display:inline-block;
-  background:#c0392b;
-  color:#fff;
-  font-size:10.5px;
-  font-weight:700;
-  letter-spacing:.03em;
-  padding:2px 7px;
-  border-radius:6px;
-}
 
 /* ---- o pé do cartão: o valor de um lado, o carrinho do outro ----
 
@@ -1373,18 +1585,34 @@ body:has(.hero__art--foto) .topbar{
 .product__pe{
   display:flex;
   align-items:center;
+  /* ELE PODE QUEBRAR, E TEM DE PODER. Medido em 18/09/2026 às 23h: o
+     cartão tem 146px de conteúdo num celular de 390px, mas só 111px
+     num de 320. Com a bolinha e o vão, sobram 61px para o preço — e
+     "R$ 1.099,00" pede 84px até no tamanho antigo de 16px. Ou seja: na
+     tela pequena o preço vazava POR BAIXO da bolinha, e vazava antes
+     de eu mexer em nada.
+     Com `wrap` e um mínimo no preço, a bolinha desce para a linha de
+     baixo quando não cabe ao lado, encostada à direita, em vez de o
+     preço passar por cima dela. */
+  flex-wrap:wrap;
+  justify-content:flex-end;
   gap:8px;
   margin-top:auto;
   padding-top:4px;
 }
-/* `min-width:0` porque sem ele um preço longo empurraria a bolinha
-   para fora do cartão em vez de deixar o texto se ajustar. */
-.product__pe .product__price{flex:1;min-width:0}
+/* O MÍNIMO É O QUE O MAIOR PREÇO DO CATÁLOGO PEDE: "R$ 1.099,00" mede
+   95px em 18px. É ele que decide se a bolinha fica ao lado (146 - 42 -
+   8 = 96, cabe) ou desce (111 - 42 - 8 = 61, não cabe). */
+.product__pe .product__price{flex:1 1 95px;min-width:95px}
 
 .product__carrinho{
   flex:none;
-  width:38px;
-  height:38px;
+  /* 42px E NÃO 38. Este é o botão de comprar, e abaixo de 40px o
+     polegar começa a errar — o próprio raciocínio que manteve o botão
+     escrito em 42px quando ele foi diminuído, mais cedo no mesmo dia.
+     Como símbolo ele tinha voltado para 38. */
+  width:42px;
+  height:42px;
   border-radius:50%;
   display:grid;
   place-items:center;
@@ -1401,6 +1629,72 @@ body:has(.hero__art--foto) .topbar{
 .product__carrinho:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(176,140,74,.38)}
 .product__carrinho:active{transform:scale(.94)}
 
+/* ---------- A BOLINHA DO CARRINHO, COM GRAÇA ----------
+   Brian, 18/09/2026: "o carrinho nos produtos ali ta muito sem graca,
+   nao estou gostando de como ele esta, de uma melhorada por favor".
+
+   ELA ERA UM DISCO DOURADO CHAPADO com um carrinho de traço dentro. O
+   que faltava não era tamanho: era relevo e reação. Três coisas, e
+   todas se medem:
+
+     1. VOLUME — o gradiente num ângulo mais raso, um fio claro por
+        dentro no alto (o brilho de peça metálica) e um fio escuro
+        embaixo. Sem isto era uma cor lisa.
+     2. REAÇÃO — o clarão atravessa quando o dedo chega. Um botão de
+        compra que não responde parece travado, e a pessoa toca de novo
+        e leva dois.
+     3. O CARRINHO ANDA — o desenho desliza um fio para a direita no
+        toque. É o movimento de pôr algo dentro, e é o que dá sentido
+        ao desenho em vez de ele ser enfeite.
+
+   `prefers-reduced-motion` desliga o movimento; o relevo fica. */
+.product__carrinho{
+  overflow:hidden;
+  background:linear-gradient(118deg,var(--gold-2),var(--gold) 52%,#9a7739);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),
+             inset 0 -1px 0 rgba(0,0,0,.10),
+             0 6px 14px rgba(176,140,74,.30);
+}
+.product__carrinho:hover{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),
+             inset 0 -1px 0 rgba(0,0,0,.10),
+             0 10px 20px rgba(176,140,74,.38);
+}
+
+/* o clarão: parado até alguém chegar perto */
+.product__carrinho-luz{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(100deg,
+    transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);
+  transform:translateX(-140%);
+  pointer-events:none;
+}
+.product__carrinho:hover .product__carrinho-luz,
+.product__carrinho:active .product__carrinho-luz{
+  animation:carrinhoLuz .6s ease-out;
+}
+@keyframes carrinhoLuz{
+  from{transform:translateX(-140%)}
+  to{transform:translateX(140%)}
+}
+
+/* o desenho fica acima do clarão, e anda */
+.product__carrinho > svg{
+  position:relative;
+  z-index:1;
+  transition:transform .18s ease;
+}
+.product__carrinho:hover > svg{transform:translateX(2px)}
+.product__carrinho:active > svg{transform:translateX(3px)}
+
+@media (prefers-reduced-motion:reduce){
+  .product__carrinho:hover .product__carrinho-luz,
+  .product__carrinho:active .product__carrinho-luz{animation:none}
+  .product__carrinho:hover > svg,
+  .product__carrinho:active > svg{transform:none}
+}
+
 /* O MESMO VERDE DO "No carrinho" que o botão escrito já usava. O aviso
    importa mais aqui do que importava lá: o botão de texto trocava a
    palavra para "No carrinho", e um botão só de símbolo não tem palavra
@@ -1411,20 +1705,111 @@ body:has(.hero__art--foto) .topbar{
 }
 
 .product__price{
-  font-size:16px;
+  /* 18px, E O NÚMERO SAIU DA RÉGUA, não do gosto. Eu havia posto 21px
+     quando o preço tinha a linha inteira; depois o carrinho veio para o
+     lado dele (pedido do Brian, com foto) e a conta mudou: sobram 96px
+     dos 146 do cartão, e "R$ 1.099,00" pede 110px em 21px — ele passava
+     10px POR BAIXO da bolinha. Em 18px pede 95 e cabe com folga.
+     Continua sendo o maior número do cartão (o nome do produto tem 16)
+     e ainda é 12% maior que os 16px de antes.
+     `tabular-nums` para os dígitos não dançarem de um cartão para o
+     outro na mesma fileira. */
+  font-size:18px;
   font-weight:700;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
   color:var(--gold);
   margin:0;
 }
-/* 10px, e o número saiu da régua: "ou até 3x sem juros de R$ 366,33"
-   mede 147px em 10,5px e a coluna do cartão tem 146 — um pixel de
-   diferença custava uma linha inteira (14px de altura) em todo cartão
-   da vitrine. Em 10px ela mede 140 e cabe. */
+/* Em promoção o preço fica em tinta escura, não em dourado: ao lado do
+   selo vermelho e do preço riscado, o dourado sobre dourado tirava o
+   contraste justo da peça que tem de gritar. */
+.product--promo .product__price{color:var(--ink)}
+/* A PARCELA. Ela era a menor letra do cartão (10px, cinza, colada no
+   preço) para caber numa linha: "ou até 3x sem juros de R$ 366,33"
+   mede 147px e a coluna tem 146.
+   A saída não é aumentar a letra e estourar a linha — é dar ar e
+   destacar O QUE IMPORTA nela. O "3x" e o "sem juros" saem em
+   negrito escuro pelo JavaScript (`<b>`), o resto fica leve, e a linha
+   ganha 5px de respiro em cima para desencostar do preço. */
 .product__installment{
-  font-size:10px;
+  font-size:10.5px;
   line-height:1.35;
   color:var(--muted);
-  margin:-4px 0 2px;
+  margin:5px 0 2px;
+}
+/* O CHIP DO "3x SEM JUROS". Ele é o que faz a linha da parcela parar
+   de ser rodapé: um selo claro com o dourado da casa, e o valor ao
+   lado em letra leve. */
+.parcela{
+  display:inline-flex;
+  align-items:baseline;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.parcela__chip{
+  display:inline-block;
+  padding:2px 6px;
+  border-radius:6px;
+  background:rgba(176,140,74,.12);
+  color:#8a6b2f;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.01em;
+  white-space:nowrap;
+}
+.parcela__valor{color:var(--muted);white-space:nowrap}
+
+/* ---------- O SELO DE DESCONTO ----------
+   Brian, 18/09/2026: "De mais enfase nessa promocoes ai, deixe animacao
+   e uma forma mais bonita".
+
+   Era um retângulo vermelho chapado de 10,5px. Agora é um selo com
+   volume (gradiente e sombra da própria cor) e um clarão que atravessa
+   — e SÓ nos cortes de 20% ou mais, que é o que a classe `--forte`
+   marca. Desconto de 8% e desconto de 31% não podem chamar o olho do
+   mesmo jeito: se tudo pisca, nada chama.
+
+   `prefers-reduced-motion` desliga a animação. Quem pediu ao aparelho
+   para parar de mexer as coisas tem de ser atendido, e o selo continua
+   legível parado — a informação está no número, não no movimento. */
+.selo-off{
+  position:relative;
+  overflow:hidden;
+  display:inline-block;
+  background:linear-gradient(135deg,#e5493b,#b01608);
+  color:#fff;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.02em;
+  padding:3px 8px;
+  border-radius:7px;
+  box-shadow:0 2px 8px rgba(176,22,8,.34);
+}
+/* o texto sobe acima do clarão */
+.selo-off > span{position:relative;z-index:1}
+.selo-off--forte::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(100deg,
+    transparent 36%,rgba(255,255,255,.55) 50%,transparent 64%);
+  transform:translateX(-130%);
+  animation:seloBrilho 3.4s ease-in-out infinite;
+}
+@keyframes seloBrilho{
+  0%,64%{transform:translateX(-130%)}
+  100%{transform:translateX(130%)}
+}
+
+/* O CARTÃO EM OFERTA GANHA UM FIO VERMELHO NO ALTO. É o sinal que se
+   vê de longe, com a vitrine em duas colunas e o olho correndo: a
+   etiqueta de canto e o selo pedem leitura, o fio não. */
+.product--promo{box-shadow:var(--shadow-sm),inset 0 3px 0 #d8392b}
+
+@media (prefers-reduced-motion:reduce){
+  .selo-off--forte::after{animation:none}
 }
 
 .protocol__preco{margin:-6px 0 16px;display:flex;flex-direction:column;gap:6px}
@@ -3634,34 +4019,76 @@ textarea:focus-visible{
 
 /* ---------- ordenar a vitrine ---------- */
 
+/* ---------- ordenar a vitrine ----------
+   Brian, 18/09/2026: "Esse 'ordernar por' ta muito feio, ta no meio do
+   celular, nao gostei de como ele ta".
+
+   ERA DUAS PEÇAS SOLTAS: o texto "ORDENAR POR" flutuando no meio da
+   tela e um `select` cru do lado, com a setinha que o sistema desenha —
+   a única coisa da vitrine que não tinha desenho nosso.
+
+   AGORA É UMA PÍLULA SÓ, encostada na direita, com a mesma altura e o
+   mesmo feitio dos chips de categoria que estão logo acima: ícone de
+   ordenar, o texto do que está escolhido, e o chevron da casa. O
+   `select` continua sendo o `select` de verdade por baixo — é ele que
+   abre a roda do sistema no celular, e nenhuma lista feita à mão chega
+   perto disso no dedo —, só invisível: sem aparência própria, sem
+   fundo, sem seta, esticado sobre a pílula inteira para que o toque em
+   qualquer ponto dela abra a escolha. */
 .ordenar{
   display:flex;
-  align-items:center;
   justify-content:flex-end;
-  gap:10px;
   padding:0 20px 16px;
 }
 
-.ordenar__rotulo{
-  font-size:11.5px;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--muted);
-}
-
-.ordenar select{
-  font:inherit;
+.ordenar__pilula{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  height:42px;
+  padding:0 12px 0 14px;
+  border-radius:999px;
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-sm);
   font-size:13.5px;
   color:var(--ink);
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:11px 14px;
-  min-height:42px;
-  max-width:190px;
-  box-shadow:var(--shadow-sm);
+  cursor:pointer;
+  transition:border-color .16s ease,box-shadow .16s ease;
 }
-.ordenar select:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ordenar__pilula:hover{border-color:var(--gold-soft)}
+/* o anel de foco tem de nascer na PÍLULA, não no `select` invisível:
+   o select não tem borda nem fundo, então um `outline` nele apareceria
+   como um retângulo solto em volta de nada */
+.ordenar__pilula:focus-within{
+  border-color:var(--gold);
+  box-shadow:0 0 0 3px rgba(176,140,74,.16);
+}
+
+.ordenar__ico{flex:none;color:var(--gold)}
+.ordenar__seta{flex:none;color:var(--muted-2)}
+
+.ordenar select{
+  /* invisível, mas é ele que manda: cobre a pílula toda para o toque
+     cair nele em qualquer ponto.
+     `-1px` E NÃO `0`: com `inset:0` o select para na borda interna, e
+     ficava uma faixa de 1px em volta — a borda da pílula — que não
+     abria nada. Medido: pílula de 162×42, select de 160×40. */
+  position:absolute;
+  inset:-1px;
+  opacity:0;
+  font:inherit;
+  border:0;
+  cursor:pointer;
+}
+/* O TEXTO DO QUE ESTÁ ESCOLHIDO. O `select` está invisível, então quem
+   mostra a escolha é este pedaço — e ele fica ENTRE o ícone e o
+   chevron, que é a ordem que a pílula pede. */
+.ordenar__valor{
+  white-space:nowrap;
+  font-weight:500;
+}
 
 /* confirmação do site, no lugar do confirm() do navegador */
 .confirmacao-site .modal__card{max-width:380px;gap:12px}
@@ -3954,6 +4381,13 @@ textarea:focus-visible{
    e tem largura para o texto. */
 .btn--carrinho{gap:8px}
 .btn--carrinho svg{flex:none}
+
+/* O BOTÃO DE LARGURA INTEIRA "ADICIONAR" NÃO EXISTE MAIS NO CARTÃO.
+   Ele virou a bolinha do carrinho ao lado do preço, a pedido do Brian
+   com a foto de outra loja (18/09/2026). O CSS dele saiu inteiro daqui
+   — inclusive o relevo e o clarão que eu tinha escrito para ele na
+   mesma noite: esse trabalho foi para `.product__carrinho`, que é onde
+   o carrinho vive agora. */
 
 /* O botão diz que deu certo, no próprio botão. Um item somado ao
    carrinho sem nenhum sinal deixa a pessoa clicando de novo. */
@@ -4870,17 +5304,37 @@ textarea:focus-visible{
   margin:0;
   border-radius:0;
   box-shadow:none;
-  /* A foto sobe para trás da barra de cima.
-     No desenho dele o topo da foto está a 11,8% da largura da tela,
-     medido do alto da página. A barra de cima termina a 17,9%, e é
-     daí que este bloco começa — então a foto tem de subir 6,1% da
-     largura. A altura dela é 65,1% da largura (1348x1167), logo
-     6,1/65,1 = 9,4% da própria altura. Em porcentagem porque assim a
-     mesma linha vale de 320px a 520px sem eu escrever um número para
-     cada tela. */
-  transform:translateY(-9.4%);
+  /* A FOTO INTEIRA, SEM SUBIR PARA TRÁS DA BARRA DE CIMA.
+     Brian, 18/09/2026: "volte com a imagem ali, deixe ela inteira como
+     tava antes".
+
+     Aqui havia `transform:translateY(-9.4%)`. Aquele número saiu do
+     desenho que ele mandou em 17/09 — nele o topo da foto fica atrás
+     da barra de cima —, e o `overflow:hidden` do `.hero` fazia o resto:
+     medido, 9,3% do alto da foto era CORTADO (18px a 320px, 22px a
+     390px, 25px a 430px). É o arco dourado do anel e a tampa do frasco
+     que iam embora, que é justamente o que dá acabamento à composição.
+
+     Sem o deslocamento a foto começa no alto do bloco e aparece
+     inteira. Ela continua encostada na direita e continua sendo o
+     fundo do topo, com o texto por cima do branco da esquerda — o
+     desenho dele não se perde, só deixa de ser cortado. */
+  transform:none;
   /* a foto é cenário: o dedo tem de chegar no que está por cima */
   pointer-events:none;
+}
+
+/* E O BLOCO TEM DE TER ALTURA PARA A FOTO INTEIRA CABER.
+   Sem esta linha, devolver a foto inteira só trocava o corte de lugar:
+   medido, a 520px ela passava 32px do pé do bloco e o `overflow:hidden`
+   comia o mármore de baixo.
+   A conta: a foto ocupa 70% da largura do bloco e a altura dela é
+   86,57% da própria largura (1348x1167 do arquivo) — logo 60,6% da
+   largura do bloco. O `min()` para no 315px porque a coluna do site
+   para em 520px: acima disso a foto não cresce mais, e sem o teto o
+   bloco continuaria esticando em tela grande com o vão vazio embaixo. */
+@media (max-width:899px){
+  .hero{min-height:min(60.6vw,315px)}
 }
 
 @media (min-width:900px){

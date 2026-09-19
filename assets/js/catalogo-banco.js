@@ -96,7 +96,15 @@
          painel que aceita a mudança e não muda nada é pior que painel
          sem o campo. */
       if (b.descricao) p.descricao = b.descricao;
-      if (b.imagem) p.imagem = b.imagem;
+      /* `fotoDeVerdade` marca que a imagem é UMA FOTO que a equipe
+         subiu, e não o desenho que o catálogo do código traz. A
+         vitrine precisa saber a diferença: atrás de uma FOTO ela pinta
+         a moldura com a própria foto desfocada, para a foto não
+         aparecer como um retângulo com borda dentro dela (Brian,
+         19/09/2026: "Alguns produtos ainda estao com a borda"). Atrás
+         de um DESENHO isso não se faz — o desenho tem fundo
+         transparente e ficaria duplicado, um por cima do outro. */
+      if (b.imagem) { p.imagem = b.imagem; p.fotoDeVerdade = true; }
 
       /* A ETIQUETA DA VITRINE (MAIS VENDIDO / PROMOÇÃO).
        *
@@ -131,6 +139,7 @@
         /* a foto que a equipe subiu; sem ela, o frasco genérico, que é
            melhor que um retângulo vazio do tamanho de uma foto */
         imagem: b.imagem || 'assets/img/prod-frasco.svg',
+        fotoDeVerdade: !!b.imagem,
         destaque: b.destaque || ''
       });
       mudou = true;

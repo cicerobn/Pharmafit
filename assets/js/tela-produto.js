@@ -99,6 +99,24 @@
 
     var foto = achar('foto');
     foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
+
+    /* A MOLDURA DA FOTO GRANDE TOMA A COR DO FUNDO DELA.
+       Aqui a moldura é creme com 22px de respiro em volta: com uma foto
+       de fundo branco, aquele anel creme era a borda mais visível do
+       site (Brian, 19/09/2026: "nao quero que isso aconteca nem que
+       isso se repita"). Só para foto de verdade: o desenho padrão tem
+       fundo transparente e fica bem no creme. */
+    var molduraDaFoto = foto.parentElement;
+    if (molduraDaFoto) {
+      if (produto.fotoDeVerdade) {
+        molduraDaFoto.setAttribute('data-fundo-da-foto', '');
+        if (window.PharmaFitFundoDaFoto) window.PharmaFitFundoDaFoto(molduraDaFoto.parentElement || document);
+      } else {
+        molduraDaFoto.removeAttribute('data-fundo-da-foto');
+        molduraDaFoto.style.removeProperty('--fundo-foto');
+        delete molduraDaFoto.dataset.fundoLido;
+      }
+    }
     foto.alt = produto.nome + ' — Pharma Fit';
 
     /* A ETIQUETA VEM DE `loja.js`, A MESMA DA VITRINE.
@@ -399,6 +417,11 @@
 
     grade.innerHTML = iguais.map(function (o) { return Cartao(o); }).join('');
     secao.hidden = false;
+
+    /* a moldura de cada foto toma a cor do fundo dela; sem isto a borda
+       que o Brian apontou em 19/09/2026 voltaria a aparecer nos
+       "produtos parecidos" */
+    if (window.PharmaFitFundoDaFoto) window.PharmaFitFundoDaFoto(grade);
 
     /* Os corações recém-desenhados precisam nascer já marcados para
        quem já favoritou — o desenho é novo, o gosto da pessoa não. */
