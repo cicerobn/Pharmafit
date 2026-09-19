@@ -1312,6 +1312,7 @@ body:has(.hero__art--foto) .topbar{
   background:var(--fundo-foto);
 }
 
+
 /* O ENCAIXE NÃO PODE DEPENDER DO TAMANHO DO ARQUIVO.
    Era `width:auto;height:auto;max-width:100%;max-height:100%`: uma foto
    MENOR que a moldura ficava no tamanho original dela, então duas fotos
@@ -1328,9 +1329,49 @@ body:has(.hero__art--foto) .topbar{
   object-fit:contain;
 }
 
+/* FOTO SEM FUNDO UNIFORME: ELA PREENCHE, E AÍ NÃO SOBRA MOLDURA.
+   A marca é posta pelo JavaScript (`catalogo.js`) quando os quatro
+   cantos da foto discordam entre si — uma foto de ambiente, de bancada,
+   com sombra de um lado. Nesse caso NÃO EXISTE cor certa para a
+   moldura: qualquer uma erra em pelo menos um lado, e o que sobra é a
+   borda de que o Brian reclamou duas vezes.
+
+   Sem cor certa, o jeito de não ter emenda é não ter sobra. `cover`
+   cresce a foto até cobrir a caixa. Corta as beiradas, e é a troca
+   certa: numa foto sem fundo uniforme a beirada é ambiente, não é o
+   produto. Na foto de catálogo — fundo liso, que é a maioria — nada
+   disto entra em ação e a foto continua inteira, com a moldura na cor
+   do fundo dela.
+
+   DEPOIS DA REGRA ACIMA, E NÃO ANTES: as duas pesam igual na conta do
+   navegador (uma classe + um elemento), e quando o peso empata quem
+   vale é a última escrita. Eu tinha posto esta antes e o `contain` de
+   cima a anulava — o teste mostrou `contain` onde eu esperava `cover`,
+   e é por isso que ele existe. */
+[data-foto-preenche] img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
 .product__badge{
   position:absolute;
   top:0;left:0;
+  /* SEM ISTO A ETIQUETA SOME NOS CARTÕES COM FOTO DE VERDADE.
+     Achado ao caçar a borda da foto, em 19/09/2026: nos dois cartões
+     que o Brian mandou não havia etiqueta nenhuma, e eu tinha lido
+     aquilo como "estes produtos não têm destaque". Não era.
+
+     A moldura da foto (`.product__media--foto`) é posicionada e vem
+     DEPOIS desta etiqueta no HTML. Entre dois elementos posicionados
+     sem `z-index`, quem vem por último pinta por cima — e o fundo
+     opaco da moldura cobria a pílula dourada inteira. Só nos cartões
+     com foto: no desenho genérico a moldura não ganha `--foto`, e por
+     isso a etiqueta aparecia nos testes e sumia no site.
+
+     2, o mesmo do coração: as duas coisas flutuam sobre a foto e
+     precisam ficar acima dela e da sombra do link (que é 1). */
+  z-index:2;
   /* Este dourado é o padrão de quem não tem sufixo: hoje só o
      "SEM ESTOQUE", que repinta de cinza logo abaixo. */
   background:linear-gradient(135deg,var(--gold-2),var(--gold));

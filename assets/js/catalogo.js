@@ -331,9 +331,33 @@ window.PharmaFitPreco = {
           var vs = cantos.map(function (c) { return c[k]; });
           return Math.max.apply(null, vs) - Math.min.apply(null, vs);
         }));
-        if (espalha > 26) return;
-        if ((media[0] + media[1] + media[2]) / 3 < 120) return;
+        /* FUNDO QUE NÃO É UNIFORME: A FOTO PREENCHE A MOLDURA.
+           Aqui a regra antiga desistia, e desistir deixava a sobra
+           branca em volta de uma foto que não é branca — a borda. Com
+           os quatro cantos discordando não existe cor certa para a
+           moldura, então o jeito de não ter emenda é não ter moldura:
+           a foto cresce até cobrir a caixa. Corta um pouco das beiradas,
+           e é a troca certa — numa foto de ambiente a beirada não é o
+           produto. */
+        if (espalha > 26) {
+          caixa.setAttribute('data-foto-preenche', '');
+          return;
+        }
 
+        /* AQUI MORAVA A REGRA QUE CRIOU A RECLAMAÇÃO DE HOJE.
+           Ela dizia: fundo mais escuro que 120 de 255 não pinta a
+           moldura. A intenção era boa — moldura escura dentro de um
+           cartão branco chama atenção. O resultado foi pior: a foto do
+           Lipoland tem fundo PRETO, a moldura ficou branca, e sobrou um
+           retângulo preto de beirada dura no meio do cartão. Brian,
+           19/09/2026, com a foto dos dois cartões lado a lado: "Resolva
+           isso de uma vez por todas".
+
+           Uma moldura preta atrás de uma foto preta não tem emenda
+           NENHUMA: o bloco inteiro vira uma peça só, e é isso que se
+           lê como proposital. O retângulo com beirada é que parece
+           defeito — porque é. A cor do fundo da foto manda, clara ou
+           escura, sem exceção. */
         caixa.style.setProperty('--fundo-foto',
           'rgb(' + media[0] + ',' + media[1] + ',' + media[2] + ')');
       } catch (e) {
@@ -351,11 +375,15 @@ window.PharmaFitPreco = {
   window.PharmaFitFundoDaFoto = function (raiz) {
     var alvos = (raiz || document).querySelectorAll('[data-fundo-da-foto]');
     [].forEach.call(alvos, function (caixa) {
-      if (caixa.dataset.fundoLido === '1') return;
       var img = caixa.tagName === 'IMG' ? caixa : caixa.querySelector('img');
       var url = img && img.getAttribute('src');
       if (!url) return;
-      caixa.dataset.fundoLido = '1';
+      /* A marca guarda QUAL endereço foi lido, e não um simples "já
+         li": quando o endereço da foto troca — é o que faz o plano B
+         do redimensionador, em `loja.js` — a medida antiga vale para
+         uma foto que não está mais ali. */
+      if (caixa.dataset.fundoLido === url) return;
+      caixa.dataset.fundoLido = url;
       medir(caixa, url);
     });
   };
