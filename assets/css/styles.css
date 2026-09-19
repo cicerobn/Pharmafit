@@ -880,9 +880,9 @@ body:has(.hero__art--foto) .topbar{
   border-bottom:1px solid #f2ece2;
   display:grid;
   place-items:center;
-  /* zero, pelo mesmo motivo da vitrine: o respiro era a faixa que
-     aparecia como borda em volta da foto */
-  padding:0;
+  /* o respiro também voltou aqui, pelo mesmo motivo da vitrine: com a
+     moldura da cor do fundo da foto, a faixa não aparece mais */
+  padding:8px;
 }
 .protocol__media img{width:100%;height:100%;object-fit:contain}
 
@@ -1260,13 +1260,17 @@ body:has(.hero__art--foto) .topbar{
   display:flex;
   align-items:center;
   justify-content:center;
-  /* ZERO, E NÃO 6px. O respiro era uma faixa da cor da moldura em volta
-     da foto — e é justamente essa faixa que aparecia como borda quando
-     o fundo da foto não era branco puro (Brian, 19/09/2026: "Alguns
-     produtos ainda estao com a borda"). Com o fundo desfocado atrás, o
-     que sobra nas laterais é a própria foto continuando, e não há mais
-     nada para respirar. */
-  padding:0;
+  /* O RESPIRO VOLTOU, E AGORA ELE É SEGURO.
+     Eu tinha zerado o respiro porque aquela faixa era a cor da moldura
+     em volta da foto — ou seja, a borda de que ele reclamou. Sem
+     respiro, o produto passou a ENCOSTAR nas bordas do cartão: na foto
+     do Lipoland a caixa preta tocava os dois lados, e ele disse "ainda
+     bugado" (19/09/2026).
+     Com a moldura tomando a cor do fundo da própria foto, a faixa
+     deixou de ser visível: ela tem exatamente a cor do que está ao lado
+     dela. Então o respiro volta — o produto ganha ar e a borda continua
+     não existindo. Medido: emenda 0 de 255 com os 10px de volta. */
+  padding:10px;
   min-height:0;
   overflow:hidden;
 }
