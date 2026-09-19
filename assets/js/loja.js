@@ -125,6 +125,36 @@
     '</span>';
   }
 
+  /* ---------- a moldura da foto ----------
+   *
+   * Brian, 19/09/2026: "Alguns produtos ainda estao com a borda, nao
+   * quero que isso aconteca nem que isso se repita".
+   *
+   * O PROBLEMA, medido: a foto quase nunca tem o formato exato da
+   * moldura, e o que sobra nas laterais (ou em cima) é a cor da
+   * moldura. Foto de catálogo tem fundo branco OU QUASE branco — 247,
+   * 247,247 numa e 252,252,250 noutra —, e a moldura é branca puro. Dá
+   * um degrau de 5 a 8 tons numa linha reta de 134px: pouco no número,
+   * bem visível no olho. É a borda que ele viu.
+   *
+   * EU TENTEI PINTAR A MOLDURA COM A PRÓPRIA FOTO DESFOCADA e medi
+   * antes de acreditar: FICOU PIOR. O desfoque preenche a moldura com
+   * um recorte, então numa foto em pé ele mostra a parte escura do
+   * produto enquanto a foto de verdade tem margem branca ao lado — a
+   * emenda subiu de 8 para 191 tons.
+   *
+   * O QUE RESOLVE é `corDoFundoDaFoto`, logo abaixo: a moldura toma a
+   * cor dos cantos da própria foto.
+   *
+   * Aqui fica só a marca de que ESTA imagem é foto de verdade, e não o
+   * desenho padrão — com o desenho não há o que igualar, o fundo dele é
+   * transparente.
+   */
+  function molduraFoto(p, classe) {
+    if (!p || !p.fotoDeVerdade) return '<div class="' + classe + '">';
+    return '<div class="' + classe + ' ' + classe + '--foto" data-fundo-da-foto>';
+  }
+
   /* ---------- bloco de preço, igual na grade e no carrossel ---------- */
 
   /* O PÉ DO CARTÃO: o que custa e como levar.
@@ -244,7 +274,7 @@
           ? '<span class="product__badge product__badge--off"><span>SEM ESTOQUE</span></span>'
           : etiquetaHtml(p, 'product__badge')) +
         coracaoHtml +
-        '<div class="product__media">' +
+        molduraFoto(p, 'product__media') +
           '<img src="' + esc(p.imagem) + '" alt="' + esc(p.nome) + ' Pharma Fit" loading="lazy">' +
         '</div>' +
         '<div class="product__body">' +
@@ -559,7 +589,7 @@
            só, que o leitor de tela anuncia de uma vez, e área de toque
            do tamanho do cartão. */
         '<a class="protocol" href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
-          '<div class="protocol__media">' +
+          molduraFoto(p, 'protocol__media') +
             /* A FILA DA INICIAL É "EM DESTAQUE", E OS TRÊS LEVAM A
                MESMA ETIQUETA: ela fala da fila, não do produto.
                A etiqueta que a equipe escolhe no painel (mais vendido
@@ -604,6 +634,12 @@
     montarGrade();
     montarCarrossel();
     montarCategoriasIniciais();
+    /* depois de os cartões existirem: a moldura de cada foto toma a cor
+       do fundo dela, e a borda deixa de aparecer. Vale também quando o
+       catálogo do banco chega depois e redesenha tudo. O pintor mora em
+       `catalogo.js` porque o CARRINHO também precisa dele e não carrega
+       este arquivo. */
+    if (window.PharmaFitFundoDaFoto) window.PharmaFitFundoDaFoto(document);
   }
 
   montarTudo();

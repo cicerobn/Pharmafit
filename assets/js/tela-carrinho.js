@@ -195,7 +195,13 @@
        * ação destrutiva da tela e ela estava na mesma coluna do preço,
        * disputando espaço com o número que importa. */
       return '<div class="carrinho__item" data-linha="' + esc(i.nome) + '">' +
-        '<img class="carrinho__foto" src="' + esc(i.produto.imagem) + '" alt="" loading="lazy">' +
+        /* `data-fundo-da-foto` na própria miniatura: ela é a <img> e
+           tem fundo creme com 6px de respiro, então com foto de fundo
+           branco sobrava um anel creme em volta — a mesma borda de que
+           ele reclamou na vitrine (19/09/2026). Quem pinta é o
+           `PharmaFitFundoDaFoto`, do catalogo.js. */
+        '<img class="carrinho__foto" src="' + esc(i.produto.imagem) + '" alt="" loading="lazy"' +
+          (i.produto.fotoDeVerdade ? ' data-fundo-da-foto' : '') + '>' +
 
         '<h2 class="carrinho__nome">' + esc(i.nome) + '</h2>' +
 
@@ -237,6 +243,9 @@
         '</div>' +
       '</div>';
     }).join('');
+    /* as miniaturas acabaram de nascer: cada moldura de FOTO toma a cor
+       do fundo dela, para não sobrar o anel creme em volta (19/09/2026) */
+    if (window.PharmaFitFundoDaFoto) window.PharmaFitFundoDaFoto(elItens);
 
     /* ---------- o resumo ---------- */
 

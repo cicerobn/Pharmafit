@@ -40,6 +40,15 @@
 
   --nav-h:74px;
 
+  /* A COR DO FUNDO DA FOTO DO PRODUTO, na moldura da vitrine.
+     Branco é o padrão; quem troca por cartão é o JavaScript, depois de
+     ler os quatro cantos da foto (ver `.product__media--foto`). Ela é
+     DECLARADA aqui de propósito: sem isto, `var(--fundo-foto,#fff)`
+     seria uma reserva escondendo uma variável que não existe em lugar
+     nenhum — e foi exatamente isso que o meu conferidor de CSS apontou
+     quando eu escrevi a regra sem esta linha. */
+  --fundo-foto:#fff;
+
   /* ---- uma cor para cada categoria do catalogo ----------------
      Escolhidas para conviver com o creme e o dourado da casa: sao
      tons fundos e quebrados, nao cores puras. Cor pura ao lado de
@@ -871,7 +880,9 @@ body:has(.hero__art--foto) .topbar{
   border-bottom:1px solid #f2ece2;
   display:grid;
   place-items:center;
-  padding:8px;
+  /* zero, pelo mesmo motivo da vitrine: o respiro era a faixa que
+     aparecia como borda em volta da foto */
+  padding:0;
 }
 .protocol__media img{width:100%;height:100%;object-fit:contain}
 
@@ -1234,6 +1245,8 @@ body:has(.hero__art--foto) .topbar{
      ele, foto e texto viram um bloco branco só. */
   background:#fff;
   border-bottom:1px solid #f2ece2;
+  /* a moldura desfocada mora num `::before` dentro dela */
+  position:relative;
   /* 1/0,8 E NÃO 1/0,66, e os 14px que o cartão cresce foram pesados.
      As fotos de produto que o Brian subiu são retratos de estúdio, ou
      seja, quadrados ou quase. Numa moldura de 1/0,66 (168×111) uma foto
@@ -1247,11 +1260,54 @@ body:has(.hero__art--foto) .topbar{
   display:flex;
   align-items:center;
   justify-content:center;
-  /* 6px e não 10: com a moldura mais alta, o respiro sobra */
-  padding:6px;
+  /* ZERO, E NÃO 6px. O respiro era uma faixa da cor da moldura em volta
+     da foto — e é justamente essa faixa que aparecia como borda quando
+     o fundo da foto não era branco puro (Brian, 19/09/2026: "Alguns
+     produtos ainda estao com a borda"). Com o fundo desfocado atrás, o
+     que sobra nas laterais é a própria foto continuando, e não há mais
+     nada para respirar. */
+  padding:0;
   min-height:0;
   overflow:hidden;
 }
+/* ---------- A MOLDURA TOMA A COR DO FUNDO DA FOTO ----------
+   Brian, 19/09/2026: "Alguns produtos ainda estao com a borda, nao
+   quero que isso aconteca nem que isso se repita".
+
+   A foto quase nunca tem o formato exato da moldura, e o que sobra nas
+   laterais (ou em cima) é a cor da moldura. Foto de catálogo tem fundo
+   branco OU QUASE branco — medi 247,247,247 numa e 252,252,250 noutra —
+   e a moldura é branca puro: dá um degrau de 5 a 8 tons numa linha reta
+   de 134px, que é pouco no número e bem visível no olho. É a borda que
+   ele viu no TG, no Gluconex e no Lipoland.
+
+   EU TENTEI PRIMEIRO PINTAR A MOLDURA COM A PRÓPRIA FOTO DESFOCADA, e
+   MEDI ANTES DE ACREDITAR: ficou pior. O desfoque é um recorte que
+   preenche a moldura, então numa foto em pé ele mostra a parte escura
+   do produto ampliada, enquanto a foto de verdade tem margem branca ao
+   lado — a emenda subiu de 8 para 191 tons. Ideia bonita, número
+   ruim, ideia fora.
+
+   O QUE RESOLVE: a moldura toma a COR DO FUNDO DA PRÓPRIA FOTO, lida
+   dos quatro cantos dela pelo JavaScript (`--fundo-foto`). A sobra fica
+   exatamente da cor do que está ao lado dela, e não existe emenda para
+   se ver — com qualquer foto, de qualquer formato, hoje e nas
+   próximas, sem ninguém subir foto de novo.
+
+   O branco continua sendo o padrão: quando a leitura não dá (foto que
+   não permite ler os pixels, ou fundo que não é uniforme), a moldura
+   fica branca e a emenda volta a ser aqueles 5 a 8 tons — o pior caso
+   é o que já existia. */
+.product__media--foto,
+.protocol__media--foto,
+/* a foto grande da página do produto e a miniatura do carrinho usam a
+   MESMA conta; a marca `data-fundo-da-foto` é posta pelo JavaScript só
+   quando a imagem é foto de verdade */
+.ficha__foto[data-fundo-da-foto],
+.carrinho__foto[data-fundo-da-foto]{
+  background:var(--fundo-foto);
+}
+
 /* O ENCAIXE NÃO PODE DEPENDER DO TAMANHO DO ARQUIVO.
    Era `width:auto;height:auto;max-width:100%;max-height:100%`: uma foto
    MENOR que a moldura ficava no tamanho original dela, então duas fotos

@@ -251,6 +251,117 @@ window.PharmaFitPreco = {
 };
 
 /* =========================================================
+   A COR DO FUNDO DE CADA FOTO DE PRODUTO
+
+   Brian, 19/09/2026: "Alguns produtos ainda estao com a borda, nao
+   quero que isso aconteca nem que isso se repita".
+
+   O PROBLEMA, medido: a foto quase nunca tem o formato exato da moldura
+   onde ela aparece, e o que sobra nas laterais (ou em cima) é a cor da
+   moldura. Foto de catálogo tem fundo branco OU QUASE branco — medi
+   247,247,247 numa e 252,252,250 noutra —, e as molduras do site são
+   brancas ou creme. Dá um degrau de 5 a 8 tons numa linha reta, que é
+   pouco no número e bem visível no olho: é a borda que ele viu no TG,
+   no Gluconex e no Lipoland.
+
+   EU TENTEI PRIMEIRO PINTAR A MOLDURA COM A PRÓPRIA FOTO DESFOCADA, e
+   medi antes de acreditar: FICOU PIOR. O desfoque preenche a moldura
+   com um recorte, então numa foto em pé ele mostra a parte escura do
+   produto enquanto a foto de verdade tem margem branca ao lado — a
+   emenda subiu de 8 para 191 tons. Ideia bonita, número ruim.
+
+   O QUE RESOLVE: a moldura toma a COR DO FUNDO DA PRÓPRIA FOTO, lida
+   dos quatro cantos dela. A sobra fica exatamente da cor do que está ao
+   lado, e não existe emenda para se ver — com qualquer foto, de
+   qualquer formato, hoje e nas próximas, sem ninguém subir foto de
+   novo.
+
+   MORA AQUI, E NÃO NO `loja.js`, porque a foto aparece em quatro
+   lugares e o `loja.js` não é carregado em todos: o cartão da vitrine,
+   a fila da página inicial, a foto grande da página do produto e a
+   miniatura do carrinho. `catalogo.js` é o único que todas as páginas
+   carregam.
+
+   TRÊS CUIDADOS, e cada um tem motivo:
+
+   1. A LEITURA USA UMA SEGUNDA IMAGEM, com `crossOrigin`. Ler pixel de
+      imagem de outro endereço só é permitido com CORS, e pedir CORS na
+      imagem QUE APARECE na tela seria arriscado: se o servidor não
+      mandasse o cabeçalho, a foto não carregaria e o cliente ficaria
+      sem foto nenhuma. A que aparece continua sem `crossOrigin`; esta
+      cópia só serve para medir. Falhando a medida, a moldura fica como
+      estava — o pior caso é o de hoje.
+
+   2. SÓ PINTA SE OS QUATRO CANTOS CONCORDAREM. Numa foto sem fundo
+      uniforme (um ambiente, uma bancada), qualquer cor escolhida
+      estaria errada em três dos quatro lados.
+
+   3. NÃO ESCURECE A MOLDURA SEM PRECISAR. Fundo abaixo de 120 de 255
+      fica de fora: moldura escura dentro de um cartão branco chama mais
+      atenção que a emenda que ela conserta — e foi disso que ele
+      reclamou na fila "Em destaque" no dia 18.
+   ========================================================= */
+
+(function () {
+  'use strict';
+
+  function lerCanto(ctx, x, y) {
+    var d = ctx.getImageData(x, y, 1, 1).data;
+    return [d[0], d[1], d[2]];
+  }
+
+  function medir(caixa, url) {
+    var medida = new Image();
+    medida.crossOrigin = 'anonymous';
+    medida.onload = function () {
+      try {
+        var n = 24;
+        var tela = document.createElement('canvas');
+        tela.width = n; tela.height = n;
+        var ctx = tela.getContext('2d');
+        ctx.drawImage(medida, 0, 0, n, n);
+
+        var cantos = [[1, 1], [n - 2, 1], [1, n - 2], [n - 2, n - 2]]
+          .map(function (c) { return lerCanto(ctx, c[0], c[1]); });
+
+        var media = [0, 1, 2].map(function (k) {
+          return Math.round(cantos.reduce(function (t, c) { return t + c[k]; }, 0) / cantos.length);
+        });
+        var espalha = Math.max.apply(null, [0, 1, 2].map(function (k) {
+          var vs = cantos.map(function (c) { return c[k]; });
+          return Math.max.apply(null, vs) - Math.min.apply(null, vs);
+        }));
+        if (espalha > 26) return;
+        if ((media[0] + media[1] + media[2]) / 3 < 120) return;
+
+        caixa.style.setProperty('--fundo-foto',
+          'rgb(' + media[0] + ',' + media[1] + ',' + media[2] + ')');
+      } catch (e) {
+        /* imagem de outro endereço sem CORS: a moldura fica como estava */
+      }
+    };
+    medida.src = url;
+  }
+
+  /**
+   * Pinta a moldura de toda foto marcada com `data-fundo-da-foto`
+   * dentro de `raiz`. A marca pode estar na moldura (que contém um
+   * <img>) ou na própria <img>, como no carrinho.
+   */
+  window.PharmaFitFundoDaFoto = function (raiz) {
+    var alvos = (raiz || document).querySelectorAll('[data-fundo-da-foto]');
+    [].forEach.call(alvos, function (caixa) {
+      if (caixa.dataset.fundoLido === '1') return;
+      var img = caixa.tagName === 'IMG' ? caixa : caixa.querySelector('img');
+      var url = img && img.getAttribute('src');
+      if (!url) return;
+      caixa.dataset.fundoLido = '1';
+      medir(caixa, url);
+    });
+  };
+})();
+
+/* =========================================================
    OS TRÊS BENEFÍCIOS DE CADA CATEGORIA
 
    Eles moravam dentro de `loja.js`, que desenha o carrossel da página

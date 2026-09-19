@@ -101,6 +101,9 @@
     alvo.innerHTML = produtos.map(function (p) {
       return window.PharmaFitCartao(p);
     }).join('');
+    /* a moldura de cada foto toma a cor do fundo dela; sem isto a borda
+       que o Brian apontou em 19/09/2026 voltaria a aparecer aqui */
+    if (window.PharmaFitFundoDaFoto) window.PharmaFitFundoDaFoto(alvo);
 
     atualizarTela();
   }
