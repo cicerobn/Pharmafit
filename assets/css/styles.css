@@ -752,8 +752,16 @@ body:has(.hero__art--foto) .topbar{
 
 /* ---------- seções ---------- */
 
+/* O BLOCO DE "EM DESTAQUE" É BRANCO, como os outros cartões da página.
+   Brian, 19/09/2026: "Deixe essa parte dos produtos em destaque branco
+   igual nas outras barras, ela esta meio bege".
+   Ele estava usando `--cream-2` (#fbf9f5), que é o quase-branco da
+   casa; os cartões vizinhos — o dos dois países e os três de categoria
+   — usam `--card` (#ffffff). Lado a lado, a diferença de 5 pontos de
+   cinza aparece, e era a única caixa grande da página que não era
+   branca. */
 .panel{
-  background:var(--cream-2);
+  background:var(--card);
   border-radius:26px 26px 0 0;
   margin-top:22px;
   padding:26px 0 0;
@@ -824,7 +832,17 @@ body:has(.hero__art--foto) .topbar{
   background:var(--card);
   border-radius:16px;
   overflow:hidden;
-  box-shadow:var(--shadow-md);
+  /* UM FIO EM VOLTA, e ele nasceu de uma conta.
+     O bloco atrás desta fila era quase-branco e virou branco puro
+     (19/09/2026, "deixe essa parte... branco igual nas outras barras").
+     Com isso o cartão — que também é branco — passou a dissolver no
+     fundo: medido no pixel, na altura do preço a maior diferença entre
+     dois pixels vizinhos na borda do cartão era 11 de 255, ou seja,
+     aresta nenhuma. Os cartões de categoria não têm este problema
+     porque estão sobre o creme da página.
+     O fio vai no `box-shadow` e não em `border` de propósito: assim
+     ele não muda o tamanho do cartão nem empurra os três na fila. */
+  box-shadow:0 0 0 1px var(--line),var(--shadow-md);
 }
 
 /* A FOTO EM CIMA, QUADRADA.
