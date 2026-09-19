@@ -43,34 +43,33 @@
       icone: 'predio',
       href: '../ajustes.html#bloco-banco'
     },
-    {
-      rotulo: 'Cotação das moedas',
-      pe: 'Quanto vale o dólar, o guarani e o peso',
-      icone: 'moeda',
-      href: '../ajustes.html#bloco-cotacao'
-    },
-    {
-      rotulo: 'Como está agora',
-      pe: 'Confere se o painel está falando com o banco',
-      icone: 'engrenagem',
-      href: '../ajustes.html#bloco-diagnostico'
-    }
+    /* "COTAÇÃO DAS MOEDAS" E "COMO ESTÁ AGORA" SAÍRAM DAQUI, na mesma
+       leva dos dois de baixo (Brian, 19/09/2026: "isso tambem").
+
+       De novo: o atalho saiu, a função ficou. As duas moram em
+       `ajustes.html` — a MESMA página que a linha acima abre. Quem
+       entra em "Dados da empresa" cai na página onde as quatro coisas
+       estão, uma embaixo da outra.
+
+       A cotação não é enfeite: é ela que o site usa para mostrar preço
+       em dólar, guarani e peso. Ela continua valendo e continua
+       editável; só não tem mais uma linha própria neste menu. */
   ];
 
-  var SISTEMA = [
-    {
-      rotulo: 'Cópia de segurança',
-      pe: 'Baixar tudo num arquivo, e restaurar de um',
-      icone: 'escudo',
-      href: '../ajustes.html#bloco-backup'
-    },
-    {
-      rotulo: 'Tabelas do banco',
-      pe: 'Quais tabelas são desta gestão',
-      icone: 'tabela',
-      href: '../ajustes.html#bloco-tabelas'
-    }
-  ];
+  /* AQUI MORAVA A SEÇÃO "SISTEMA", com dois atalhos: "Cópia de
+     segurança" e "Tabelas do banco". Brian, 19/09/2026, com a foto do
+     cartão: "Tire isso".
+
+     AS DUAS COISAS CONTINUAM EXISTINDO, e isto não é descuido: o que
+     saiu foi o ATALHO, não a função. Os dois blocos moram em
+     `ajustes.html`, a MESMA página que as três linhas de "Geral" abrem
+     — quem entra em "Dados da empresa" está na página onde eles estão,
+     um pouco abaixo. Nenhuma tela ficou sem porta, que é o defeito que
+     este painel passou uma semana caçando.
+
+     Se um dia for para tirar de verdade, o que se apaga são os blocos
+     em `ajustes.html` — e aí vale lembrar que a cópia de segurança é
+     como este negócio se recupera se o banco sumir. */
 
   function linhas(lista) {
     return lista.map(function (i) {
@@ -118,7 +117,6 @@
     else elDono.hidden = true;
 
     document.querySelector('[data-geral]').innerHTML = linhas(GERAL);
-    document.querySelector('[data-sistema]').innerHTML = linhas(SISTEMA);
 
     document.querySelector('[data-sair-aqui]').addEventListener('click', async function () {
       try { await Auth.sair(); } catch (e) {}
