@@ -43,7 +43,14 @@
        preenche em "Meus dados" e que passou a morar na conta dele em
        17/09/2026. Entra aqui porque é dado de cliente — perder isto é
        perder o endereço de entrega de todo mundo. */
-    { nome: 'clientes',       para: 'cadastro de contato dos clientes' }
+    { nome: 'clientes',       para: 'cadastro de contato dos clientes' },
+    /* PAGAMENTO NO SITE (migração 15). Escritas pelo SITE e pela função de
+       servidor, não pelo painel — e entram nas duas listas porque perder
+       isto é perder o registro de quem pagou, o que foi comprado e por
+       quanto. `cobrancas` é onde o código PIX e o valor líquido ficam. */
+    { nome: 'compras',        para: 'compras pagas no site' },
+    { nome: 'compra_itens',   para: 'o que cada compra levou' },
+    { nome: 'cobrancas',      para: 'pagamentos do site (PIX e cartão)' }
   ];
 
   var conexaoTestada = null; /* { url, chave } que passou no teste */
@@ -216,7 +223,7 @@
      e o arquivo sai incompleto sem dizer que saiu. */
   var COLECOES = ['pedidos', 'produtos', 'despesas', 'representantes', 'orcamentos',
                   'espera', 'atendimentos', 'pessoal', 'notas', 'configuracoes',
-                  'clientes'];
+                  'clientes', 'compras', 'compra_itens', 'cobrancas'];
 
   var CHAVE_BACKUP = 'pharmafit_ultimo_backup';
 

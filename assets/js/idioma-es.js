@@ -161,6 +161,31 @@ window.PHARMAFIT_ES ={
   "Já tem conta?": "¿Ya tiene cuenta?",
   "LINHA PREMIUM": "LÍNEA PREMIUM",
   "Limpar o carrinho": "Vaciar el carrito",
+
+  /* PAGAR NO SITE, COM PIX. "PIX" não se traduz: é o nome do sistema
+     brasileiro de pagamento, e quem vai pagar por ele reconhece o nome —
+     traduzir viraria uma palavra que não existe em banco nenhum.
+     As frases de erro estão aqui inteiras porque o tradutor procura frase
+     completa no dicionário; cortar em pedaços faz o espanhol sair
+     remendado. */
+  "ou pague agora": "o pague ahora",
+  "Pagar com PIX": "Pagar con PIX",
+  "Gerando o código…": "Generando el código…",
+  "O código aparece aqui na tela, na hora.": "El código aparece aquí en la pantalla, al instante.",
+  "Copiar código": "Copiar código",
+  "Copiado!": "¡Copiado!",
+  "Copie o código selecionado": "Copie el código seleccionado",
+  "Código QR do PIX desta compra": "Código QR del PIX de esta compra",
+  "Esperando o pagamento…": "Esperando el pago…",
+  "Este código vale por uma hora.": "Este código vale por una hora.",
+  "O carrinho está vazio.": "El carrito está vacío.",
+  "O código venceu. Toque em \"Pagar com PIX\" para gerar outro.":
+    "El código venció. Toque en \"Pagar con PIX\" para generar otro.",
+  "Não conseguimos abrir a compra agora. Feche o pedido no WhatsApp, logo abaixo — a equipe resolve com você.":
+    "No pudimos abrir la compra ahora. Cierre el pedido por WhatsApp, abajo — el equipo lo resuelve con usted.",
+  "Não deu para gerar o PIX agora. Feche no WhatsApp, logo abaixo.":
+    "No se pudo generar el PIX ahora. Cierre por WhatsApp, abajo.",
+
   "Linha de peptídeos": "Línea de péptidos",
   "Lista de produtos": "Lista de productos",
   "MAIS PROCURADO": "MÁS BUSCADO",
