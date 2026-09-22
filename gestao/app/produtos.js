@@ -329,8 +329,38 @@
                 '<button class="botao" type="button" data-escolher-foto>Escolher foto</button>' +
                 '<button class="botao" type="button" data-tirar-foto hidden>Voltar ao desenho</button>' +
               '</div>' +
-              '<p class="campo__nota" data-foto-nota>JPG, PNG ou WEBP. Eu reduzo e converto ' +
-                'antes de enviar, para a página do cliente não ficar pesada.</p>' +
+
+              /* A MEDIDA DA FOTO, EM DESTAQUE.
+               *
+               * Brian, 19/09/2026: "Tire essas coisas aqui, e deixe em
+               * destaque qual o tamanho a foto tem que ter pra encaixar
+               * perfeito ali".
+               *
+               * Saíram daqui o botão "Aproximar no produto", a barrinha
+               * de zoom e o recado que explicava os dois. A ideia era
+               * boa e ele usou: mexer no enquadramento DEPOIS, na tela.
+               * Ele preferiu resolver ANTES, mandando a foto já certa —
+               * e quem manda nisso é ele.
+               *
+               * O NÚMERO NÃO É CHUTE. Medido nas três telas que mostram
+               * foto de produto: o carrossel da inicial é quadrado
+               * (110x110 no celular, 260x260 no computador), o cartão
+               * da lista é 1,25:1 e a página do produto fica entre os
+               * dois. Não existe uma proporção que encaixe exata nas
+               * três — e o painel GUARDA a foto quadrada, que é o que
+               * casa com o carrossel e deixa margem só nos outros dois.
+               * Margem que, com fundo de uma cor só, some dentro da
+               * moldura (ela toma a cor do fundo da foto).
+               *
+               * Por isso a recomendação é o quadrado, e por isso ela
+               * fala do FUNDO junto: sem fundo liso, a margem aparece. */
+              '<div class="foto-medida">' +
+                '<p class="foto-medida__num">1200 × 1200 px</p>' +
+                '<p class="foto-medida__txt">Quadrada, com fundo de uma cor só ' +
+                  '(branco de preferência) e o produto ocupando quase todo o quadro. ' +
+                  'Foto de outro formato também sobe: eu completo com a cor do fundo ' +
+                  'dela até virar quadrado.</p>' +
+              '</div>' +
             '</div>' +
           '</div>' +
           '<input type="file" accept="image/jpeg,image/png,image/webp" data-arquivo-foto>' +
@@ -455,11 +485,26 @@
     arquivo.addEventListener('change', function () {
       if (arquivo.files && arquivo.files[0]) escolheuFoto(arquivo.files[0]);
     });
+    /* A FOTO QUE JÁ ESTÁ NO AR, APROXIMADA SEM SUBIR NADA DE NOVO.
+     *
+     * Ela é lida com `crossOrigin` porque mora no Supabase, e sem isso
+     * o canvas fica "sujo" e o navegador recusa ler os pixels dela —
+     * é a mesma leitura que a vitrine já faz para descobrir a cor do
+     * fundo, então o cabeçalho existe. Se por algum motivo falhar, a
+     * tela diz e nada é alterado.
+     *
+     * O resultado NÃO sobe sozinho: ele fica de prévia, como se fosse
+     * uma foto escolhida à mão, e só vai para o ar quando o dono
+     * apertar Salvar. Trocar a foto de um produto sem ele mandar seria
+     * mexer no site dele pelas costas. */
     folha.querySelector('[data-tirar-foto]').addEventListener('click', function () {
       fotoNova = null;
       fotoTirar = true;
       folha.querySelector('[data-foto-vista]').src = '../../assets/img/prod-frasco.svg';
       folha.querySelector('[data-tirar-foto]').hidden = true;
+      /* Sem foto não há o que aproximar: o desenho genérico já vem no
+         talho certo, e o botão ali só daria um caminho que não leva a
+         lugar nenhum. */
       dizer('A foto sai quando você salvar. O produto volta a mostrar o desenho.', 'bom');
     });
   }
@@ -503,62 +548,42 @@
    * 1200px no maior lado e WEBP com qualidade 0,82: na tela não se vê
    * diferença e o arquivo cai para uns 80KB. Se ainda passar de 2,8MB
    * (foto gigante e cheia de detalhe), cai a qualidade até caber. */
-  function reduzir(arq) {
+  /* O canvas vira arquivo WEBP, caindo a qualidade até caber no balde
+     (3MB). Era um trecho dentro de `reduzir()`; virou função quando o
+     botão "Aproximar no produto" passou a precisar da mesma conversão —
+     duas cópias disso e um dia uma delas subiria PNG de 6MB. */
+  function paraWebp(tela, ok, falhou) {
+    var tentar = function (q) {
+      /* `toBlob` num canvas sujo LANÇA na hora, e não pelo caminho do
+         erro. Sem este try o erro subia do ouvinte da barrinha e a
+         gravação falhava calada — nada no site, nada na tela. */
+      try {
+        tela.toBlob(function (blob) {
+          if (!blob) return falhou(new Error('não consegui converter a imagem'));
+          if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
+          ok(blob);
+        }, 'image/webp', q);
+      } catch (e) {
+        falhou(new Error('não consegui converter esta foto'));
+      }
+    };
+    tentar(0.82);
+  }
+
+  /* O arquivo escolhido vira uma `Image` carregada. Só isso: o recorte,
+     o quadrado e o zoom são conta da barrinha, em `medir-foto.js`.
+     (Aqui morava `reduzir()`, que media e recortava sozinha. Ela saiu
+     quando o zoom passou a ser decisão de quem olha a foto — código que
+     decide no lugar do dono, depois de existir uma barrinha para ele
+     decidir, é código que só pode discordar dele.) */
+  function imagemDoArquivo(arq) {
     return new Promise(function (ok, falhou) {
       var leitor = new FileReader();
       leitor.onerror = function () { falhou(new Error('não consegui ler o arquivo')); };
       leitor.onload = function () {
         var img = new Image();
         img.onerror = function () { falhou(new Error('esse arquivo não parece uma imagem')); };
-        img.onload = function () {
-          /* A FOTO SAI QUADRADA, SEMPRE.
-           *
-           * Brian, 19/09/2026: "As fotos tao ficando bugadas, olha como
-           * ta ficando quando adicionei as fotos".
-           *
-           * Ele estava certo, e o defeito nascia AQUI: esta função
-           * reduzia a foto para 1200px no maior lado e guardava no
-           * FORMATO ORIGINAL. Foto de estúdio quadrada ficava quadrada,
-           * foto deitada ficava deitada, foto em pé ficava em pé — e a
-           * vitrine mostra todas na mesma moldura.
-           *
-           * MEDIDO NO NAVEGADOR, com as quatro formas na mesma fileira:
-           * a deitada ocupava 69% da moldura, a quadrada 44% e a em pé
-           * 24%. Três produtos do mesmo tamanho real apareciam em três
-           * tamanhos diferentes na tela, e é isso que parece bug.
-           *
-           * O conserto é de origem: a foto é desenhada CENTRADA num
-           * quadrado branco. Assim toda foto de produto tem o mesmo
-           * formato, e a moldura da vitrine mostra todas do mesmo
-           * tamanho — sem cortar nada da foto, que é o que aconteceria
-           * se eu preenchesse a moldura à força.
-           *
-           * O branco em volta não é invenção: foto de catálogo já vem
-           * com fundo branco, então a sobra some dentro dela. */
-          var LADO = 1200;
-          var escala = Math.min(1, LADO / Math.max(img.width, img.height));
-          var l = Math.round(img.width * escala);
-          var a = Math.round(img.height * escala);
-          var lado = Math.max(l, a);
-          var tela = document.createElement('canvas');
-          tela.width = lado; tela.height = lado;
-          var ctx = tela.getContext('2d');
-          /* fundo branco: PNG com transparência viraria preto no WEBP
-             achatado, e foto de produto com fundo preto não é o que
-             ninguém quis. Aqui ele também é a sobra do quadrado. */
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, lado, lado);
-          ctx.drawImage(img, Math.round((lado - l) / 2), Math.round((lado - a) / 2), l, a);
-
-          var tentar = function (q) {
-            tela.toBlob(function (blob) {
-              if (!blob) return falhou(new Error('não consegui converter a imagem'));
-              if (blob.size > 2.8 * 1024 * 1024 && q > 0.4) return tentar(q - 0.15);
-              ok(blob);
-            }, 'image/webp', q);
-          };
-          tentar(0.82);
-        };
+        img.onload = function () { ok(img); };
         img.src = leitor.result;
       };
       leitor.readAsDataURL(arq);
@@ -568,15 +593,24 @@
   async function escolheuFoto(arq) {
     calar();
     try {
-      var blob = await reduzir(arq);
-      if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
-      fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
-      fotoTirar = false;
-      folha.querySelector('[data-foto-vista]').src = fotoNova.url;
-      folha.querySelector('[data-tirar-foto]').hidden = false;
-      var kb = Math.round(blob.size / 1024);
-      folha.querySelector('[data-foto-nota]').textContent =
-        'Pronta (' + kb + ' KB). Ela sobe quando você salvar.';
+      var img = await imagemDoArquivo(arq);
+
+      /* QUADRAR, E SÓ. Nada de recortar nem de aproximar: a foto sobe
+         do jeito que ele mandou, completada até virar quadrado com a
+         cor do fundo dela. O enquadramento é decisão de quem prepara a
+         foto — é o que a medida em destaque ali em cima pede. */
+      var tela = window.PharmaFitQuadrarFoto(img, 1200);
+      paraWebp(tela, function (blob) {
+        if (fotoNova && fotoNova.url) URL.revokeObjectURL(fotoNova.url);
+        fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
+        fotoTirar = false;
+        folha.querySelector('[data-foto-vista]').src = fotoNova.url;
+        folha.querySelector('[data-tirar-foto]').hidden = false;
+        dizer('Foto pronta (' + Math.round(blob.size / 1024) + ' KB). ' +
+          'Aperte SALVAR para ela entrar no site.', 'bom');
+      }, function (e) {
+        dizer(String((e && e.message) || e), 'ruim');
+      });
     } catch (e) {
       dizer(String((e && e.message) || e), 'ruim');
     }
@@ -834,9 +868,7 @@
     if (!bloco.hidden) {
       folha.querySelector('[data-foto-vista]').src = fotoDe(p);
       folha.querySelector('[data-tirar-foto]').hidden = !p.imagem;
-      folha.querySelector('[data-foto-nota]').textContent =
-        'JPG, PNG ou WEBP. Eu reduzo e converto antes de enviar, para a página do ' +
-        'cliente não ficar pesada.';
+
     }
 
     veu.classList.add('is-aberto');

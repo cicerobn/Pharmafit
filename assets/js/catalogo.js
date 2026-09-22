@@ -327,12 +327,39 @@ window.PharmaFitPreco = {
         var media = [0, 1, 2].map(function (k) {
           return Math.round(cantos.reduce(function (t, c) { return t + c[k]; }, 0) / cantos.length);
         });
+        /* OS QUATRO CANTOS PRECISAM CONCORDAR. VOLTEI ATRÁS NISTO.
+         *
+         * Brian, 19/09/2026, com o cartão do Gluconex numa moldura
+         * verde-oliva: "Volte atras disso aqui".
+         *
+         * ONTEM EU TIREI ESTA EXIGÊNCIA e mandei pintar a média dos
+         * cantos SEMPRE, concordando eles ou não. O raciocínio era que
+         * uma diferença de tom incomoda menos que um retângulo de cor
+         * errada. A foto dele mostrou o furo: com a foto APROXIMADA,
+         * os cantos deixam de ser fundo e viram PRODUTO. A média de
+         * azul, dourado e branco deu verde-oliva, e o cartão ficou com
+         * uma moldura de uma cor que não existe na foto.
+         *
+         * "Média de cores que discordam" não é uma cor aproximada: é
+         * uma cor nova, que não está em lugar nenhum da imagem. Pior
+         * que a emenda que ela tentava esconder.
+         *
+         * Cantos discordando = não dá para saber qual é o fundo. Então
+         * a moldura fica como estava (o creme claro do cartão) e a
+         * emenda volta a ser os 5 a 8 tons de sempre — o pior caso é o
+         * que já existia, e ninguém inventa cor. */
         var espalha = Math.max.apply(null, [0, 1, 2].map(function (k) {
           var vs = cantos.map(function (c) { return c[k]; });
           return Math.max.apply(null, vs) - Math.min.apply(null, vs);
         }));
         if (espalha > 26) return;
-        if ((media[0] + media[1] + media[2]) / 3 < 120) return;
+
+        /* E AQUI MORAVA A REGRA QUE CRIOU A RECLAMAÇÃO DE ONTEM: fundo
+           mais escuro que 120 de 255 não pintava a moldura. Essa NÃO
+           volta. Ela era o que deixava a foto de fundo preto (Lipoland)
+           dentro de uma moldura branca, com um retângulo de beirada
+           dura no meio do cartão. Fundo preto lido com os quatro cantos
+           concordando é fundo preto de verdade, e a moldura acompanha. */
 
         caixa.style.setProperty('--fundo-foto',
           'rgb(' + media[0] + ',' + media[1] + ',' + media[2] + ')');
@@ -351,11 +378,15 @@ window.PharmaFitPreco = {
   window.PharmaFitFundoDaFoto = function (raiz) {
     var alvos = (raiz || document).querySelectorAll('[data-fundo-da-foto]');
     [].forEach.call(alvos, function (caixa) {
-      if (caixa.dataset.fundoLido === '1') return;
       var img = caixa.tagName === 'IMG' ? caixa : caixa.querySelector('img');
       var url = img && img.getAttribute('src');
       if (!url) return;
-      caixa.dataset.fundoLido = '1';
+      /* A marca guarda QUAL endereço foi lido, e não um simples "já
+         li": quando o endereço da foto troca — é o que faz o plano B
+         do redimensionador, em `loja.js` — a medida antiga vale para
+         uma foto que não está mais ali. */
+      if (caixa.dataset.fundoLido === url) return;
+      caixa.dataset.fundoLido = url;
       medir(caixa, url);
     });
   };

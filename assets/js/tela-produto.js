@@ -43,16 +43,94 @@
 
   document.getElementById('carregando').hidden = true;
 
-  if (!produto) {
+  function mostrarNaoAchei() {
+    document.getElementById('carregando').hidden = true;
     var caixa = document.getElementById('nao-achei');
     caixa.hidden = false;
     document.getElementById('nao-achei-texto').textContent = pedido
       ? '“' + pedido + '” não está no catálogo. Ele pode ter saído de linha.'
       : 'O endereço veio sem o nome do produto.';
     achar('caminho-nome').textContent = 'Não encontrado';
+  }
+
+  /* ---------- NÃO ACHAR NA PRIMEIRA OLHADA NÃO É NÃO EXISTIR ----------
+   *
+   * Brian, 19/09/2026, com a tela de "Não achamos este produto" aberta
+   * no Gluconex: "Resolva isso".
+   *
+   * O QUE ACONTECIA. Esta página procura o produto pelo nome no
+   * catálogo. O catálogo tem duas fontes: a lista escrita no código
+   * (`catalogo.js`), que chega junto com a página, e o BANCO, que chega
+   * um instante depois. Quando a equipe renomeia um produto no painel —
+   * ou cadastra um novo — ele existe só no banco.
+   *
+   * A página olhava UMA vez, na lista do código, não achava, escrevia
+   * "não está no catálogo" e DAVA RETURN. O `return` matava o resto do
+   * arquivo, incluindo o ouvinte que redesenha quando o banco responde.
+   * Ou seja: ela desistia antes da resposta chegar e não tinha como
+   * voltar atrás. Todo produto renomeado pelo painel ficava inacessível
+   * na loja, com o cartão da vitrine linkando para uma página de erro.
+   *
+   * AGORA ELA ESPERA. Se não achou de primeira, continua mostrando
+   * "carregando" e fica ouvindo o banco. Quando ele responde, procura
+   * de novo: achou, a página monta inteira; não achou, aí sim é porque
+   * o produto não existe mesmo.
+   *
+   * E SE O BANCO NUNCA RESPONDER (sem internet, banco fora do ar), o
+   * prazo de 8 segundos mostra o "não achamos" — porque "carregando"
+   * para sempre é pior que uma resposta errada: pelo menos a página de
+   * erro tem um botão para a lista de produtos. */
+  function esperarOBanco() {
+    var desistir = setTimeout(mostrarNaoAchei, 8000);
+
+    /* DOIS AVISOS, E QUALQUER UM DOS DOIS SERVE.
+     *
+     * `pharmafit-catalogo` sai quando o banco trouxe mudança;
+     * `pharmafit-catalogo-pronto` sai quando a consulta ACABOU, mesmo
+     * sem mudança nenhuma.
+     *
+     * O segundo entrou em 22/09/2026 porque só o primeiro deixava esta
+     * tela girando OITO SEGUNDOS: quem abre um endereço de produto
+     * errado — link velho, nome digitado à mão — ficava olhando o
+     * "carregando" até o prazo estourar, para só então ler "não
+     * achamos". O banco já tinha respondido no primeiro segundo; era
+     * esta tela que não ficava sabendo.
+     *
+     * O prazo de 8 segundos CONTINUA, e continua sendo necessário: ele é
+     * a rede para quando o banco não responde nada — sem internet, ou
+     * fora do ar. Aí nenhum dos dois avisos vem. */
+    function aoChegar() {
+      produto = C.doCatalogo(pedido);
+      clearTimeout(desistir);
+      document.removeEventListener('pharmafit-catalogo', aoChegar);
+      document.removeEventListener('pharmafit-catalogo-pronto', aoChegar);
+      if (!produto) {
+        /* O banco respondeu e ele não está lá: agora é definitivo. */
+        mostrarNaoAchei();
+        return;
+      }
+      document.getElementById('carregando').hidden = true;
+      iniciar();
+    }
+
+    document.addEventListener('pharmafit-catalogo', aoChegar);
+    document.addEventListener('pharmafit-catalogo-pronto', aoChegar);
+  }
+
+  if (!produto) {
+    /* Continua em "carregando": a resposta do banco ainda vem. */
+    document.getElementById('carregando').hidden = false;
+    esperarOBanco();
     return;
   }
 
+  iniciar();
+
+  /* Tudo o que monta a página vive aqui dentro, e não solto no arquivo,
+     porque agora ele pode rodar em DOIS momentos: agora, quando o
+     produto já está na lista do código, ou depois, quando o banco
+     trouxe ele. */
+  function iniciar() {
   document.getElementById('produto').hidden = false;
   document.title = produto.nome + ' — Pharma Fit';
 
@@ -97,8 +175,29 @@
       bene.hidden = !htmlBene;
     }
 
+    /* A FOTO GRANDE TAMBÉM PEDE O TAMANHO DA TELA.
+       Brian, 19/09/2026: "ta menos lento, mas quando abre ta lento
+       tambem". A vitrine já pedia a foto medida; esta página não, e
+       continuava baixando o arquivo de 1200px que o painel guarda.
+
+       700px, e o número tem régua: o CSS desta página limita a foto a
+       340px (`.ficha__foto img{max-width:340px}`), então 700 é o dobro
+       — o suficiente para tela retina e nada além disso.
+
+       `data-foto-inteira` é o plano B, o mesmo dos cartões: se o
+       redimensionador não responder, o ouvinte que mora em `loja.js`
+       devolve o arquivo inteiro. `data-foto` (sem sufixo) NÃO serve
+       aqui: ele já é o marcador que esta página usa para achar este
+       próprio `<img>`. */
     var foto = achar('foto');
-    foto.src = produto.imagem || 'assets/img/prod-frasco.svg';
+    var fotoInteira = produto.imagem || 'assets/img/prod-frasco.svg';
+    var fotoPedida = window.PharmaFitFoto
+      ? window.PharmaFitFoto(fotoInteira, 700)
+      : fotoInteira;
+
+    if (fotoPedida !== fotoInteira) foto.setAttribute('data-foto-inteira', fotoInteira);
+    else foto.removeAttribute('data-foto-inteira');
+    foto.src = fotoPedida;
 
     /* A MOLDURA DA FOTO GRANDE TOMA A COR DO FUNDO DELA.
        Aqui a moldura é creme com 22px de respiro em volta: com uma foto
@@ -444,4 +543,5 @@
     pintarConta();
     pintarRelacionados();
   });
+  }
 })();

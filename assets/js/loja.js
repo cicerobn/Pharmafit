@@ -65,15 +65,26 @@
       '?width=' + largura + '&resize=contain&quality=70';
   }
 
+  /* A PÁGINA DO PRODUTO USA A MESMA CONTA, por isso ela sai daqui.
+     `tela-produto.js` carrega depois deste arquivo e monta o `<img>`
+     grande na mão — sem isto ele teria a sua própria cópia da regra, e
+     no dia em que o endereço do redimensionador mudasse, metade do site
+     seguiria o outro caminho. */
+  window.PharmaFitFoto = fotoDoTamanho;
+
   /** O `<img>` de uma foto de produto, já no tamanho que a tela usa. */
   function fotoHtml(p, largura, eager) {
     var pedida = fotoDoTamanho(p.imagem, largura);
     var original = String(p.imagem || '');
 
     return '<img src="' + esc(pedida) + '"' +
-      /* `data-foto` só existe quando houve troca de endereço: é ele que
-         diz ao conserto abaixo qual era a foto inteira. */
-      (pedida !== original ? ' data-foto="' + esc(original) + '"' : '') +
+      /* Só existe quando houve troca de endereço: é ele que diz ao
+         conserto abaixo qual era a foto inteira.
+         `data-foto-inteira`, e NÃO `data-foto`: este último já é um
+         marcador desta casa — `app.js` acha por ele a foto que voa até
+         o carrinho, e o CSS da página do produto o usa como seletor.
+         Guardar um endereço nele fazia dois donos para o mesmo nome. */
+      (pedida !== original ? ' data-foto-inteira="' + esc(original) + '"' : '') +
       ' alt="' + esc(p.nome) + ' Pharma Fit"' +
       ' decoding="async"' +
       /* Os primeiros cartões da tela NÃO são preguiçosos: `lazy` neles
@@ -91,8 +102,8 @@
     var img = e.target;
     if (!img || img.tagName !== 'IMG') return;
 
-    var inteira = img.getAttribute('data-foto');
-    /* Sem `data-foto`, ou já mostrando a foto inteira: aí o problema é
+    var inteira = img.getAttribute('data-foto-inteira');
+    /* Sem o atributo, ou já mostrando a foto inteira: aí o problema é
        a foto mesmo, e não o redimensionador. Não há o que fazer. */
     if (!inteira || img.src === inteira) return;
 
@@ -102,9 +113,9 @@
     /* As outras da tela iam falhar pelo mesmo motivo. Trocar todas
        agora evita onze pedidos perdidos em vez de um. */
     Array.prototype.forEach.call(
-      document.querySelectorAll('img[data-foto]'),
+      document.querySelectorAll('img[data-foto-inteira]'),
       function (outra) {
-        var url = outra.getAttribute('data-foto');
+        var url = outra.getAttribute('data-foto-inteira');
         if (url && outra.src !== url) outra.src = url;
       }
     );

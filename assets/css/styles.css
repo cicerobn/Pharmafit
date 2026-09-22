@@ -31,7 +31,28 @@
   --radius:18px;
   --radius-lg:24px;
 
-  --serif:"Playfair Display","Times New Roman",Georgia,serif;
+  /* A FONTE DOS TÍTULOS.
+
+     Brian, 19/09/2026, com a foto do título da home: "Onde tiver essa
+     fonte troque, nao gosto dela". A fonte era a Playfair Display, a
+     serifada que estava aqui desde o começo — e ela estava em 44 lugares
+     entre o site e o painel, do título da home ao total do carrinho.
+
+     No lugar dela, a mesma Inter do resto do site, em peso 600. É a
+     segunda vez que ele pede isso: em 18/09 o nome do produto no cartão
+     já tinha saído da serifada por pedido dele ("texto normal"). Duas
+     vezes é preferência, não acaso.
+
+     POR QUE A VARIÁVEL CONTINUA EXISTINDO, se ela virou cópia da
+     `--sans`: porque ela diz QUAL É O PAPEL do texto, não qual é o
+     desenho da letra. Enquanto as 44 regras apontarem para cá, trocar a
+     fonte dos títulos — de novo — é mexer nesta linha e em mais nenhuma.
+     Se ela sumisse, a próxima troca seria caçar 44 lugares outra vez.
+
+     O peso vive nas regras, e não aqui, porque `font-family` não carrega
+     peso. Todas as 44 foram para 600: a Inter 500 num título de 50px sai
+     apagada do lado do traço grosso que a Playfair tinha. */
+  --titulo:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
   --sans:"Inter","Helvetica Neue",Arial,system-ui,sans-serif;
 
   --shadow-sm:0 6px 18px rgba(40,30,10,.06);
@@ -393,25 +414,36 @@ body:has(.hero__art--foto) .topbar{
 .hero__grid{display:block;width:100%;min-width:0}
 
 .hero__title{
-  font-family:var(--serif);
-  font-weight:500;
-  /* O PISO DO CLAMP ERA 24px E ISSO ESTOURAVA A CAIXA A 320px.
-     "performance" é uma palavra que não parte, e em 24px ela mede
-     137px — mais que os 128px da coluna. O navegador não reclama:
-     ele deixa a palavra VAZAR, e ela ia por cima do arco dourado do
-     anel. Medido nos pixels: o fundo atrás daquelas duas linhas caía
-     de 254 para 189. Com 21px ela mede 120px e cabe. */
-  /* E O TAMANHO SUBIU, com a régua da própria foto.
-     Medi onde a foto COMEÇA de verdade, escondendo o texto e varrendo
-     o pixel da esquerda para a direita em catorze alturas: num celular
-     de 390px o ponto mais apertado é a ponta da agulha, a 186px; em
-     320px é 153px; em 430px é 203px. Tirando os 20px de margem e uma
-     folga de 8, o título tem 158px em 390.
-     "performance" media 127px em 25,7px de letra. Em 30,4px ela mede
-     150 e ainda sobra folga para a agulha — e o título cresce 18% sem
-     tocar na foto. O teto de 31px é onde ela para de caber nos 158px
-     do `max-width` abaixo. */
-  font-size:clamp(23px,7.3vw,40px);
+  font-family:var(--titulo);
+  font-weight:600;
+  /* O TAMANHO É REFÉM DE UMA PALAVRA: "performance".
+     Ela não parte, e a coluna do título é estreita de propósito (a
+     agulha da foto começa logo depois — ver o `max-width` abaixo). Se
+     ela não couber, o navegador não reclama nem quebra: deixa a
+     palavra VAZAR por cima da foto. Já aconteceu duas vezes aqui.
+
+     A segunda foi agora, com a troca da Playfair pela Inter: a Inter é
+     ~20% mais larga na mesma altura de letra, e "performance", que em
+     Playfair 28,5px media 141px numa coluna de 152, passou a medir
+     169px e saiu em cima da agulha em TODAS as larguras.
+
+     Os números novos, medidos no navegador com a Inter 600 já
+     carregada (largura da tela → coluna do título → palavra):
+       320 → 119 → 116     390 → 152 → 141     520 → 213 → 188
+       360 → 137 → 130     430 → 170 → 156     700 → 213 → 204
+     A menor folga é a de 320px, com 3px. O piso de 19,5px é onde ela
+     acaba: abaixo disso a palavra encosta na agulha de novo.
+
+     Parece menor que os 23px de antes e não é — a Inter tem a altura
+     de x bem maior que a Playfair, então 19,5px dela lê do mesmo
+     tamanho que 23px da outra. E o título continua em QUATRO linhas,
+     como no desenho, em todas as larguras testadas.
+
+     O teto de 35px, e não 40: a coluna do site para em 520px, e daí
+     para cima a tela cresce mas a foto não. Em 40px a palavra media
+     233px numa coluna que trava em 213 — vazava de novo, só que
+     no computador. */
+  font-size:clamp(19.5px,6.2vw,35px);
   /* 1,02 SAIU DA FOTO DELE. As quatro linhas do título dele estão a
      61px uma da outra numa tela de 900 — 26,4px num celular de 390,
      com fonte de 26px. Entrelinha 1,02, bem mais fechada que a 1,14
@@ -423,7 +455,10 @@ body:has(.hero__art--foto) .topbar{
      ia a 149. Fechando a entrelinha, o texto sobe para onde ele está
      no desenho, onde a seringa ainda está mais à direita. */
   line-height:1.02;
-  letter-spacing:-.01em;
+  /* -.02em e não -.01em: a Inter pede um aperto maior que a Playfair
+     nos tamanhos de título, e aqui ele ainda devolve 2px de folga na
+     tela de 320px — onde a conta inteira acima é decidida. */
+  letter-spacing:-.02em;
   margin:6px 0 0;
   /* ESTREITO, E ISSO NÃO É GOSTO: É ONDE A SERINGA COMEÇA.
      A foto ocupa a direita, e a ponta da agulha entra a 40% da
@@ -434,16 +469,6 @@ body:has(.hero__art--foto) .topbar{
      Por isso a fonte encolheu junto: em 30px "performance" não cabe em
      38% de largura e o título viraria seis linhas. No desenho dele são
      quatro. */
-  /* A LARGURA AGORA VEM DA RÉGUA DA FOTO, e não de uma porcentagem da
-     coluna. `40%` parecia 158px e não era: 40% de uma coluna de 350
-     (390 menos as margens) dá 140 — e com a letra maior o título
-     passou a quebrar em SEIS linhas em vez de quatro, o que foi o
-     primeiro resultado desta mudança.
-     Medido escondendo o texto e varrendo o pixel: a foto começa em
-     47,5% da largura da tela (153px em 320, 186 em 390, 203 em 430).
-     Tirando os 20px de margem e 8 de folga para a agulha, sobra
-     `47vw - 28px`. O teto de 220px é porque a coluna do site para em
-     520px: acima disso a tela cresce e a foto não. */
   /* A LARGURA VEM DA RÉGUA DA FOTO, e é PORCENTAGEM DA COLUNA — não
      `vw`, e não `40%`.
      · `40%` parecia 158px e não era: 40% de uma coluna de 350 (390
@@ -462,9 +487,10 @@ body:has(.hero__art--foto) .topbar{
      conta fechava em todas as telas menos a menor — num celular de
      320px sobravam 2px entre o "performance" e a ponta da agulha, que
      é dentro da margem de erro do próprio desenho da foto. Com 13 a
-     folga vai a 6px ali e a 13 num celular comum. O piso da letra
-     desceu de 24 para 23px junto, senão "performance" não caberia
-     nessa largura menor e o título quebraria em cinco linhas. */
+     folga vai a 6px ali e a 13 num celular comum. O piso da letra foi
+     ajustado junto — hoje 19,5px, pela conta que está lá em cima —,
+     senão "performance" não cabe nessa largura menor e o título
+     quebra em cinco linhas. */
   max-width:calc(47% - 13px);
   position:relative;
   z-index:2;
@@ -785,8 +811,8 @@ body:has(.hero__art--foto) .topbar{
   padding:0 20px 18px;
 }
 .section-title{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:27px;
   line-height:1.15;
   margin:0;
@@ -1008,8 +1034,8 @@ body:has(.hero__art--foto) .topbar{
 
 .page-head{padding:14px 20px 0}
 .page-title{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:clamp(40px,11vw,50px);
   line-height:1;
   margin:8px 0 0;
@@ -1189,8 +1215,8 @@ body:has(.hero__art--foto) .topbar{
   margin-bottom:10px;
 }
 .promo__title{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:30px;
   margin:0 0 8px;
 }
@@ -1312,6 +1338,7 @@ body:has(.hero__art--foto) .topbar{
   background:var(--fundo-foto);
 }
 
+
 /* O ENCAIXE NÃO PODE DEPENDER DO TAMANHO DO ARQUIVO.
    Era `width:auto;height:auto;max-width:100%;max-height:100%`: uma foto
    MENOR que a moldura ficava no tamanho original dela, então duas fotos
@@ -1328,9 +1355,25 @@ body:has(.hero__art--foto) .topbar{
   object-fit:contain;
 }
 
+
 .product__badge{
   position:absolute;
   top:0;left:0;
+  /* SEM ISTO A ETIQUETA SOME NOS CARTÕES COM FOTO DE VERDADE.
+     Achado ao caçar a borda da foto, em 19/09/2026: nos dois cartões
+     que o Brian mandou não havia etiqueta nenhuma, e eu tinha lido
+     aquilo como "estes produtos não têm destaque". Não era.
+
+     A moldura da foto (`.product__media--foto`) é posicionada e vem
+     DEPOIS desta etiqueta no HTML. Entre dois elementos posicionados
+     sem `z-index`, quem vem por último pinta por cima — e o fundo
+     opaco da moldura cobria a pílula dourada inteira. Só nos cartões
+     com foto: no desenho genérico a moldura não ganha `--foto`, e por
+     isso a etiqueta aparecia nos testes e sumia no site.
+
+     2, o mesmo do coração: as duas coisas flutuam sobre a foto e
+     precisam ficar acima dela e da sombra do link (que é 1). */
+  z-index:2;
   /* Este dourado é o padrão de quem não tem sufixo: hoje só o
      "SEM ESTOQUE", que repinta de cinza logo abaixo. */
   background:linear-gradient(135deg,var(--gold-2),var(--gold));
@@ -1441,12 +1484,16 @@ body:has(.hero__art--foto) .topbar{
    Brian, 18/09/2026: "texto normal". Era Playfair (a serifada da
    marca), 16px.
 
-   A serifada continua onde ela trabalha: nos títulos das seções e no
-   topo, onde há UMA frase grande e ela dá o tom da casa. No cartão ela
-   atrapalhava — "BIOGENISES GHK-CU 100MG" em serifada, com o corpo
-   miúdo de um cartão de 146px, vira ornamento em cima de informação
-   técnica. Nome de produto é dado: peso, dose, quantidade. Lê-se melhor
-   na mesma letra do resto da tela.
+   No cartão a serifada atrapalhava — "BIOGENISES GHK-CU 100MG" em
+   serifada, com o corpo miúdo de um cartão de 146px, vira ornamento em
+   cima de informação técnica. Nome de produto é dado: peso, dose,
+   quantidade. Lê-se melhor na mesma letra do resto da tela.
+
+   Em 19/09/2026 esta regra deixou de ser a exceção e virou a regra da
+   casa: ele pediu a mesma coisa para o resto ("Onde tiver essa fonte
+   troque, nao gosto dela") e a serifada saiu do site inteiro. Esta
+   linha fica porque o cartão pede um peso próprio, não porque a fonte
+   aqui é diferente — hoje ela é a mesma de todo lugar.
 
    600 e não 700: precisa pesar mais que a descrição e menos que o
    preço, que é quem manda no cartão. */
@@ -2362,7 +2409,7 @@ body:has(.hero__art--foto) .topbar{
 .modal.is-open .modal__card{transform:none;opacity:1}
 
 .modal__head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.modal__title{font-family:var(--serif);font-weight:500;font-size:24px;margin:0}
+.modal__title{font-family:var(--titulo);font-weight:600;letter-spacing:-.02em;font-size:24px;margin:0}
 .modal__lead{margin:-6px 0 2px;font-size:13px;line-height:1.5;color:var(--muted)}
 
 .modal__acoes{display:flex;gap:10px;margin-top:6px}
@@ -2563,8 +2610,8 @@ body:has(.hero__art--foto) .topbar{
   padding:5px 12px;
 }
 .quiz__titulo{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:27px;
   line-height:1.15;
   margin:0 0 8px;
@@ -2609,7 +2656,7 @@ body:has(.hero__art--foto) .topbar{
   margin-bottom:20px;
 }
 .quiz__produto-img{background:#fff;border-radius:12px;padding:6px}
-.quiz__produto-nome{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 4px}
+.quiz__produto-nome{font-family:var(--titulo);font-weight:600;font-size:20px;margin:0 0 4px}
 .quiz__produto-desc{font-size:12.5px;line-height:1.45;color:var(--muted);margin:0 0 8px}
 
 .quiz__acoes{display:flex;flex-direction:column;gap:10px}
@@ -2693,7 +2740,7 @@ body:has(.hero__art--foto) .topbar{
   gap:10px;
 }
 .vazio-bloco svg{color:var(--gold-soft)}
-.vazio-bloco__titulo{font-family:var(--serif);font-size:21px;margin:6px 0 0}
+.vazio-bloco__titulo{font-family:var(--titulo);font-weight:600;font-size:21px;margin:6px 0 0}
 .vazio-bloco__texto{font-size:13.5px;color:var(--muted);margin:0 0 8px;max-width:32ch}
 .vazio-bloco .btn{max-width:280px}
 
@@ -2770,8 +2817,8 @@ body:has(.hero__art--foto) .topbar{
 .cartao-zap .atalho__seta{color:rgba(255,255,255,.8)}
 
 .secao-titulo{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:24px;
   margin:26px 0 14px;
 }
@@ -2878,7 +2925,7 @@ body:has(.hero__art--foto) .topbar{
   box-shadow:var(--shadow-sm);
 }
 .pedido__topo{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.pedido__nome{margin:0;font-family:var(--serif);font-size:19px}
+.pedido__nome{margin:0;font-family:var(--titulo);font-weight:600;font-size:19px}
 .pedido__qtd{
   font-size:11.5px;
   font-weight:700;
@@ -2921,14 +2968,14 @@ body:has(.hero__art--foto) .topbar{
   transition:transform .2s ease;
 }
 .resumo-item:hover{transform:translateY(-2px)}
-.resumo-item b{display:block;font-family:var(--serif);font-size:27px;color:var(--gold)}
+.resumo-item b{display:block;font-family:var(--titulo);font-weight:600;letter-spacing:-.02em;font-size:27px;color:var(--gold)}
 .resumo-item span{font-size:12.5px;color:var(--muted)}
 
 /* ---------- texto corrido ---------- */
 
 .texto-longo h2{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:21px;
   margin:24px 0 8px;
 }
@@ -2985,14 +3032,14 @@ body:has(.hero__art--foto) .topbar{
 .atend-hero__texto{position:relative;z-index:1;max-width:72%}
 
 .atend-hero__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   /* clamp em vez de tamanho fixo: o título tem duas linhas longas e a
      medida certa muda muito entre 320 e 430px. */
   /* 7.6vw: em 375px da 28.5px, e "Seu atendimento" cabe numa linha.
      Com 8.4vw dava 31.5px e quebrava. Medido, nao estimado. */
   font-size:clamp(25px,7.6vw,40px);
   line-height:1.12;
-  font-weight:500;
+  font-weight:600;
   letter-spacing:-.015em;
   margin:0;
 }
@@ -3675,9 +3722,9 @@ textarea:focus-visible{
   line-height:1;
 }
 .porta-gestao__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:18px;
-  font-weight:500;
+  font-weight:600;
   line-height:1.2;
   letter-spacing:-.01em;
 }
@@ -3874,7 +3921,8 @@ textarea:focus-visible{
 }
 .resumo-produto__nome{
   margin:0 0 4px;
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:17px;
   line-height:1.2;
 }
@@ -3916,7 +3964,9 @@ textarea:focus-visible{
 }
 .protocolo__data{
   margin:0;
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   font-size:32px;
   line-height:1;
 }
@@ -3996,7 +4046,8 @@ textarea:focus-visible{
 }
 
 .protocolo--vazio .protocolo__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:21px;
   margin:0 0 8px;
 }
@@ -4243,7 +4294,8 @@ textarea:focus-visible{
 .carrinho__barra .btn{flex:none;padding:11px 20px;font-size:14px}
 
 .form-card__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:22px;
   margin:0 0 4px;
 }
@@ -4577,7 +4629,8 @@ textarea:focus-visible{
   text-align:right;
 }
 .carrinho__subtotal{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
   font-size:18px;
   margin:0;
   white-space:nowrap;
@@ -4672,9 +4725,9 @@ textarea:focus-visible{
   gap:14px;
 }
 .contato__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:20px;
-  font-weight:500;
+  font-weight:600;
   margin:0;
 }
 .contato__texto{
@@ -4697,9 +4750,9 @@ textarea:focus-visible{
   box-shadow:var(--shadow-sm);
 }
 .resumo__titulo{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:20px;
-  font-weight:500;
+  font-weight:600;
   margin:0 0 16px;
 }
 .resumo__linha{
@@ -4722,7 +4775,9 @@ textarea:focus-visible{
 }
 .resumo__total-rotulo{font-size:15px;font-weight:600}
 .resumo__total-valor{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   font-size:clamp(22px,6.5vw,28px);
   white-space:nowrap;
 }
@@ -4816,8 +4871,8 @@ textarea:focus-visible{
   margin:0 0 7px;
 }
 .ficha__nome{
-  font-family:var(--serif);
-  font-weight:500;
+  font-family:var(--titulo);
+  font-weight:600;letter-spacing:-.02em;
   font-size:clamp(24px,6.4vw,33px);
   line-height:1.15;
   margin:0;
@@ -4858,7 +4913,11 @@ textarea:focus-visible{
    texto de baixo junto: "1 a 4 unid." virava 76px e não cabia numa
    coluna de 88px com respiro; "1 a 4 un." mede 48. A conta, em 320px:
    (280 - 2×8 de vão - 3×16 de respiro) / 3 = 72px por coluna de
-   conteúdo, e "R$ 1.099,00" em 14px de serifa mede 68. */
+   conteúdo, e "R$ 1.099,00" em 13px de Inter 600, com o aperto de
+   -.02em, mede 68 — medido no navegador em 19/09/2026, depois da troca
+   da fonte. Na Playfair de antes eram os mesmos 68 em 14px: a Inter é
+   mais larga, então o tamanho desceu meio pixel para a conta continuar
+   fechando. */
 .faixas{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -4886,8 +4945,15 @@ textarea:focus-visible{
   text-overflow:ellipsis;
 }
 .faixa__valor{
-  font-family:var(--serif);
-  font-size:clamp(13.5px,3.8vw,17px);
+  font-family:var(--titulo);
+  font-weight:600;
+  /* O PISO DESCEU DE 13,5 PARA 13px, E O APERTO ENTROU JUNTO, na troca
+     da Playfair pela Inter. O valor é `nowrap` — ele não quebra, ele
+     VAZA a coluna —, e numa tela de 320px a coluna tem 70px: a Inter
+     600 escrevia "R$ 1.099,00" em 73,6 e passava por cima da borda do
+     cartão do meio. Com 13px e -.02em ela mede 68 e sobram 2px. */
+  font-size:clamp(13px,3.8vw,17px);
+  letter-spacing:-.02em;
   margin:0;
   line-height:1.15;
   white-space:nowrap;
@@ -4917,7 +4983,9 @@ textarea:focus-visible{
   margin:0 0 3px;
 }
 .ficha__valor{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   font-size:clamp(26px,7.2vw,34px);
   line-height:1.05;
   margin:0;
@@ -4971,7 +5039,9 @@ textarea:focus-visible{
 }
 .ficha__conta-linha{font-size:11.5px;color:var(--muted);margin:0;white-space:nowrap}
 .ficha__conta-total{
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   /* 20px no celular estreito: "R$ 10.494,00" em 27px pedia 150px e a
      coluna tem 110. Cresce com a tela. */
   font-size:clamp(20px,5.4vw,26px);
@@ -5089,7 +5159,9 @@ textarea:focus-visible{
   border-radius:50%;
   background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,#9a7739);
   color:#fff;
-  font-family:var(--serif);
+  font-family:var(--titulo);
+  font-weight:600;
+  letter-spacing:-.02em;
   font-size:25px;
   line-height:1;
   display:grid;place-items:center;
@@ -5147,9 +5219,9 @@ textarea:focus-visible{
 .ficha-conta__num + .ficha-conta__num{border-left:1px solid var(--line)}
 .ficha-conta__num:hover{background:var(--cream-2)}
 .ficha-conta__num b{
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:23px;
-  font-weight:500;
+  font-weight:600;
   color:var(--gold);
   line-height:1.1;
 }
@@ -5172,9 +5244,9 @@ textarea:focus-visible{
 }
 .ficha-conta__chamada{
   margin:0 0 6px;
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:22px;
-  font-weight:500;
+  font-weight:600;
   color:var(--ink);
 }
 .ficha-conta__ajuda{
@@ -5225,9 +5297,9 @@ textarea:focus-visible{
 }
 .vazio-conta__titulo{
   margin:0 0 6px;
-  font-family:var(--serif);
+  font-family:var(--titulo);
   font-size:19px;
-  font-weight:500;
+  font-weight:600;
   color:var(--ink);
 }
 .vazio-conta__texto{
