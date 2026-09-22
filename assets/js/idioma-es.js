@@ -168,6 +168,8 @@ window.PHARMAFIT_ES ={
      As frases de erro estão aqui inteiras porque o tradutor procura frase
      completa no dicionário; cortar em pedaços faz o espanhol sair
      remendado. */
+  "A equipe confirma o estoque e combina a entrega com você. Você pode pagar agora com PIX ou fechar o pedido no WhatsApp.":
+    "El equipo confirma el stock y acuerda la entrega con usted. Puede pagar ahora con PIX o cerrar el pedido por WhatsApp.",
   "ou pague agora": "o pague ahora",
   "Pagar com PIX": "Pagar con PIX",
   "Gerando o código…": "Generando el código…",

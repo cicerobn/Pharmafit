@@ -60,6 +60,7 @@
   var elCopiar = document.getElementById('pix-copiar');
   var elEstado = document.getElementById('pix-estado');
   var elPrazo = document.getElementById('pix-prazo');
+  var elAviso = document.querySelector('.resumo__aviso');
 
   function moeda(v) {
     return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -208,7 +209,27 @@
     }, 4000);
   }
 
+  /* O AVISO DEBAIXO DO BOTÃO PRECISA PARAR DE MENTIR.
+   *
+   * Ele diz, desde sempre: "A equipe confirma com você o estoque, o valor
+   * final e a entrega ANTES DE QUALQUER PAGAMENTO. Nada é cobrado por
+   * aqui." Era verdade enquanto o único caminho era o WhatsApp.
+   *
+   * Com o PIX na tela isso fica falso, e eu vi o tamanho do estrago numa
+   * foto da tela: embaixo de um "Pagamento confirmado" em verde estava
+   * escrito "nada é cobrado por aqui". Frase que se contradiz na mesma
+   * tela faz o cliente desconfiar de tudo — inclusive do que é verdade.
+   *
+   * Então o aviso é reescrito quando o pagamento existe, e sai de cena
+   * quando o pagamento acontece. */
+  function corrigirOAviso() {
+    if (!elAviso) return;
+    elAviso.textContent = 'A equipe confirma o estoque e combina a entrega com você. ' +
+      'Você pode pagar agora com PIX ou fechar o pedido no WhatsApp.';
+  }
+
   function pagou(numero) {
+    if (elAviso) elAviso.hidden = true;
     if (elQr) elQr.hidden = true;
     var codigo = document.querySelector('.pix__codigo');
     if (codigo) codigo.hidden = true;
@@ -330,7 +351,9 @@
   /* A PERGUNTA QUE DECIDE SE O BOTÃO EXISTE. Ela roda depois da tela
      montar, sem travar nada: o carrinho não espera por ela. */
   gatewayDePe().then(function (pronto) {
-    if (pronto) caixaBotao.hidden = false;
+    if (!pronto) return;
+    caixaBotao.hidden = false;
+    corrigirOAviso();
   });
 
   window.PharmaFitPagamento = { gatewayDePe: gatewayDePe };
