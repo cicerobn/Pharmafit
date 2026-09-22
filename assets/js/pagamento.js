@@ -96,15 +96,53 @@
 
   /* ---------- 1. o gateway está de pé? ---------- */
 
+  /* O QUE O SERVIDOR RESPONDEU, guardado para o diagnóstico de baixo. */
+  var ultimaResposta = null;
+
   async function gatewayDePe() {
     try {
       var r = await chamar('pf-cobranca-criar', {});
+      var corpo = await r.json().catch(function () { return {}; });
+      ultimaResposta = { codigo: r.status, erro: corpo.erro || '', falta: corpo.falta || '' };
       /* 400 = a função rodou e tem chave. Qualquer outra coisa (503 sem
-         chave, 404 não publicada, 500) conta como não estar pronta. */
+         chave, 404 não publicada, 401 identidade, 500) conta como não
+         estar pronta. */
       return r.status === 400;
     } catch (e) {
+      ultimaResposta = { codigo: 0, erro: 'não deu para falar com o servidor', falta: '' };
       return false;   /* sem rede até o Supabase: nada de botão */
     }
+  }
+
+  /* UMA LINHA QUE EXPLICA, PARA QUEM ESTÁ LIGANDO O PAGAMENTO.
+   *
+   * Isto existe por um motivo prático: eu não alcanço o Supabase do lugar
+   * onde eu trabalho, então não consigo conferir para o Brian se a chave
+   * chegou e se a verificação de identidade foi desligada. E o
+   * comportamento certo do site — esconder o botão quando algo falta — é
+   * exatamente o que esconde também o MOTIVO.
+   *
+   * Então: `carrinho.html?diagnostico=1` mostra o que o servidor
+   * respondeu, em português. Sem o endereço, ninguém vê nada — cliente
+   * nenhum topa com isso por acidente. */
+  function traduzirResposta(r) {
+    if (!r) return 'ainda perguntando ao servidor…';
+    if (r.codigo === 400) return 'PRONTO: a chave está no Supabase e a função respondeu. O botão de pagar aparece.';
+    if (r.codigo === 503 && r.falta) return 'FALTA A CHAVE: a função respondeu, mas o segredo ' + r.falta + ' não está no Supabase.';
+    if (r.codigo === 401) return 'FALTA DESLIGAR A VERIFICAÇÃO DE IDENTIDADE (Verify JWT) desta função no painel do Supabase.';
+    if (r.codigo === 404) return 'FUNÇÃO NÃO ENCONTRADA: pf-cobranca-criar não está publicada neste projeto.';
+    if (r.codigo === 0) return 'SEM RESPOSTA: o navegador não conseguiu falar com o Supabase.';
+    return 'RESPOSTA INESPERADA: código ' + r.codigo + (r.erro ? ' — ' + r.erro : '');
+  }
+
+  function mostrarDiagnostico() {
+    if (location.search.indexOf('diagnostico') < 0) return;
+    var linha = document.createElement('p');
+    linha.className = 'pagar__nota';
+    linha.setAttribute('data-diagnostico', '');
+    linha.style.textAlign = 'left';
+    linha.textContent = 'Pagamento no site — ' + traduzirResposta(ultimaResposta);
+    caixaBotao.parentNode.insertBefore(linha, caixaBotao);
   }
 
   /* ---------- 2. gravar a compra ---------- */
@@ -371,10 +409,15 @@
   /* A PERGUNTA QUE DECIDE SE O BOTÃO EXISTE. Ela roda depois da tela
      montar, sem travar nada: o carrinho não espera por ela. */
   gatewayDePe().then(function (pronto) {
-    if (!pronto) return;
-    caixaBotao.hidden = false;
-    corrigirOAviso();
+    if (pronto) {
+      caixaBotao.hidden = false;
+      corrigirOAviso();
+    }
+    mostrarDiagnostico();
   });
 
-  window.PharmaFitPagamento = { gatewayDePe: gatewayDePe };
+  window.PharmaFitPagamento = {
+    gatewayDePe: gatewayDePe,
+    resposta: function () { return ultimaResposta; }
+  };
 })();
