@@ -131,6 +131,44 @@
 
         <div id="itens"></div>
 
+
+        <div class="resumo" style="margin-top:22px">
+          <h2 class="resumo__titulo">Resumo do pedido</h2>
+
+          <div class="resumo__linha">
+            <span id="resumo-qtd">—</span>
+            <span id="resumo-soma">—</span>
+          </div>
+          <div class="resumo__linha">
+            <span>Entrega</span>
+            <span id="resumo-entrega">combinada no WhatsApp</span>
+          </div>
+
+          <div class="resumo__total">
+            <span class="resumo__total-rotulo">Total</span>
+            <span class="resumo__total-valor" id="resumo-total">—</span>
+          </div>
+
+          <div class="resumo__moedas" id="resumo-moedas" hidden></div>
+          <p class="resumo__cotacao" id="resumo-cotacao" hidden></p>
+
+          <!-- O FORMULÁRIO VEM DEPOIS DO TOQUE, e não antes.
+               Brian, 22/09/2026, com a foto dos campos em vermelho na
+               frente: "Deixe pra colocar essas informacoes aqui depois de
+               ja ter clicar pra pagar".
+               Ele está certo, e o que ele viu foi o preço de pedir antes:
+               três campos e um erro em vermelho ANTES de a pessoa ter
+               feito qualquer coisa. Quem chega no carrinho quer pagar;
+               nome, WhatsApp e endereço são o que a equipe precisa para
+               ENTREGAR, e isso pode ser pedido depois de a pessoa dizer
+               que quer fechar.
+               Então ele nasce escondido e aparece no primeiro toque em
+               qualquer um dos dois botões. Quem já comprou antes nem vê:
+               os campos vêm preenchidos do aparelho, a checagem passa, e
+               o toque vale de uma vez.
+               E ele mudou de LUGAR junto: morava acima do resumo, e
+               apareceria empurrando o total para baixo, longe do dedo.
+               Aqui ele nasce exatamente em cima do botão que foi tocado. -->
         <!-- PARA QUEM E PARA ONDE VAI O PEDIDO.
              ACHADO EM 18/09/2026, seguindo o caminho do dinheiro até o
              fim: quem comprava PELO CARRINHO não digitava nome,
@@ -151,7 +189,7 @@
              enviar — quem fecha é o link do WhatsApp logo abaixo — então
              a checagem é a do site (`data-valida`), que escreve o recado
              embaixo do campo em vez de abrir a bolha cinza do navegador. -->
-        <form class="contato" id="form-contato" novalidate>
+        <form class="contato" id="form-contato" data-contato novalidate hidden>
           <h2 class="contato__titulo">Para onde vai o pedido</h2>
           <p class="contato__texto">
             A equipe precisa saber para quem responder e para onde entregar.
@@ -185,26 +223,6 @@
             </div>
           </div>
         </form>
-
-        <div class="resumo" style="margin-top:22px">
-          <h2 class="resumo__titulo">Resumo do pedido</h2>
-
-          <div class="resumo__linha">
-            <span id="resumo-qtd">—</span>
-            <span id="resumo-soma">—</span>
-          </div>
-          <div class="resumo__linha">
-            <span>Entrega</span>
-            <span id="resumo-entrega">combinada no WhatsApp</span>
-          </div>
-
-          <div class="resumo__total">
-            <span class="resumo__total-rotulo">Total</span>
-            <span class="resumo__total-valor" id="resumo-total">—</span>
-          </div>
-
-          <div class="resumo__moedas" id="resumo-moedas" hidden></div>
-          <p class="resumo__cotacao" id="resumo-cotacao" hidden></p>
 
           <p style="margin:18px 0 0">
             <a class="btn btn--primary btn--block btn--zap" id="fechar" href="#" target="_blank" rel="noopener">
@@ -416,7 +434,7 @@
 <script src="assets/js/moedas.js?v=ddbb4a9b" defer></script>
 <script src="assets/js/conta.js?v=5b35fb28" defer></script>
 <script src="assets/js/pedido.js?v=91551a6f" defer></script>
-<script src="assets/js/pagamento.js?v=ace2c20f" defer></script>
-<script src="assets/js/tela-carrinho.js?v=f95bf3ce" defer></script>
+<script src="assets/js/tela-carrinho.js?v=a98fa393" defer></script>
+<script src="assets/js/pagamento.js?v=5226d051" defer></script>
 </body>
 </html>

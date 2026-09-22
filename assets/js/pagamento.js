@@ -1,7 +1,7 @@
 /* =========================================================
    PHARMA FIT — pagar no site
 
-   precisa: carrinho, minha-area, pedido, nuvem, conta, validacao
+   precisa: carrinho, minha-area, pedido, nuvem, conta, validacao, tela-carrinho
 
    O QUE ESTE ARQUIVO FAZ: abre a cobrança PIX da compra do carrinho e
    mostra o código na tela, sem a pessoa sair do site.
@@ -281,9 +281,18 @@
    * Então o aviso é reescrito quando o pagamento existe, e sai de cena
    * quando o pagamento acontece. */
   function corrigirOAviso() {
-    if (!elAviso) return;
-    elAviso.textContent = 'A equipe confirma o estoque e combina a entrega com você. ' +
-      'Você pode pagar agora com PIX ou fechar o pedido no WhatsApp.';
+    if (elAviso) {
+      elAviso.textContent = 'A equipe confirma o estoque e combina a entrega com você. ' +
+        'Você pode pagar agora com PIX ou fechar o pedido no WhatsApp.';
+    }
+    /* E O TEXTO DO FORMULÁRIO TAMBÉM, pelo mesmo motivo: ele diz "Nada é
+       cobrado por aqui", e com o PIX na tela isso deixou de ser verdade.
+       Este é o segundo lugar da mesma frase — eu achei o primeiro olhando
+       a foto da tela, e fui procurar se havia outro. Havia. */
+    var texto = document.querySelector('.contato__texto');
+    if (texto) {
+      texto.textContent = 'A equipe precisa saber para quem responder e para onde entregar.';
+    }
   }
 
   function pagou(numero) {
@@ -299,9 +308,14 @@
   }
 
   async function pagarComPix() {
-    var form = document.getElementById('form-contato');
-    if (form && window.PharmaFitValidacao &&
-        !window.PharmaFitValidacao.conferir(form)) return;
+    /* OS DADOS SÃO PEDIDOS AGORA, e não antes de a pessoa tocar.
+     *
+     * Quem mostra o formulário é o `tela-carrinho.js`, que é o dono dele —
+     * aqui eu só peço. Se ele devolver false, a tela acabou de pedir o que
+     * falta e eu paro: nada de gravar compra pela metade nem de mexer no
+     * rótulo do botão, que ainda não começou a trabalhar. */
+    var Contato = window.PharmaFitContato;
+    if (Contato && !Contato.pedir()) return;
 
     botao.disabled = true;
     var rotulo = botao.querySelector('[data-pagar-rotulo]');
