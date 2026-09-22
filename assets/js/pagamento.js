@@ -66,10 +66,30 @@
     return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   }
 
+  /* A CHAVE PUBLICÁVEL VAI SÓ NO CABEÇALHO `apikey`, e NÃO como `Bearer`.
+   *
+   * Eu tinha escrito nos dois, e a documentação da Supabase chama isso de
+   * erro comum, com estas palavras: "A common mistake is sending a
+   * publishable or secret key as a bearer token. The new API keys are not
+   * JWTs. The platform check can't validate them". A chave deste site é do
+   * formato novo (`sb_publishable_…`), então como Bearer ela não autentica
+   * nada — só faz o Supabase recusar o pedido antes de a função rodar.
+   *
+   * Ela é pública de propósito: está escrita no código do site, que qualquer
+   * visitante lê. Quem manda no que pode ser lido e gravado é a Row Level
+   * Security do banco, não ela.
+   *
+   * E POR ISSO AS TRÊS FUNÇÕES PRECISAM DE `verify_jwt` DESLIGADO. A mesma
+   * documentação: "Edge Functions only support JWT verification via the anon
+   * and service_role JWT-based API keys. You will need to use the
+   * --no-verify-jwt option when using publishable and secret keys". É a mesma
+   * configuração que as funções do 595 Imports já têm neste projeto. */
   function chamar(funcao, corpo) {
+    var cabecalhos = { 'Content-Type': 'application/json' };
+    if (cfg.SUPABASE_ANON_KEY) cabecalhos.apikey = cfg.SUPABASE_ANON_KEY;
     return fetch(BASE + '/functions/v1/' + funcao, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: cabecalhos,
       body: JSON.stringify(corpo || {})
     });
   }
