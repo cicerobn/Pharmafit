@@ -353,6 +353,7 @@ window.PHARMAFIT_ES ={
   "Revendedores, clínicas, profissionais e parceiros comerciais têm condições próprias e atendimento direto.": "Revendedores, clínicas, profesionales y socios comerciales tienen condiciones propias y atención directa.",
   "Rua, número, bairro e complemento": "Calle, número, barrio y complemento",
   "SAÚDE · PERFORMANCE · BEM-ESTAR": "SALUD · RENDIMIENTO · BIENESTAR",
+  "SAÚDE • PERFORMANCE • BEM-ESTAR": "SALUD • RENDIMIENTO • BIENESTAR",
   "Se preferir, toque em Pedir no WhatsApp e a conversa já abre com este produto e a quantidade dentro.": "Si prefieres, toca Pedir por WhatsApp y la conversación ya se abre con este producto y la cantidad dentro.",
   "SELEÇÃO PREMIUM": "SELECCIÓN PREMIUM",
   "Sair da conta": "Salir de la cuenta",
