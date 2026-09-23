@@ -540,9 +540,19 @@
     /* abrir em outra aba não troca esta tela; animar aqui seria mentira */
     if (e.metaKey || e.ctrlKey || e.shiftKey || link.target === '_blank') return;
 
-    var foto = link.matches('.protocol')
-      ? link.querySelector('.protocol__media img')
-      : (link.closest('.product') || link).querySelector('.product__media img, img');
+    /* A FOTO É A DO CARTÃO, E A BUSCA COMEÇA NO CARTÃO — não no link.
+       Até 23/09/2026 a fila "Em destaque" era um link só, do tamanho do
+       cartão, então dava para perguntar a ele mesmo pela foto. Naquele
+       dia o botão "Comprar" entrou nela e o cartão deixou de ser uma
+       âncora: quem é link passou a ser o NOME, e um `<a>` que só tem
+       texto dentro não tem foto nenhuma para achar. A animação morreria
+       em silêncio — nada quebra na tela, a foto só para de voar.
+       Subir para o cartão vale nas duas filas e não depende de qual
+       pedaço do cartão é o link, hoje ou depois. */
+    var cartao = link.closest('.product, .protocol');
+    var foto = cartao
+      ? cartao.querySelector('.product__media img, .protocol__media img')
+      : link.querySelector('img');
     if (!foto) return;
 
     limparFotoVoando();

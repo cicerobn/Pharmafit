@@ -289,7 +289,11 @@
    * 31% não podem chamar o olho do mesmo jeito — se tudo pisca, nada
    * chama. Os cortes do catálogo de hoje vão de 8% a 31%.
    */
-  function blocoPe(p, botao) {
+  /* O PÉ DO CARTÃO: o preço antigo riscado, o preço, as parcelas.
+     O botão NÃO entra mais aqui — desde 23/09/2026 ele é uma linha
+     inteira embaixo deste bloco (ver `botaoComprar`), e não um símbolo
+     ao lado do preço. */
+  function blocoPe(p) {
     var desconto = Preco.desconto(p.antes, p.venda);
 
     return (p.antes
@@ -303,7 +307,6 @@
         : '') +
       '<div class="product__pe">' +
         '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
-        botao +
       '</div>' +
       '<p class="product__installment">' + Preco.htmlParcelas(p.venda) + '</p>';
   }
@@ -322,55 +325,66 @@
     grade.innerHTML = visiveis().map(cartao).join('');
   }
 
+  /* ---------- O BOTÃO DE COMPRAR ----------
+
+     Brian, 23/09/2026, com a foto do cartão pronto: "Coloca um balão
+     de 'comprar' direto no card dos produtos igual está na outra
+     foto".
+
+     ELE JÁ FOI ESCRITO, VIROU SÍMBOLO E VOLTA A SER ESCRITO — e o
+     caminho de ida e volta não foi à toa. Em 18/09 ele pediu o símbolo
+     ao lado do preço, copiando o cartão de outra loja, e o botão
+     escrito saiu para o cartão encurtar. Cinco dias depois, com a foto
+     do site já assim, ele pediu a palavra de volta. Entre as duas, a
+     palavra é a que vende: "Comprar" é o único lugar do cartão que diz
+     o que acontece quando se toca, e num catálogo de remédio a pessoa
+     quer certeza antes de tocar.
+
+     A BOLINHA SAIU DE VEZ, e não ficou ao lado. Dois botões de pôr no
+     carrinho no mesmo cartão são dois caminhos para a mesma coisa —
+     quem chega não sabe se fazem o mesmo, e quem sabe toca no maior. O
+     que era dela continua aqui: o desenho do carrinho, que diz o que a
+     palavra não diz (vai para o carrinho, não para o pagamento), e o
+     clarão que atravessa no toque.
+
+     A ORDEM DOS FILHOS IMPORTA, e isto é armadilha de verdade: o
+     `app.js` troca o texto do PRIMEIRO `<span>` do botão por "No
+     carrinho" quando o produto entra. Na bolinha o primeiro span era o
+     clarão — o aviso ia para um elemento escondido e nunca aparecia.
+     Aqui a palavra vem antes do clarão, e o aviso funciona como sempre
+     foi para funcionar.
+
+     `extra` é o modificador de classe: a fila "Em destaque" usa o
+     mesmo botão num cartão de 92px de coluna e pede a versão curta.
+     Um botão só, dois tamanhos — e não dois botões. */
+  function botaoComprar(p, extra) {
+    return '' +
+      '<button class="product__comprar' + (extra || '') + '" type="button" ' +
+        'data-por-no-carrinho="' + esc(p.nome) + '" ' +
+        'aria-label="Comprar ' + esc(p.nome) + '">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
+        '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
+        '</svg>' +
+        '<span class="product__comprar-txt">Comprar</span>' +
+        '<span class="product__carrinho-luz" aria-hidden="true"></span>' +
+      '</button>';
+  }
+
   /** Cartão de produto usado na grade e na página de favoritos.
       `i` é a posição na fila: os primeiros pedem a foto na hora. */
   function cartao(p, i) {
 
-    /* Fora de estoque não ganha botão de carrinho: pôr no carrinho o que
-       não pode ser entregue só empurra a decepção para o fim da compra. */
-    /* Fora de estoque a ação continua sendo uma FRASE, e não podia ser
-       outra coisa: "avise-me quando chegar" não cabe num símbolo. O
-       botão redondo do carrinho só existe onde há o que pôr nele. */
+    /* Fora de estoque não ganha botão de comprar: pôr no carrinho o que
+       não pode ser entregue só empurra a decepção para o fim da compra.
+       No lugar dele vai uma FRASE — "avise-me quando chegar" —, que é o
+       que a pessoa pode fazer ali. */
     var acaoEspera = semEstoque(p)
       ? '<button class="btn btn--outline btn--espera" type="button" data-avise="' + esc(p.nome) + '">' +
           'Avise-me quando chegar' + setaHtml + '</button>'
       : '';
 
-    /* O CARRINHO VIROU SÍMBOLO, AO LADO DO PREÇO.
-       Brian, 18/09/2026, com a foto de um cartão de outra loja: "quero
-       que os produtos fiquem assim (...) em baixo o preco, e do lado o
-       simbolo de jogar pro carrinho".
-
-       Antes era um botão de largura inteira escrito "Adicionar", numa
-       linha só dele embaixo do preço. Como símbolo ao lado do preço ele
-       devolve essa linha ao cartão — e põe as duas coisas que decidem a
-       compra (quanto custa, como levar) no mesmo lugar do olho.
-
-       O RÓTULO NÃO SUMIU, mudou de lugar: `aria-label` diz "Adicionar
-       <produto> ao carrinho" para quem usa leitor de tela, e `title`
-       diz o mesmo no passar do mouse. Botão só de desenho sem rótulo é
-       um botão que só funciona para quem enxerga.
-
-       E DENTRO DELE VAI O CLARÃO. Brian, na mesma noite: "o carrinho
-       nos produtos ali ta muito sem graca, nao estou gostando de como
-       ele esta". Eu havia posto este clarão no botão escrito, que este
-       cartão não tem mais — então ele vem para cá, que é onde o
-       carrinho vive agora. É um elemento e não um `::after` porque o
-       botão já usa pseudo-elemento no aviso de "no carrinho", e dois
-       desenhos no mesmo pseudo-elemento se atropelam. `aria-hidden`
-       porque é cenário: não tem nada a dizer a quem ouve a tela. */
-    var botaoCarrinho =
-      '<button class="product__carrinho" type="button" ' +
-        'data-por-no-carrinho="' + esc(p.nome) + '" ' +
-        'title="Adicionar ao carrinho" ' +
-        'aria-label="Adicionar ' + esc(p.nome) + ' ao carrinho">' +
-        '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>' +
-        '<path d="M3 4h2l2.4 10.2a1.5 1.5 0 0 0 1.5 1.2h9.2a1.5 1.5 0 0 0 1.5-1.2L21 8H6"/>' +
-        '</svg>' +
-        '<span class="product__carrinho-luz" aria-hidden="true"></span>' +
-      '</button>';
 
     return '' +
       /* `product--promo` existe para o CSS poder tratar o cartão em
@@ -404,7 +418,8 @@
             '<a href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
               esc(p.nome) + '</a></h2>' +
           '<p class="product__desc">' + esc(p.descricao) + '</p>' +
-          blocoPe(p, semEstoque(p) ? '' : botaoCarrinho) +
+          blocoPe(p) +
+          (semEstoque(p) ? '' : botaoComprar(p)) +
           acaoEspera +
         '</div>' +
       '</article>';
@@ -704,13 +719,26 @@
 
     trilho.innerHTML = destaques.map(function (p) {
       return '' +
-        /* O CARTÃO INTEIRO É UM LINK PARA O PRODUTO.
+        /* O CARTÃO INTEIRO LEVA AO PRODUTO, MAS ELE NÃO É MAIS UMA
+           ÂNCORA — e a diferença é o botão de comprar.
+
            Brian, 17/09/2026: "Tem que dar pra clicar no produto e ver
-           tudo sobre ele". Como não há botão nenhum dentro dele, o
-           jeito certo é o mais simples: o cartão é a âncora. Um link
-           só, que o leitor de tela anuncia de uma vez, e área de toque
-           do tamanho do cartão. */
-        '<a class="protocol" href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
+           tudo sobre ele". Enquanto não havia botão nenhum aqui dentro,
+           o jeito certo era o mais simples: o cartão era a âncora.
+
+           Em 23/09/2026 ele pediu o "Comprar" também nestes três, e
+           botão dentro de link não pode: o HTML não permite, e na
+           prática o toque no botão abriria a página do produto em vez
+           de pôr no carrinho — as duas coisas disputando o mesmo dedo.
+
+           Agora é o mesmo desenho que o cartão da vitrine usa desde
+           sempre: quem é link é o NOME, e uma sombra invisível dele
+           (`.protocol__name a::after`) cobre o cartão inteiro. A área
+           de toque continua sendo o cartão todo, o leitor de tela
+           anuncia um link com o nome do produto — melhor do que antes,
+           quando ele lia o cartão inteiro de uma vez — e o botão fica
+           por cima da sombra, com um caminho só. */
+        '<article class="protocol">' +
           molduraFoto(p, 'protocol__media') +
             /* A FILA DA INICIAL É "EM DESTAQUE", E OS TRÊS LEVAM A
                MESMA ETIQUETA: ela fala da fila, não do produto.
@@ -725,7 +753,9 @@
             fotoHtml(p, 300, true) +
           '</div>' +
           '<div class="protocol__body">' +
-            '<h3 class="protocol__name">' + esc(p.nome) + '</h3>' +
+            '<h3 class="protocol__name">' +
+              '<a href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
+                esc(p.nome) + '</a></h3>' +
             /* SÓ O PREÇO, e o desconto quando existe.
                Brian, 18/09/2026: "Deixe esses cards aqui com as fotos
                menores e um tamanho menor, quero que de ve pra ver 3
@@ -748,8 +778,13 @@
                que é promoção, e a porcentagem com o preço antigo
                riscado está na lista de produtos e na página do produto. */
             '<p class="protocol__valor">' + Preco.formatar(p.venda) + '</p>' +
+            /* O MESMO BOTÃO DA VITRINE, num tamanho que cabe em 92px de
+               coluna (`--curto`). Os três da fila estão sempre em
+               estoque? Não necessariamente — por isso o mesmo teste da
+               vitrine: sem estoque, sem botão. */
+            (semEstoque(p) ? '' : botaoComprar(p, ' product__comprar--curto')) +
           '</div>' +
-        '</a>';
+        '</article>';
     }).join('');
   }
 

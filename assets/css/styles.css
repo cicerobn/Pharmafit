@@ -71,21 +71,37 @@
   --fundo-foto:#fff;
 
   /* ---- uma cor para cada categoria do catalogo ----------------
-     Escolhidas para conviver com o creme e o dourado da casa: sao
-     tons fundos e quebrados, nao cores puras. Cor pura ao lado de
-     dourado briga e deixa a vitrine com cara de promocao de
-     supermercado.
+
+     Brian, 23/09/2026, com a foto do topo da home: "Cor dos cards
+     Tirzepatida, Reta, Peps".
+
+     ELAS ERAM QUATRO COISAS DIFERENTES E VIRARAM UMA SÓ FAMÍLIA.
+     Verde, terracota, ameixa e azul: quatro cores sem parentesco
+     entre si nem com a casa. Cada disco puxava o olho para um lado,
+     e a fileira de três parecia três marcas diferentes numa linha.
+
+     Agora é a escada da própria marca: dourado, bronze, preto. É a
+     mesma tinta da logo, do preço e dos botões, em três degraus de
+     profundidade — a fileira lê como um conjunto, e a cor volta a ser
+     enfeite em vez de ruído.
 
      O tom 1 e o cheio (fundo do chip marcado) e o 2 e o mais claro
      (topo do degrade), para o chip marcado ter volume.
 
+     E O MESMO NÚMERO PINTA OS CHIPS DA PÁGINA DE PRODUTOS, de
+     propósito: a mesma categoria mudar de cor entre a home e a lista
+     faria a cor não significar nada. Mexer aqui muda os dois lugares,
+     e é para ser assim.
+
      Sao QUATRO para tres categorias de proposito: no dia em que
      entrar uma quarta, ela ja tem cor. Da quinta em diante o
-     rodizio recomeca, e nenhuma fica sem cor definida. */
-  --cat1:#2f6f62;  --cat1-2:#3f8b7a;   /* verde fundo    */
-  --cat2:#a4552f;  --cat2-2:#c06a3d;   /* terracota      */
-  --cat3:#6a4270;  --cat3-2:#85558b;   /* ameixa         */
-  --cat4:#3a5a7a;  --cat4-2:#4d739a;   /* azul ardosia   */
+     rodizio recomeca, e nenhuma fica sem cor definida. A quarta
+     fecha a escada por baixo, num taupe quente que ainda é da
+     mesma família. */
+  --cat1:#b08c4a;  --cat1-2:#c9a863;   /* dourado da casa */
+  --cat2:#8a5a33;  --cat2-2:#a4713f;   /* bronze          */
+  --cat3:#1e1e1e;  --cat3-2:#3d3d3d;   /* preto           */
+  --cat4:#6b5f4e;  --cat4-2:#877a64;   /* taupe quente    */
 }
 
 *,*::before,*::after{box-sizing:border-box}
@@ -276,7 +292,17 @@ body:has(.hero__art--foto) .topbar{
 @container (max-width:181px){
   .brand__name{display:none}
 }
-@container (max-width:273px){
+/* A ETIQUETA VOLTA AO CELULAR, e o número 171 é medido.
+   Brian, 23/09/2026: "no canto esquerdo colocar as letrinhas (saude -
+   perfomance - bem estar)". Ela existia no HTML e estava escondida em
+   toda tela de celular — por uma razão boa, que agora tem conserto:
+   ela pedia 186px e num celular de 375px a marca inteira tem 191.
+   O conserto está mais abaixo, no `@media` do celular: sem os dois
+   risquinhos dourados e com a letra mais fechada ela passou a pedir
+   116px. O limite aqui é o espaço que sobra para o texto (a marca
+   menos o monograma de 40 e o vão de 12) mais uma folga: abaixo de
+   171px de cartão não cabe, e aí ela some de novo. */
+@container (max-width:180px){
   .brand__tag{display:none}
 }
 
@@ -328,16 +354,32 @@ body:has(.hero__art--foto) .topbar{
   .btn-conta__nome{display:none}
 }
 
+/* O ANEL E O DESENHO SÃO PRETOS, E NÃO DOURADOS.
+
+   Brian, 23/09/2026, com a foto do topo: "Canto superior direito os
+   detalhe dos 'botoes' dourado, alterar para detalhes preto".
+
+   Não é só troca de gosto: no topo o dourado agora disputa com a
+   própria marca. Quando a etiqueta "SAÚDE · PERFORMANCE · BEM-ESTAR"
+   passou a aparecer no celular (o pedido da mesma foto), ela trouxe
+   dois risquinhos dourados para a esquerda da barra — e com três
+   círculos dourados à direita a barra inteira virava dourada, sem
+   nada guiando o olho. Em preto, os botões viram o que são: os
+   comandos da tela, discretos até a hora de usar.
+
+   O anel é preto a 16%, e não preto cheio: a 100% ele desenharia três
+   alvos pesados no alto de uma página clara. A 16% é a mesma presença
+   que o dourado tinha, na cor certa. */
 .icon-btn{
   width:44px;height:44px;
   display:grid;place-items:center;
   border-radius:50%;
-  border:1px solid var(--gold-soft);
-  color:var(--gold);
+  border:1px solid rgba(16,16,16,.16);
+  color:var(--ink);
   background:rgba(255,255,255,.55);
   transition:background .2s ease,border-color .2s ease,transform .2s ease;
 }
-.icon-btn:hover{background:#fff;border-color:var(--gold);transform:translateY(-1px)}
+.icon-btn:hover{background:#fff;border-color:var(--ink);transform:translateY(-1px)}
 .icon-btn--bare{border-color:transparent;background:transparent}
 
 /* O NÚMERO DO CARRINHO NO ITEM DA GAVETA.
@@ -858,7 +900,11 @@ body:has(.hero__art--foto) .topbar{
 .protocol{
   flex:0 0 calc((100% - 20px) / 3);
   scroll-snap-align:start;
-  /* é uma âncora: o cartão inteiro leva à página do produto */
+  /* DEIXOU DE SER UMA ÂNCORA em 23/09/2026, quando o botão "Comprar"
+     entrou aqui: botão dentro de link não pode. Quem é link agora é o
+     nome, e a sombra invisível dele cobre o cartão (ver
+     `.protocol__name a::after`) — por isso o `relative` aqui. */
+  position:relative;
   color:inherit;
   text-decoration:none;
   display:flex;
@@ -977,6 +1023,17 @@ body:has(.hero__art--foto) .topbar{
   margin:0;
   min-width:0;
   overflow-wrap:break-word;
+}
+/* A SOMBRA DO LINK, que é o que faz o cartão inteiro ser clicável sem
+   o cartão ser um link. É a mesma receita do cartão da vitrine
+   (`.product__name a::after`), e o botão de comprar passa por cima
+   dela com o `z-index` dele. */
+.protocol__name a{color:inherit;text-decoration:none}
+.protocol__name a::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
 }
 .protocol__valor{
   /* `margin-top:auto` encosta o preço no pé do cartão, então os três
@@ -1273,16 +1330,26 @@ body:has(.hero__art--foto) .topbar{
   border-bottom:1px solid #f2ece2;
   /* a moldura desfocada mora num `::before` dentro dela */
   position:relative;
-  /* 1/0,8 E NÃO 1/0,66, e os 14px que o cartão cresce foram pesados.
+  /* 1/0,94, E ESTE NÚMERO JÁ SUBIU DUAS VEZES.
      As fotos de produto que o Brian subiu são retratos de estúdio, ou
-     seja, quadrados ou quase. Numa moldura de 1/0,66 (168×111) uma foto
-     quadrada é limitada pela ALTURA e sai com 91px, deixando 28px de
-     creme de cada lado — o produto fica pequeno no meio de sobra.
-     Em 1/0,8 (168×134) a mesma foto sai com 122px: 34% maior, com 23px
-     a mais de cartão. Não vai a 1/1 porque ali a moldura sozinha teria
-     168px e o cartão passaria de 375 de altura — ele pediu cartões
-     menores em 18/09, e isso vale mais que a foto crescer 20%. */
-  aspect-ratio:1/.8;
+     seja, quadrados ou quase — e numa moldura deitada uma foto quadrada
+     é limitada pela ALTURA, sobrando creme dos dois lados. Foi 1/0,66
+     (foto de 91px), virou 1/0,8 (122px) e agora é 1/0,94.
+
+     Brian, 23/09/2026: "cards do produto, aumentar mais um pouco o
+     produto". Medido num celular de 390px: a moldura vai de 134 para
+     157px de altura e a foto quadrada de 114 para 137 — 20% maior.
+
+     Não vai a 1/1: ali a moldura sozinha teria a largura inteira do
+     cartão, e com o botão "Comprar" que entrou no mesmo dia o cartão
+     passaria dos 400px de altura. Ele pediu cartões MENORES em 18/09,
+     e isso continua valendo — 0,94 é o ponto onde a foto cresce o que
+     dá sem desfazer aquele pedido.
+
+     O BALÃO DE DESTAQUE NÃO CRESCEU JUNTO, e é pedido dele na mesma
+     frase ("manter o mesmo tamanho do balão de destaque"): a etiqueta
+     tem medida própria e ficou onde estava. */
+  aspect-ratio:1/.94;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1636,81 +1703,91 @@ body:has(.hero__art--foto) .topbar{
 .product__pe{
   display:flex;
   align-items:center;
-  /* ELE PODE QUEBRAR, E TEM DE PODER. Medido em 18/09/2026 às 23h: o
-     cartão tem 146px de conteúdo num celular de 390px, mas só 111px
-     num de 320. Com a bolinha e o vão, sobram 61px para o preço — e
-     "R$ 1.099,00" pede 84px até no tamanho antigo de 16px. Ou seja: na
-     tela pequena o preço vazava POR BAIXO da bolinha, e vazava antes
-     de eu mexer em nada.
-     Com `wrap` e um mínimo no preço, a bolinha desce para a linha de
-     baixo quando não cabe ao lado, encostada à direita, em vez de o
-     preço passar por cima dela. */
-  flex-wrap:wrap;
-  justify-content:flex-end;
+  /* O PREÇO FICA NA ESQUERDA DESDE QUE A BOLINHA SAIU (23/09/2026).
+     Com o botão ao lado, `flex-end` encostava os dois na direita e o
+     conjunto tinha peso. Sozinho ali, o preço ficava pendurado no
+     canto direito enquanto o nome e a descrição começam na esquerda —
+     três linhas e três alinhamentos diferentes. */
+  justify-content:flex-start;
+  /* O `wrap` e o mínimo de 95px no preço MORAVAM AQUI e saíram junto
+     com a bolinha: eles existiam para ela descer uma linha quando não
+     coubesse ao lado do preço numa tela de 320px. Sem ninguém dividindo
+     a linha, o preço tem o cartão inteiro e não há o que quebrar. */
   gap:8px;
   margin-top:auto;
   padding-top:4px;
 }
-/* O MÍNIMO É O QUE O MAIOR PREÇO DO CATÁLOGO PEDE: "R$ 1.099,00" mede
-   95px em 18px. É ele que decide se a bolinha fica ao lado (146 - 42 -
-   8 = 96, cabe) ou desce (111 - 42 - 8 = 61, não cabe). */
-.product__pe .product__price{flex:1 1 95px;min-width:95px}
 
-.product__carrinho{
-  flex:none;
-  /* 42px E NÃO 38. Este é o botão de comprar, e abaixo de 40px o
-     polegar começa a errar — o próprio raciocínio que manteve o botão
-     escrito em 42px quando ele foi diminuído, mais cedo no mesmo dia.
-     Como símbolo ele tinha voltado para 38. */
-  width:42px;
-  height:42px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  color:#fff;
-  background:linear-gradient(135deg,var(--gold-2),var(--gold));
-  box-shadow:0 6px 14px rgba(176,140,74,.3);
-  /* Acima da sombra do link que cobre o cartão inteiro (ver
-     `.product__name a::after`): sem isto, tocar na bolinha abriria a
-     página do produto em vez de pôr no carrinho. */
-  position:relative;
-  z-index:2;
-  transition:transform .18s ease,box-shadow .18s ease,background .25s ease;
-}
-.product__carrinho:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(176,140,74,.38)}
-.product__carrinho:active{transform:scale(.94)}
+/* ---------- O BALÃO DE "COMPRAR", NO PÉ DO CARTÃO ----------
 
-/* ---------- A BOLINHA DO CARRINHO, COM GRAÇA ----------
-   Brian, 18/09/2026: "o carrinho nos produtos ali ta muito sem graca,
-   nao estou gostando de como ele esta, de uma melhorada por favor".
+   Brian, 23/09/2026: "Coloca um balão de 'comprar' direto no card dos
+   produtos igual está na outra foto".
 
-   ELA ERA UM DISCO DOURADO CHAPADO com um carrinho de traço dentro. O
-   que faltava não era tamanho: era relevo e reação. Três coisas, e
-   todas se medem:
+   AQUI MORAVA A BOLINHA (`.product__carrinho`), de 42px, encostada no
+   preço. Ela saiu inteira: o que era dela e continua valendo mudou de
+   nome e de forma, o resto foi embora com ela.
 
-     1. VOLUME — o gradiente num ângulo mais raso, um fio claro por
-        dentro no alto (o brilho de peça metálica) e um fio escuro
-        embaixo. Sem isto era uma cor lisa.
+   O QUE VEIO JUNTO, porque não era da bolinha e sim do botão de
+   comprar, qualquer que seja a forma dele:
+
+     1. VOLUME — o gradiente num ângulo raso, um fio claro por dentro
+        no alto (brilho de peça metálica) e um fio escuro embaixo.
+        Brian, 18/09/2026: "o carrinho nos produtos ali ta muito sem
+        graca". Sem isto é uma barra de cor lisa.
      2. REAÇÃO — o clarão atravessa quando o dedo chega. Um botão de
         compra que não responde parece travado, e a pessoa toca de novo
         e leva dois.
      3. O CARRINHO ANDA — o desenho desliza um fio para a direita no
-        toque. É o movimento de pôr algo dentro, e é o que dá sentido
-        ao desenho em vez de ele ser enfeite.
+        toque. É o movimento de pôr algo dentro.
 
-   `prefers-reduced-motion` desliga o movimento; o relevo fica. */
-.product__carrinho{
+   `prefers-reduced-motion` desliga o movimento; o relevo fica.
+
+   A ALTURA É 40px E NÃO MENOS: abaixo disso o polegar começa a errar,
+   e este é o botão que vende. Largura inteira porque é a última linha
+   do cartão e não disputa espaço com nada. */
+.product__comprar{
+  width:100%;
+  min-height:40px;
+  border:0;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:0 12px;
+  margin-top:9px;
+  font-family:var(--sans);
+  font-size:13.5px;
+  font-weight:600;
+  letter-spacing:.01em;
+  color:#fff;
+  cursor:pointer;
   overflow:hidden;
   background:linear-gradient(118deg,var(--gold-2),var(--gold) 52%,#9a7739);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.38),
              inset 0 -1px 0 rgba(0,0,0,.10),
              0 6px 14px rgba(176,140,74,.30);
+  /* Acima da sombra do link que cobre o cartão inteiro (ver
+     `.product__name a::after`): sem isto, tocar no botão abriria a
+     página do produto em vez de pôr no carrinho. */
+  position:relative;
+  z-index:2;
+  transition:transform .18s ease,box-shadow .18s ease,background .25s ease;
 }
-.product__carrinho:hover{
+.product__comprar:hover{
+  transform:translateY(-1px);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.45),
              inset 0 -1px 0 rgba(0,0,0,.10),
              0 10px 20px rgba(176,140,74,.38);
 }
+.product__comprar:active{transform:translateY(0) scale(.985)}
+
+/* o texto e o desenho ficam ACIMA do clarão, que é irmão deles */
+.product__comprar > svg,
+.product__comprar-txt{position:relative;z-index:1}
+.product__comprar > svg{flex:none;transition:transform .18s ease}
+.product__comprar:hover > svg{transform:translateX(2px)}
+.product__comprar:active > svg{transform:translateX(3px)}
 
 /* o clarão: parado até alguém chegar perto */
 .product__carrinho-luz{
@@ -1721,8 +1798,8 @@ body:has(.hero__art--foto) .topbar{
   transform:translateX(-140%);
   pointer-events:none;
 }
-.product__carrinho:hover .product__carrinho-luz,
-.product__carrinho:active .product__carrinho-luz{
+.product__comprar:hover .product__carrinho-luz,
+.product__comprar:active .product__carrinho-luz{
   animation:carrinhoLuz .6s ease-out;
 }
 @keyframes carrinhoLuz{
@@ -1730,29 +1807,70 @@ body:has(.hero__art--foto) .topbar{
   to{transform:translateX(140%)}
 }
 
-/* o desenho fica acima do clarão, e anda */
-.product__carrinho > svg{
-  position:relative;
-  z-index:1;
-  transition:transform .18s ease;
-}
-.product__carrinho:hover > svg{transform:translateX(2px)}
-.product__carrinho:active > svg{transform:translateX(3px)}
-
 @media (prefers-reduced-motion:reduce){
-  .product__carrinho:hover .product__carrinho-luz,
-  .product__carrinho:active .product__carrinho-luz{animation:none}
-  .product__carrinho:hover > svg,
-  .product__carrinho:active > svg{transform:none}
+  .product__comprar:hover .product__carrinho-luz,
+  .product__comprar:active .product__carrinho-luz{animation:none}
+  .product__comprar:hover > svg,
+  .product__comprar:active > svg{transform:none}
 }
 
-/* O MESMO VERDE DO "No carrinho" que o botão escrito já usava. O aviso
-   importa mais aqui do que importava lá: o botão de texto trocava a
-   palavra para "No carrinho", e um botão só de símbolo não tem palavra
-   para trocar — sobra a cor para dizer que deu certo. */
-.product__carrinho.is-feito{
+/* A VERSÃO CURTA, para a fila "Em destaque" da página inicial.
+   O cartão de lá tem 110px de largura e 92 de coluna: medido, o botão
+   inteiro (13,5px de letra, desenho de 17 e 12 de respiro de cada
+   lado) pede 106px e não cabe. Em 12px, com desenho de 15 e respiro de
+   8, ele pede 80 e sobra folga.
+   A altura desce de 40 para 34px, e é o único lugar do site onde isso
+   acontece: são três botões numa fila de cartões pequenos, e 40px ali
+   fariam o botão pesar mais que a foto do produto. */
+.product__comprar--curto{
+  min-height:34px;
+  border-radius:9px;
+  gap:5px;
+  padding:0 8px;
+  margin-top:8px;
+  font-size:12px;
+}
+.product__comprar--curto > svg{width:15px;height:15px}
+
+/* NO CELULAR PEQUENO O DESENHO SAI, E A PALAVRA FICA.
+   Medido: o cartão da fila tem 92px numa tela de 320px e 100 numa de
+   360, o que dá 78 e 82px de botão. Com o carrinho desenhado o botão
+   pede 87 — o texto seria espremido, e "Comprar" espremido quebra em
+   duas linhas dentro de um botão de 34px de altura.
+   Sem o desenho ele pede 67 e cabe nas duas. Entre perder o desenho e
+   perder a palavra, perde-se o desenho: a palavra é a que diz o que o
+   botão faz, e o desenho só reforça. Nos cartões da página de
+   Produtos, que são largos, os dois continuam. */
+@media (max-width:374px){
+  .product__comprar--curto > svg{display:none}
+  .product__comprar--curto{gap:0}
+}
+
+/* O VERDE DO "No carrinho". Quem troca a palavra é o `app.js`, no
+   primeiro `<span>` do botão — que aqui é o texto, e não o clarão. */
+.product__comprar.is-feito{
   background:linear-gradient(135deg,#3f8b7a,#2f6f62);
   box-shadow:0 6px 14px rgba(47,111,98,.32);
+}
+
+/* ENQUANTO CONFIRMA, O DESENHO SAI — e isto é conta, não gosto.
+   "No carrinho" é bem mais larga que "Comprar": medido em 13,5px, 77px
+   contra 57. No cartão da vitrine numa tela de 320px o botão tem 111px
+   e, com o carrinho desenhado e o respiro, a palavra pedia 125 — ela
+   era espremida e quebrava em duas linhas dentro de um botão de 40px
+   de altura, bem no instante em que ele precisa ser lido.
+   Sem o desenho ela pede 101 e cabe. E o desenho some justamente
+   quando ele já cumpriu o papel: o produto ACABOU de ir para o
+   carrinho, a cor verde diz isso, e a palavra diz o resto. */
+.product__comprar.is-feito > svg{display:none}
+.product__comprar.is-feito{gap:0}
+
+/* No cartão da fila "Em destaque" numa tela de 320px nem isso basta:
+   sobram 62px de espaço e a palavra pede 69 em 12px. Em 10,5px ela
+   mede 60 e cabe com 2 de folga. É o único lugar do site com letra
+   abaixo de 11px, e é por 1,4 segundo — o tempo da confirmação. */
+@media (max-width:374px){
+  .product__comprar--curto.is-feito{font-size:10.5px}
 }
 
 .product__price{
@@ -2264,14 +2382,100 @@ body:has(.hero__art--foto) .topbar{
 }
 .searchbar input:focus{border-color:var(--gold)}
 
-/* ---------- rodapé ---------- */
+/* ---------- rodapé ----------
 
-.footnote{
-  padding:22px 20px 8px;
-  font-size:11px;
-  line-height:1.6;
-  color:var(--muted);
+   Brian, 23/09/2026: "Organizar a escrita no fim da página como esta na
+   outra foto. Onde está escrito saúde, performance e bem estar nao
+   precisa colocar".
+
+   ERA UM PARÁGRAFO SÓ, de três linhas de 11px, todas do mesmo tamanho
+   e da mesma cor: a marca, o aviso legal e os dois links, sem nada
+   dizendo qual importa mais. O olho batia naquilo como bate num aviso
+   de bula — e os dois links, que são a única coisa clicável do fim da
+   página, ficavam do tamanho do texto miúdo em volta.
+
+   Agora são quatro degraus, do mais importante para o menos:
+     1. PHARMA FIT, a assinatura;
+     2. de onde a loja atende;
+     3. os dois links, com desenho e tamanho de link;
+     4. o aviso legal, que é o que pode ser pequeno.
+
+   A FRASE "Saúde, performance e bem-estar" SAIU daqui por pedido dele
+   na mesma mensagem — e ela não se perdeu: subiu para a etiqueta da
+   marca no topo, que voltou a aparecer no celular hoje. Repetida nos
+   dois lugares, ela viraria enfeite.
+
+   O RISCO EM CIMA separa o fim da página do conteúdo. Sem ele os
+   quatro degraus flutuam colados no último cartão. */
+
+.rodape{
+  margin:14px 20px 8px;
+  padding:20px 0 10px;
+  border-top:1px solid var(--line);
   text-align:center;
+  color:var(--muted);
+}
+.rodape__marca{
+  margin:0;
+  font-family:var(--titulo);
+  font-size:15px;
+  font-weight:600;
+  letter-spacing:.26em;
+  /* O espaço entre letras empurra a última para fora do centro: a
+     margem da esquerda devolve o conjunto ao meio. */
+  text-indent:.26em;
+  color:var(--ink);
+}
+.rodape__local{
+  margin:5px 0 0;
+  font-size:11px;
+  line-height:1.5;
+}
+.rodape__links{
+  margin:14px 0 0;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  /* O VÃO DE 22px É O RISCO QUE SEPARA OS DOIS, e ele é desenhado
+     pelo `::before` do segundo link em vez de ser um elemento à parte:
+     assim, na página de privacidade — onde só existe um link — não há
+     risco solto pendurado no meio do nada. */
+  gap:0 22px;
+}
+.rodape__link{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  position:relative;
+  padding:6px 2px;
+  font-size:12.5px;
+  font-weight:500;
+  color:var(--ink);
+  text-decoration:none;
+}
+.rodape__link svg{flex:none;color:var(--gold)}
+.rodape__link:hover{color:var(--gold)}
+.rodape__link + .rodape__link::before{
+  content:"";
+  position:absolute;
+  left:-11px;
+  top:9px;bottom:9px;
+  width:1px;
+  background:var(--line);
+}
+.rodape__aviso{
+  margin:12px 0 0;
+  font-size:10.5px;
+  line-height:1.6;
+}
+
+/* Numa tela estreita os dois links não cabem lado a lado: eles descem
+   um sobre o outro, e aí o risco vertical entre eles não faz mais
+   sentido nenhum — vira um traço solto na esquerda do de baixo. */
+@media (max-width:359px){
+  .rodape__links{gap:0}
+  .rodape__link + .rodape__link::before{display:none}
 }
 
 .is-hidden{display:none !important}
@@ -3610,7 +3814,7 @@ body:has(.hero__art--foto) .topbar{
 .ficha__acoes .linkish,
 .carrinho__acoes .linkish{display:inline-block;padding:11px 10px 10px}
 
-.footnote .linkish{display:inline-block;padding:8px 4px}
+
 
 a:focus-visible,
 button:focus-visible,
@@ -3783,8 +3987,12 @@ textarea:focus-visible{
 @media (max-width:430px){
   /* a marca precisa caber sem empurrar os botões para fora */
   .topbar{gap:8px}
-  .brand{min-width:0;flex:1}
-  .brand__mark{width:40px;height:40px}
+  /* O vão entre o monograma e o texto cai de 12 para 9, e o monograma
+     de 40 para 34: são 9px devolvidos ao texto da marca, e é com eles
+     (mais o enxugamento da etiqueta, logo abaixo) que "SAÚDE ·
+     PERFORMANCE · BEM-ESTAR" passou a caber no celular. */
+  .brand{min-width:0;flex:1;gap:9px}
+  .brand__mark{width:34px;height:34px}
   /* Quando o nome sai (marca com menos de 182px de espaco), o monograma
      fica sozinho no canto: 44px iguala a altura dos botoes redondos do
      outro lado e a barra volta a ficar equilibrada, em vez de ter uma
@@ -3797,8 +4005,10 @@ textarea:focus-visible{
     .brand__mark{width:44px;height:44px}
   }
   .brand__name{font-size:16px;letter-spacing:.16em}
-  .brand__tag{font-size:6.5px;letter-spacing:.16em}
-  .brand__tag::before,.brand__tag::after{width:10px}
+  /* O tamanho da etiqueta no celular mora no `@media` de 519px, mais
+     abaixo, junto da explicação da conta. Estava repetido aqui, com
+     outro número, e o de baixo ganhava — dois donos para a mesma
+     medida. */
   .topbar__actions{flex:none}
   .icon-btn{width:40px;height:40px}
 
@@ -3858,14 +4068,33 @@ textarea:focus-visible{
   .page-title{font-size:38px}
 }
 
-/* O SUBTITULO SO APARECE DE 520px PARA CIMA.
-   Ele estava escondido abaixo de 360 e, de 375 a 470, saia CORTADO no
-   meio da palavra ("SAUDE · PERFORMANCE · BEM-ESTA") — porque eu havia
-   posto reticencias nele para parar de invadir os icones. Medido: ele
-   precisa de 166px e so tem 93 em 375px; cabe inteiro a partir de 520.
-   Frase cortada no meio parece site quebrado; ausente nao parece nada. */
+/* NO CELULAR A ETIQUETA ENCOLHE EM VEZ DE SUMIR.
+
+   Ela ficou escondida abaixo de 520px desde que saiu CORTADA no meio
+   da palavra ("SAUDE · PERFORMANCE · BEM-ESTA"): do jeito que estava
+   desenhada pedia 186px, e num celular de 375px a marca inteira tem
+   191 — dos quais 52 vão no monograma e no vão.
+
+   Brian, 23/09/2026, pediu ela de volta no celular. Ela cabe tirando
+   as três coisas que só existiam para enfeitar num espaço que não
+   sobra:
+   · os dois risquinhos dourados dos lados (14px cada, mais 6 de vão
+     em cada: 40px inteiros só de enfeite);
+   · 8 centésimos de entreletra (.24em → .16em: 17px em 30 letras);
+   · meio ponto de tamanho (7 → 6,5px).
+   Medido no navegador depois: 116px, dentro dos 139 que sobram no
+   celular mais apertado onde ela aparece.
+
+   Os risquinhos voltam do tablet para cima, onde há espaço para eles
+   — a regra de cima continua valendo lá. */
 @media (max-width:519px){
-  .brand__tag{display:none}
+  .brand__tag{
+    font-size:6px;
+    letter-spacing:.14em;
+    gap:0;
+  }
+  .brand__tag::before,
+  .brand__tag::after{display:none}
 }
 
 @media (max-width:360px){
@@ -3897,7 +4126,6 @@ textarea:focus-visible{
   .acao-discreta .linkish,
   .quiz__voltar{display:inline-block;padding:10px 8px}
   .modal .icon-btn{width:44px;height:44px}
-  .footnote .linkish{padding:10px 6px}
 }
 
 /* ---------- resumo do produto dentro do pedido ---------- */
@@ -4420,8 +4648,10 @@ textarea:focus-visible{
    foto de outro cartão: "em baixo o preco, e do lado o simbolo de
    jogar pro carrinho".
 
-   O botão escrito virou a bolinha `.product__carrinho`, que mora ao
-   lado do preço e está lá em cima, junto do resto do cartão. Não
+   O botão escrito virou bolinha em 19/09 e voltou a ser botão escrito
+   em 23/09, a pedido dele de novo ("Coloca um balão de 'comprar'
+   direto no card"). Hoje ele é `.product__comprar`, uma linha inteira
+   no pé do cartão, e está lá em cima junto do resto do cartão. Não
    sobrou nada aqui: um seletor que nenhum HTML usa é pior que seletor
    nenhum — no dia de mexer, alguém o edita achando que está mudando a
    tela.
@@ -4438,12 +4668,12 @@ textarea:focus-visible{
 .btn--carrinho{gap:8px}
 .btn--carrinho svg{flex:none}
 
-/* O BOTÃO DE LARGURA INTEIRA "ADICIONAR" NÃO EXISTE MAIS NO CARTÃO.
-   Ele virou a bolinha do carrinho ao lado do preço, a pedido do Brian
-   com a foto de outra loja (18/09/2026). O CSS dele saiu inteiro daqui
-   — inclusive o relevo e o clarão que eu tinha escrito para ele na
-   mesma noite: esse trabalho foi para `.product__carrinho`, que é onde
-   o carrinho vive agora. */
+/* O BOTÃO DE LARGURA INTEIRA DO CARTÃO NÃO MORA MAIS AQUI, e não é o
+   mesmo botão de antes: o "Adicionar" saiu em 18/09/2026, virou
+   bolinha em 19/09 e voltou como "Comprar" em 23/09. O CSS dele é o
+   `.product__comprar`, lá em cima junto do cartão — inclusive o relevo
+   e o clarão que eu tinha escrito aqui, que atravessaram as três
+   formas sem mudar. */
 
 /* O botão diz que deu certo, no próprio botão. Um item somado ao
    carrinho sem nenhum sinal deixa a pessoa clicando de novo. */
