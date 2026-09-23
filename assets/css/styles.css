@@ -694,14 +694,17 @@ body:has(.hero__art--foto) .topbar{
 }
 .btn--outline:hover{border-color:var(--gold);color:var(--gold)}
 
+/* PRETO, E NÃO DOURADO, desde a foto de 23/09/2026 ("exatamente
+   assim"): ao lado de "Em destaque", o dourado competia com os preços
+   e com os botões "Comprar" logo abaixo, que são o que tem de chamar. */
 .link-more{
   display:inline-flex;
   align-items:center;
   gap:6px;
-  color:var(--gold);
+  color:var(--ink);
   font-size:14px;
   font-weight:500;
-  border-bottom:1px solid var(--gold);
+  border-bottom:1px solid var(--ink);
   padding-bottom:2px;
 }
 
@@ -724,7 +727,9 @@ body:has(.hero__art--foto) .topbar{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:10px;
-  padding:16px 20px 6px;
+  /* 6px em cima, e não 16: a segunda metade do "mais pra cima" (a
+     primeira é a foto do topo, 4% menor). */
+  padding:6px 20px 6px;
   /* A EMENDA DO DEGRADÊ VOLTOU PARA CÁ. De 18 a 23/09/2026 ela morou
      na faixa "Brasil e Paraguai", que ficava entre a foto do topo e
      estes cartões; a faixa saiu a pedido do Brian ("Tire isso",
@@ -829,12 +834,16 @@ body:has(.hero__art--foto) .topbar{
    — usam `--card` (#ffffff). Lado a lado, a diferença de 5 pontos de
    cinza aparece, e era a única caixa grande da página que não era
    branca. */
+/* SEM O FUNDO BRANCO.
+   Brian, 23/09/2026, com a foto da fila: "quero essa parte de produtos
+   exatamente assim, sem o fundo branco ali". Era uma folha branca de
+   cantos arredondados subindo por cima do creme, com sombra — e os
+   cartões, também brancos, ficavam branco sobre branco, separados só
+   pelo fio de 1px de cada um. No creme da página eles se destacam
+   sozinhos, que é o que a foto mostra. */
 .panel{
-  background:var(--card);
-  border-radius:26px 26px 0 0;
-  margin-top:22px;
-  padding:26px 0 0;
-  box-shadow:0 -10px 30px rgba(60,45,20,.05);
+  margin-top:14px;
+  padding:14px 0 0;
 }
 
 .section-head{
@@ -2073,6 +2082,38 @@ body:has(.hero__art--foto) .topbar{
   padding:9px 6px 8px;
   box-shadow:0 18px 40px rgba(0,0,0,.3);
 }
+/* NO CELULAR A BARRA ENCOSTA NO PÉ DA TELA, E NÃO FLUTUA.
+
+   Brian, 23/09/2026, com a foto do iPhone: "A barra tá sobrepondo,
+   meio estranho". Ela era uma pílula solta a 10px do pé, com cantos
+   redondos dos quatro lados — e o conteúdo da página aparecia EMBAIXO
+   e dos LADOS dela enquanto rolava. No Safari novo do iPhone, que tem
+   a barra de endereço também flutuando embaixo, eram duas pílulas uma
+   em cima da outra com o texto da página escorrendo entre elas: na
+   foto dele, "Você ainda não fez nenhum pedido" aparece cortado por
+   cima, por baixo e pelo meio.
+
+   Encostada no pé, a barra vira o CHÃO da tela: nada passa por baixo
+   nem pelos lados, só por trás dela, que é o que se espera de uma
+   barra de navegação. O pé dela se estende pela área do risquinho do
+   iPhone (`safe-area-inset-bottom`), para o preto ir até a borda em
+   vez de deixar uma faixa de página ali embaixo.
+   Os cantos de cima continuam redondos: é o desenho da casa, e é o
+   que diz que ela está POR CIMA da página, não é a página.
+
+   No computador ela continua flutuando (regra de 900px para cima):
+   lá a página é larga, a barra tem 520px no meio, e não há barra de
+   navegador disputando o pé da tela. */
+@media (max-width:899px){
+  .tabbar{
+    bottom:0;
+    width:min(var(--shell), 100vw);
+    border-radius:22px 22px 0 0;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 24px rgba(0,0,0,.14);
+  }
+}
+
 .tab{
   display:flex;
   flex-direction:column;
@@ -2764,6 +2805,42 @@ body:has(.hero__art--foto) .topbar{
 }
 .fav:hover{color:var(--gold);transform:scale(1.06)}
 .fav.is-salvo{color:#c0392b}
+
+/* O CORAÇÃO NA FILA "EM DESTAQUE" É SÓ O DESENHO, sem o disco branco.
+   Assim está na foto do Brian (23/09/2026), e é também o que cabe: o
+   cartão tem 110px, e com o disco de 34px o coração tomava um terço da
+   largura e encostava na etiqueta do primeiro cartão. O alvo de toque
+   continua com 30px — o que encolhe é o desenho, não o dedo. */
+.protocol .fav{
+  top:0;right:0;
+  width:30px;height:30px;
+  background:none;
+  box-shadow:none;
+  color:var(--ink-2);
+}
+.protocol .fav svg{width:15px;height:15px}
+
+/* A ETIQUETA E O CORAÇÃO DIVIDEM A MESMA LINHA, e a conta é apertada.
+   Com o coração entrando (23/09/2026), a etiqueta do primeiro cartão
+   passava por baixo dele: medido, ela ia até 98px de um cartão de 110
+   e o desenho do coração começava em 85. Em 6px de letra, e com o
+   desenho da estrela menor, ela para em 84 e sobram 4px antes dele —
+   é o tamanho da etiqueta da foto dele, que termina antes do coração.
+   `.protocol .badge` pesa mais que o `.badge` sozinho das regras de
+   tamanho de tela, então manda nesta fila em qualquer largura; nos
+   outros lugares a etiqueta segue como era. */
+.protocol .badge{font-size:6px;padding:4px 5px;gap:3px}
+.protocol .badge svg{width:7px;height:7px}
+
+/* ABAIXO DE 390px NÃO CABEM OS DOIS NA MESMA LINHA, nem com letra de
+   5,5px: o cartão tem de 92 a 106px (medido de 320 a 389). Ali o coração desce para logo
+   abaixo da etiqueta — nos três cartões, para a fileira continuar
+   igual — em vez de a etiqueta encolher até não se ler. */
+@media (max-width:389px){
+  .protocol .fav{top:20px}
+  .protocol .badge{font-size:5.5px;padding:2px 5px;gap:2px}
+  .protocol .badge svg{width:6px;height:6px}
+}
 
 /* A BATIDA DO CORAÇÃO AO SALVAR.
    Ela entrou no lugar da tarja preta que o Brian mandou tirar ("tire
@@ -5586,7 +5663,16 @@ textarea:focus-visible{
      seringa para a direita: a 70% ela sai de cima do texto e a foto
      continua sendo o fundo do topo, do jeito que ele desenhou.
      O porquê completo está no comentário do `.hero__text`. */
-  width:70%;
+  /* 66% DESDE 23/09/2026. Brian: "Deixe essa parte aqui mais pra
+     cima", das categorias logo abaixo desta foto. A foto vai até o pé
+     do bloco — a ponta dourada da seringa encosta nele —, então havia
+     só dois jeitos de subir as categorias: cobrir a ponta da seringa
+     com os cartões, ou a foto ficar um pouco menor. Cobrir era cortar
+     a foto de novo, que ele já recusou uma vez ("deixe ela inteira").
+     De 70 para 66% a foto encolhe 6%, continua inteira, e o bloco
+     encurta 14px num celular de 390. Ela ainda se afasta do título:
+     a seringa começa mais à direita. */
+  width:66%;
   max-width:none;
   height:auto;
   margin:0;
@@ -5616,13 +5702,14 @@ textarea:focus-visible{
    Sem esta linha, devolver a foto inteira só trocava o corte de lugar:
    medido, a 520px ela passava 32px do pé do bloco e o `overflow:hidden`
    comia o mármore de baixo.
-   A conta: a foto ocupa 70% da largura do bloco e a altura dela é
-   86,57% da própria largura (1348x1167 do arquivo) — logo 60,6% da
-   largura do bloco. O `min()` para no 315px porque a coluna do site
+   A conta: a foto ocupa 66% da largura do bloco e a altura dela é
+   86,57% da própria largura (1348x1167 do arquivo) — logo 57,1% da
+   largura do bloco. O `min()` para no 297px porque a coluna do site
    para em 520px: acima disso a foto não cresce mais, e sem o teto o
-   bloco continuaria esticando em tela grande com o vão vazio embaixo. */
+   bloco continuaria esticando em tela grande com o vão vazio embaixo.
+   (Eram 70%, 60,6% e 315px até 23/09/2026 — ver `.hero__art--foto`.) */
 @media (max-width:899px){
-  .hero{min-height:min(60.6vw,315px)}
+  .hero{min-height:min(57.1vw,297px)}
 }
 
 @media (min-width:900px){

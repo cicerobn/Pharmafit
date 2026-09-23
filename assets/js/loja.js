@@ -717,7 +717,7 @@
        quer a lista toda vai em Produtos, na barra de baixo. */
     var destaques = visiveis().slice(0, 3);
 
-    trilho.innerHTML = destaques.map(function (p) {
+    trilho.innerHTML = destaques.map(function (p, i) {
       return '' +
         /* O CARTÃO INTEIRO LEVA AO PRODUTO, MAS ELE NÃO É MAIS UMA
            ÂNCORA — e a diferença é o botão de comprar.
@@ -738,16 +738,26 @@
            anuncia um link com o nome do produto — melhor do que antes,
            quando ele lia o cartão inteiro de uma vez — e o botão fica
            por cima da sombra, com um caminho só. */
-        '<article class="protocol">' +
+        /* `data-produto` é por onde o coração acha de que produto ele é
+           (favoritos.js), igual ao cartão da vitrine. */
+        '<article class="protocol" data-produto="' + esc(p.nome) + '">' +
+          /* O CORAÇÃO, como na foto do Brian (23/09/2026, "quero essa
+             parte de produtos exatamente assim"). É o mesmo botão da
+             vitrine — mesmo arquivo, mesma lista de favoritos —, só
+             menor, porque o cartão tem 110px (ver `.protocol .fav`). */
+          coracaoHtml +
           molduraFoto(p, 'protocol__media') +
-            /* A FILA DA INICIAL É "EM DESTAQUE", E OS TRÊS LEVAM A
-               MESMA ETIQUETA: ela fala da fila, não do produto.
-               A etiqueta que a equipe escolhe no painel (mais vendido
-               / promoção) manda na LISTA de produtos e na página do
-               produto, onde o cartão está sozinho e a etiqueta
-               distingue um do outro. Aqui todos os três são destaque,
-               então distinguir não faz sentido. */
-            etiquetaHtml({ destaque: 'mais-procurado' }, 'badge') +
+            /* A ETIQUETA SÓ NO PRIMEIRO.
+               Até 23/09/2026 os três levavam "MAIS PROCURADO", porque a
+               etiqueta falava da fila e não do produto. Na foto que o
+               Brian mandou nesse dia ("exatamente assim") só o primeiro
+               tem — e faz sentido: três etiquetas iguais lado a lado não
+               distinguem nada, e uma só aponta o mais procurado de fato,
+               que é o primeiro da ordem que a equipe escolhe no painel.
+               A etiqueta que a equipe escolhe para cada produto (mais
+               vendido / promoção) continua mandando na LISTA de produtos
+               e na página do produto. */
+            (i === 0 ? etiquetaHtml({ destaque: 'mais-procurado' }, 'badge') : '') +
             /* 300px: aqui o cartão tem ~110px, e os três estão no alto
                da página inicial — nenhum deles é preguiçoso. */
             fotoHtml(p, 300, true) +
@@ -795,6 +805,12 @@
           '</div>' +
         '</article>';
     }).join('');
+
+    /* Os corações desta fila nascem vazios; quem sabe quais estão
+       salvos é o favoritos.js. Pedir aqui, e não contar com a ordem dos
+       scripts: esta fila é redesenhada de novo quando o banco responde,
+       depois de o favoritos.js já ter pintado a tela uma vez. */
+    if (window.PharmaFitFavoritos) window.PharmaFitFavoritos.pintar();
   }
 
   function montarTudo() {

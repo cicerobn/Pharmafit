@@ -68,7 +68,10 @@
   function atualizarTela() {
     var lista = ler();
 
-    document.querySelectorAll('.product[data-produto]').forEach(function (card) {
+    /* Os dois cartões que têm coração: o da vitrine (`.product`) e, desde
+       23/09/2026, o da fila "Em destaque" da página inicial
+       (`.protocol`). Os dois dizem de que produto são em `data-produto`. */
+    document.querySelectorAll('.product[data-produto], .protocol[data-produto]').forEach(function (card) {
       var salvo = lista.indexOf(card.getAttribute('data-produto')) !== -1;
       var botao = card.querySelector('[data-favorito]');
       if (!botao) return;
@@ -115,7 +118,7 @@
     if (!botao) return;
 
     e.preventDefault();
-    var card = botao.closest('.product');
+    var card = botao.closest('.product, .protocol');
     var nome = card && card.getAttribute('data-produto');
     if (!nome) return;
 
