@@ -5861,3 +5861,66 @@ textarea:focus-visible{
 .topbar--com-voltar{gap:8px}
 .topbar--com-voltar .brand{flex:1;min-width:0}
 .icon-btn--voltar{flex:none}
+
+/* =========================================================
+   PAGAR NO SITE, COM PIX
+
+   Nasce escondido no HTML e só é mostrado quando o servidor
+   responde que o gateway está de pé (`pagamento.js`).
+
+   O "ou pague agora" é um divisor com o texto no meio: as duas
+   linhas são `::before`/`::after` para não haver elemento vazio
+   no HTML só para desenhar risco.
+   ========================================================= */
+.pagar{margin-top:16px}
+.pagar__ou{
+  display:flex;align-items:center;gap:10px;
+  margin:0 0 12px;font-size:12px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted)
+}
+.pagar__ou::before,.pagar__ou::after{
+  content:"";flex:1 1 0;height:1px;background:var(--line)
+}
+.btn--pix{justify-content:center;gap:10px}
+.btn--pix svg{flex:none}
+.pagar__nota{margin:9px 0 0;font-size:12.5px;color:var(--muted);text-align:center}
+
+.pix{
+  margin-top:16px;padding:16px;
+  background:var(--card);border:1px solid var(--gold-soft);border-radius:14px
+}
+.pix__valor{
+  margin:0 0 12px;font-size:21px;font-weight:700;text-align:center;color:var(--ink)
+}
+.pix__valor:empty{display:none}
+
+/* O QR EM CIMA DE BRANCO, SEMPRE.
+   O cartão é creme, e leitor de QR erra quando o quiet zone tem
+   cor. O fundo branco com respiro é o que garante a leitura. */
+.pix__qr{
+  display:block;width:100%;max-width:224px;margin:0 auto 14px;
+  background:#fff;padding:10px;border-radius:10px;
+  border:1px solid var(--line);image-rendering:pixelated
+}
+
+.pix__codigo{display:flex;flex-direction:column;gap:9px}
+.pix__codigo code{
+  display:block;padding:10px 11px;
+  background:var(--cream-2);border:1px solid var(--line);border-radius:10px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;
+  line-height:1.5;color:var(--ink);
+  /* o código PIX é uma linha só de 100+ caracteres: sem isto ele
+     estoura a largura do celular e empurra a página de lado */
+  word-break:break-all;max-height:84px;overflow:auto
+}
+.pix__codigo code:empty{display:none}
+.pix__codigo .btn{align-self:center}
+
+.pix__estado{
+  margin:13px 0 0;font-size:13.5px;text-align:center;color:var(--muted)
+}
+.pix__estado--pago{
+  color:#1c7a45;font-weight:600;font-size:15px
+}
+.pix__estado--frio{color:#a8331f}
+.pix__prazo{margin:6px 0 0;font-size:12px;text-align:center;color:var(--muted)}

@@ -83,20 +83,38 @@
   function esperarOBanco() {
     var desistir = setTimeout(mostrarNaoAchei, 8000);
 
-    document.addEventListener('pharmafit-catalogo', function aoChegar() {
+    /* DOIS AVISOS, E QUALQUER UM DOS DOIS SERVE.
+     *
+     * `pharmafit-catalogo` sai quando o banco trouxe mudança;
+     * `pharmafit-catalogo-pronto` sai quando a consulta ACABOU, mesmo
+     * sem mudança nenhuma.
+     *
+     * O segundo entrou em 22/09/2026 porque só o primeiro deixava esta
+     * tela girando OITO SEGUNDOS: quem abre um endereço de produto
+     * errado — link velho, nome digitado à mão — ficava olhando o
+     * "carregando" até o prazo estourar, para só então ler "não
+     * achamos". O banco já tinha respondido no primeiro segundo; era
+     * esta tela que não ficava sabendo.
+     *
+     * O prazo de 8 segundos CONTINUA, e continua sendo necessário: ele é
+     * a rede para quando o banco não responde nada — sem internet, ou
+     * fora do ar. Aí nenhum dos dois avisos vem. */
+    function aoChegar() {
       produto = C.doCatalogo(pedido);
+      clearTimeout(desistir);
+      document.removeEventListener('pharmafit-catalogo', aoChegar);
+      document.removeEventListener('pharmafit-catalogo-pronto', aoChegar);
       if (!produto) {
         /* O banco respondeu e ele não está lá: agora é definitivo. */
-        clearTimeout(desistir);
-        document.removeEventListener('pharmafit-catalogo', aoChegar);
         mostrarNaoAchei();
         return;
       }
-      clearTimeout(desistir);
-      document.removeEventListener('pharmafit-catalogo', aoChegar);
       document.getElementById('carregando').hidden = true;
       iniciar();
-    });
+    }
+
+    document.addEventListener('pharmafit-catalogo', aoChegar);
+    document.addEventListener('pharmafit-catalogo-pronto', aoChegar);
   }
 
   if (!produto) {

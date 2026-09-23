@@ -36,6 +36,18 @@
       origem: 'site'
     };
 
+    /* DE QUAL COMPRA ESTE PEDIDO FAZ PARTE, quando a pessoa paga no site.
+     *
+     * A fila do painel continua uma linha por produto — é a forma dela, e é
+     * assim que o painel desenha. Mas cobrança é por COMPRA: quem leva três
+     * produtos paga um PIX, não três. O `compra_id` é o que liga as linhas
+     * da fila ao pagamento, e é por ele que o webhook acha estas linhas
+     * depois, para marcar como pagas e escrever o valor.
+     *
+     * Fica vazio em todo pedido que não nasceu de pagamento no site — o do
+     * WhatsApp e o do painel —, que hoje é a totalidade deles. */
+    if (pedido.compra_id) registro.compra_id = pedido.compra_id;
+
     /* DE QUEM É O PEDIDO, quando a pessoa está logada.
      *
      * Sem isto, "Meus pedidos" só mostra o que está guardado NESTE

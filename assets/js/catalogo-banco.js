@@ -151,8 +151,31 @@
 
   window.PharmaFitCatalogoBanco = { sincronizar: sincronizar };
 
-  /* Começa sozinho: a tela desenha com o que tem no código (imediato) e
-     se corrige quando o banco responde. O contrário — esperar o banco
-     para desenhar — deixaria a loja em branco em conexão ruim. */
-  sincronizar();
+  /* AVISAR QUE A CONSULTA TERMINOU, MESMO SEM TER MUDADO NADA.
+   *
+   * ACHADO EM 22/09/2026, medindo a página de produto com um endereço
+   * errado: ela ficava OITO SEGUNDOS girando o "carregando" antes de
+   * dizer "não achamos".
+   *
+   * O motivo: `pharmafit-catalogo` só é disparado quando o banco traz
+   * alguma mudança. A tela do produto, quando não acha o nome no
+   * catálogo do código, espera esse evento para não dar "não existe"
+   * cedo demais — um produto renomeado pelo painel só aparece depois da
+   * resposta do banco. Sem evento, ela caía no prazo de 8 segundos.
+   *
+   * Então agora existe um segundo aviso, `pharmafit-catalogo-pronto`,
+   * que sai SEMPRE que a consulta acaba — trouxe mudança, não trouxe,
+   * deu erro, ou nem havia banco configurado. Quem espera decide na
+   * hora, e continua decidindo CERTO: o aviso só sai depois de o banco
+   * ter respondido de verdade.
+   *
+   * São dois eventos, e não um, de propósito: `pharmafit-catalogo`
+   * significa "redesenhe, mudou coisa", e várias telas escutam. Fazer
+   * ele sair sem mudança nenhuma mandaria a vitrine inteira se
+   * redesenhar à toa. */
+  sincronizar()
+    .catch(function () { /* o erro já é tratado dentro; aqui é só não deixar escapar */ })
+    .then(function () {
+      document.dispatchEvent(new CustomEvent('pharmafit-catalogo-pronto'));
+    });
 })();

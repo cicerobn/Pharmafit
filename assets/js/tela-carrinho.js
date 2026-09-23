@@ -52,6 +52,60 @@
     return campo ? String(campo.value || '').trim() : '';
   }
 
+  /* ---------- PEDIR OS DADOS DEPOIS DO TOQUE ----------
+   *
+   * Brian, 22/09/2026: "Deixe pra colocar essas informacoes aqui depois de
+   * ja ter clicar pra pagar". O formulário nasce escondido no HTML, e é
+   * este pedaço que o mostra.
+   *
+   * Quem manda nisso é este arquivo, e não os dois botões, porque são DOIS
+   * caminhos usando o mesmo formulário: o WhatsApp (aqui) e o PIX
+   * (`pagamento.js`). Duas cópias da mesma revelação divergiriam na
+   * primeira mudança — é a doença que eu passei dias consertando neste
+   * site. Então fica num lugar só e os dois pedem emprestado.
+   *
+   * O PRIMEIRO TOQUE NÃO PINTA ERRO. Abrir o formulário já cheio de
+   * vermelho, sem a pessoa ter digitado nada, é o que ele viu na foto e
+   * não gostou — com razão. O primeiro toque mostra os campos e leva o
+   * dedo ao primeiro vazio; o segundo, aí sim, cobra o que falta. */
+  var Validacao = window.PharmaFitValidacao;
+
+  function primeiroVazio() {
+    var campos = [cNome, cZap, cEndereco];
+    for (var i = 0; i < campos.length; i++) {
+      if (campos[i] && !valorDe(campos[i])) return campos[i];
+    }
+    return null;
+  }
+
+  /** true = os dados estão completos, pode seguir.
+   *  false = a tela pediu o que falta, e quem chamou deve parar. */
+  function pedirDados() {
+    if (!form) return true;
+
+    /* Já está tudo lá? Então não mostra nada e deixa passar. Quem comprou
+       antes tem os campos preenchidos pelo aparelho, e para essa pessoa o
+       toque continua valendo de uma vez. */
+    if (!primeiroVazio()) {
+      return Validacao ? Validacao.conferir(form) : true;
+    }
+
+    var vazio = primeiroVazio();
+    if (form.hidden) {
+      form.hidden = false;
+      try { form.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      try { vazio.focus({ preventScroll: true }); } catch (e) { vazio.focus(); }
+      return false;
+    }
+
+    /* segundo toque com campo vazio: agora o recado em vermelho */
+    if (Validacao) Validacao.conferir(form);
+    try { vazio.focus({ preventScroll: true }); } catch (e) { vazio.focus(); }
+    return false;
+  }
+
+  window.PharmaFitContato = { pedir: pedirDados };
+
   function contato() {
     if (!form) {
       /* sem formulário na tela, vale o que está guardado */
@@ -353,8 +407,7 @@
        * conversa começaria sem nome nem telefone, o pedido entraria na
        * fila anônimo, e a pessoa acharia que está tudo certo. Barrar
        * aqui é a única hora em que dá para pedir o que falta. */
-      if (form && window.PharmaFitValidacao &&
-          !window.PharmaFitValidacao.conferir(form)) {
+      if (!pedirDados()) {
         e.preventDefault();
         return;
       }
