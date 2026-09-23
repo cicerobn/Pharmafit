@@ -914,17 +914,14 @@ body:has(.hero__art--foto) .topbar{
   background:var(--card);
   border-radius:16px;
   overflow:hidden;
-  /* UM FIO EM VOLTA, e ele nasceu de uma conta.
-     O bloco atrás desta fila era quase-branco e virou branco puro
-     (19/09/2026, "deixe essa parte... branco igual nas outras barras").
-     Com isso o cartão — que também é branco — passou a dissolver no
-     fundo: medido no pixel, na altura do preço a maior diferença entre
-     dois pixels vizinhos na borda do cartão era 11 de 255, ou seja,
-     aresta nenhuma. Os cartões de categoria não têm este problema
-     porque estão sobre o creme da página.
-     O fio vai no `box-shadow` e não em `border` de propósito: assim
-     ele não muda o tamanho do cartão nem empurra os três na fila. */
-  box-shadow:0 0 0 1px var(--line),var(--shadow-md);
+  /* SEM O FIO EM VOLTA, SÓ A SOMBRA.
+     O fio de 1px nasceu de uma conta: o bloco atrás desta fila era
+     branco e o cartão também, e sem ele o cartão dissolvia no fundo.
+     Em 23/09/2026 o fundo branco saiu ("sem o fundo branco ali") e a
+     fila passou a pousar no creme da página — o motivo do fio foi
+     embora junto. Na foto que o Brian mandou em seguida ("ainda nao
+     esta igual") os cartões têm só a sombra, sem contorno. */
+  box-shadow:var(--shadow-md);
 }
 
 /* A FOTO EM CIMA, QUADRADA.
@@ -950,7 +947,8 @@ body:has(.hero__art--foto) .topbar{
   /* o mesmo branco da moldura da vitrine, pelo mesmo motivo: foto de
      produto vem com fundo branco. Ver `.product__media`. */
   background:#fff;
-  border-bottom:1px solid #f2ece2;
+  /* sem risco embaixo: na foto de 23/09/2026 a foto e o texto são o
+     mesmo cartão branco, sem divisão entre eles */
   display:grid;
   place-items:center;
   /* o respiro também voltou aqui, pelo mesmo motivo da vitrine: com a
@@ -988,7 +986,11 @@ body:has(.hero__art--foto) .topbar{
    e já apareceu na barra do topo, nos interesses do atendimento e na
    faixa dos benefícios. */
 .protocol__body{
-  padding:9px 9px 11px;
+  /* 6px dos lados, e não 9: são 6px devolvidos à coluna do texto, e
+     é com eles que "Tirzec Pen 15 mg" cabe numa linha num celular de
+     390, como na foto do Brian (23/09/2026). Medido no navegador: o
+     nome pede 94px em 12px e a coluna passou de 92 para 98. */
+  padding:9px 6px 11px;
   min-width:0;
   display:flex;
   flex-direction:column;
@@ -1014,13 +1016,16 @@ body:has(.hero__art--foto) .topbar{
      tamanho do nome: os três ficam iguais, com ou sem nome comprido, e
      o nome que não cabe termina em "…" — a página do produto está a um
      toque, com o nome inteiro. */
-  font-size:12.5px;
+  /* 12px desde 23/09/2026 (era 12,5): junto com o respiro menor do
+     `.protocol__body`, é o que põe "Tirzec Pen 15 mg" numa linha só,
+     como na foto do Brian. */
+  font-size:12px;
   display:-webkit-box;
   -webkit-line-clamp:2;
   -webkit-box-orient:vertical;
   overflow:hidden;
   line-height:1.25;
-  letter-spacing:-.01em;
+  letter-spacing:-.02em;
   margin:0;
   min-width:0;
   overflow-wrap:break-word;
@@ -1782,10 +1787,16 @@ body:has(.hero__art--foto) .topbar{
   color:#fff;
   cursor:pointer;
   overflow:hidden;
-  background:linear-gradient(118deg,var(--gold-2),var(--gold) 52%,#9a7739);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.38),
-             inset 0 -1px 0 rgba(0,0,0,.10),
-             0 6px 14px rgba(176,140,74,.30);
+  /* BRONZE FUNDO, E NÃO O DOURADO CLARO DO RESTO.
+     Brian, 23/09/2026, com a foto da fila pronta: "ainda nao esta
+     igual". Na foto o botão é um bronze mais escuro e quase liso; o
+     nosso ia do dourado claro ao escuro num degradê que brilhava mais
+     que o preço dourado logo acima — e o preço é quem tem de chamar
+     primeiro. Mais fundo, o botão assenta embaixo de tudo. */
+  background:linear-gradient(118deg,#a8844a,#94703a 55%,#88652f);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),
+             inset 0 -1px 0 rgba(0,0,0,.12),
+             0 6px 14px rgba(120,90,40,.26);
   /* Acima da sombra do link que cobre o cartão inteiro (ver
      `.product__name a::after`): sem isto, tocar no botão abriria a
      página do produto em vez de pôr no carrinho. */
@@ -1795,9 +1806,9 @@ body:has(.hero__art--foto) .topbar{
 }
 .product__comprar:hover{
   transform:translateY(-1px);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),
-             inset 0 -1px 0 rgba(0,0,0,.10),
-             0 10px 20px rgba(176,140,74,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),
+             inset 0 -1px 0 rgba(0,0,0,.12),
+             0 10px 20px rgba(120,90,40,.34);
 }
 .product__comprar:active{transform:translateY(0) scale(.985)}
 
@@ -2816,7 +2827,9 @@ body:has(.hero__art--foto) .topbar{
   width:30px;height:30px;
   background:none;
   box-shadow:none;
-  color:var(--ink-2);
+  /* dourado, como na foto ("ainda nao esta igual", 23/09/2026); em
+     preto ele pesava mais que a etiqueta ao lado */
+  color:var(--gold);
 }
 .protocol .fav svg{width:15px;height:15px}
 
