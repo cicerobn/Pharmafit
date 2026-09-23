@@ -756,6 +756,15 @@
             '<h3 class="protocol__name">' +
               '<a href="produto.html?p=' + encodeURIComponent(p.nome) + '">' +
                 esc(p.nome) + '</a></h3>' +
+            /* A CATEGORIA EMBAIXO DO NOME, EM CINZA CLARO.
+               Brian, 23/09/2026, com a foto dos três cartões: "Deixe uma
+               descricao abaixo assim, com um texto mais claro". Na foto
+               a linha de baixo é a categoria ("Tirzepatida"), não a
+               descrição longa — e é o que cabe aqui: a descrição inteira
+               não entra numa coluna de 92px (ver o comentário do preço,
+               logo abaixo), a categoria é uma palavra. Ela diz de que
+               família é o produto sem a pessoa precisar abrir. */
+            '<p class="protocol__cat">' + esc(p.categoria) + '</p>' +
             /* SÓ O PREÇO, e o desconto quando existe.
                Brian, 18/09/2026: "Deixe esses cards aqui com as fotos
                menores e um tamanho menor, quero que de ve pra ver 3

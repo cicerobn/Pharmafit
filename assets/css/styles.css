@@ -1029,6 +1029,18 @@ body:has(.hero__art--foto) .topbar{
    (`.product__name a::after`), e o botão de comprar passa por cima
    dela com o `z-index` dele. */
 .protocol__name a{color:inherit;text-decoration:none}
+/* A linha da categoria, clara como na foto dele (23/09/2026). Uma linha
+   só, cortada com reticências: "Peptídeos" cabe folgado nos 92px, mas
+   uma categoria nova de nome comprido não pode empurrar o preço. */
+.protocol__cat{
+  margin:0;
+  font-size:11px;
+  line-height:1.3;
+  color:var(--muted-2);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 .protocol__name a::after{
   content:"";
   position:absolute;
@@ -1632,7 +1644,13 @@ body:has(.hero__art--foto) .topbar{
 .product__desc{
   font-size:12.5px;
   line-height:1.45;
-  color:var(--ink-2);
+  /* MAIS CLARA DESDE 23/09/2026: "com um texto mais claro", pedido com
+     a foto dos cartões da página inicial. Era quase preta (`--ink-2`),
+     e competia com o nome logo acima — dois blocos escuros seguidos, o
+     olho não sabia qual ler primeiro. Em `--muted` ela fica clara e
+     ainda legível (4,9 de contraste sobre branco; o cinza mais claro
+     da casa, `--muted-2`, tem 3 e em 12,5px vira esforço). */
+  color:var(--muted);
   margin:0;
   /* DUAS LINHAS, E O `flex:1` TINHA DE SAIR PARA ISSO FUNCIONAR.
      Ele estava aqui para empurrar o botão para o pé do cartão, e fazia
@@ -2074,6 +2092,31 @@ body:has(.hero__art--foto) .topbar{
 }
 .tab:hover{color:#fff}
 .tab.is-active{color:var(--gold-2)}
+
+/* O TRACINHO DOURADO EM CIMA DA ABA ONDE A PESSOA ESTÁ.
+   Brian, 23/09/2026, com a foto da aba Início: "deixe assim pra
+   sinalizar em qual pagina esta".
+   Só a cor dourada dizia isso, e cor sozinha é sinal fraco: numa tela
+   com brilho baixo, ou para quem enxerga pouca diferença entre dourado
+   e cinza, as quatro abas pareciam iguais. Um traço é FORMA, e forma
+   se vê mesmo quando a cor não se distingue.
+   Ele encosta na borda de cima da barra (os 9px de respiro dela, por
+   isso o `top` negativo) e tem a ponta de baixo arredondada — como
+   uma aba pendurada no alto, que é o desenho da foto. -8 e não -9: a
+   barra cai em meio pixel conforme a tela, e colado à borda o traço
+   saía um fio para fora dela, sobre o fundo claro da página. */
+.tab{position:relative}
+.tab.is-active::before{
+  content:"";
+  position:absolute;
+  top:-8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:30px;
+  height:3px;
+  border-radius:0 0 3px 3px;
+  background:var(--gold-2);
+}
 .tab__ico{display:grid;place-items:center;height:24px}
 
 /* A BARRINHA DECORATIVA SAIU.
@@ -2384,33 +2427,29 @@ body:has(.hero__art--foto) .topbar{
 
 /* ---------- rodapé ----------
 
-   Brian, 23/09/2026: "Organizar a escrita no fim da página como esta na
-   outra foto. Onde está escrito saúde, performance e bem estar nao
-   precisa colocar".
+   Brian, 23/09/2026, com a foto do rodapé pronto: "Deixe o rodape
+   exatamente assim". Esta é a SEGUNDA versão do mesmo dia, e a foto
+   manda: cada medida abaixo saiu dela.
 
-   ERA UM PARÁGRAFO SÓ, de três linhas de 11px, todas do mesmo tamanho
-   e da mesma cor: a marca, o aviso legal e os dois links, sem nada
-   dizendo qual importa mais. O olho batia naquilo como bate num aviso
-   de bula — e os dois links, que são a única coisa clicável do fim da
-   página, ficavam do tamanho do texto miúdo em volta.
+   A PRIMEIRA TROCOU DUAS COISAS QUE A FOTO NÃO TEM, e ele corrigiu:
+   · embaixo do nome ia "Atendimento em Manaus · AM"; na foto vai a
+     etiqueta SAÚDE • PERFORMANCE • BEM-ESTAR, com bolinhas cheias.
+     (No pedido anterior ele tinha dito que essa frase "não precisa" —
+     a foto de agora é a palavra final, e ela tem a frase.) A cidade
+     continua no site: na página de Atendimento e no menu.
+   · os dois links eram iguais, em preto com desenho dourado. Na foto
+     eles são DIFERENTES entre si: o WhatsApp é todo preto, com o
+     desenho da marca do WhatsApp; "Seus dados" é todo dourado. O
+     primeiro é o contato, o segundo é o aviso de privacidade — a cor
+     separa um do outro sem precisar de mais nada.
 
-   Agora são quatro degraus, do mais importante para o menos:
-     1. PHARMA FIT, a assinatura;
-     2. de onde a loja atende;
-     3. os dois links, com desenho e tamanho de link;
-     4. o aviso legal, que é o que pode ser pequeno.
-
-   A FRASE "Saúde, performance e bem-estar" SAIU daqui por pedido dele
-   na mesma mensagem — e ela não se perdeu: subiu para a etiqueta da
-   marca no topo, que voltou a aparecer no celular hoje. Repetida nos
-   dois lugares, ela viraria enfeite.
-
-   O RISCO EM CIMA separa o fim da página do conteúdo. Sem ele os
-   quatro degraus flutuam colados no último cartão. */
+   Os quatro degraus continuam: a assinatura, a etiqueta, os links e o
+   aviso legal pequeno. O risco em cima separa o fim da página do
+   conteúdo. */
 
 .rodape{
   margin:14px 20px 8px;
-  padding:20px 0 10px;
+  padding:22px 0 10px;
   border-top:1px solid var(--line);
   text-align:center;
   color:var(--muted);
@@ -2418,56 +2457,64 @@ body:has(.hero__art--foto) .topbar{
 .rodape__marca{
   margin:0;
   font-family:var(--titulo);
-  font-size:15px;
+  font-size:19px;
   font-weight:600;
   letter-spacing:.26em;
   /* O espaço entre letras empurra a última para fora do centro: a
      margem da esquerda devolve o conjunto ao meio. */
   text-indent:.26em;
+  line-height:1.2;
   color:var(--ink);
 }
-.rodape__local{
-  margin:5px 0 0;
-  font-size:11px;
-  line-height:1.5;
+.rodape__tag{
+  margin:6px 0 0;
+  font-size:9.5px;
+  font-weight:500;
+  letter-spacing:.24em;
+  text-indent:.24em;
+  color:var(--ink-2);
+  white-space:nowrap;
 }
 .rodape__links{
-  margin:14px 0 0;
+  margin:18px 0 0;
   display:flex;
   flex-wrap:wrap;
   align-items:center;
   justify-content:center;
-  /* O VÃO DE 22px É O RISCO QUE SEPARA OS DOIS, e ele é desenhado
+  /* O VÃO DE 30px É O RISCO QUE SEPARA OS DOIS, e ele é desenhado
      pelo `::before` do segundo link em vez de ser um elemento à parte:
      assim, na página de privacidade — onde só existe um link — não há
      risco solto pendurado no meio do nada. */
-  gap:0 22px;
+  gap:0 30px;
 }
 .rodape__link{
   display:inline-flex;
   align-items:center;
-  gap:7px;
+  gap:8px;
   position:relative;
   padding:6px 2px;
-  font-size:12.5px;
+  font-size:13.5px;
   font-weight:500;
-  color:var(--ink);
   text-decoration:none;
 }
-.rodape__link svg{flex:none;color:var(--gold)}
-.rodape__link:hover{color:var(--gold)}
+.rodape__link svg{flex:none}
+/* o contato: preto, com a marca do WhatsApp */
+.rodape__link--zap{color:var(--ink)}
+/* o aviso de privacidade: dourado inteiro, desenho e palavra */
+.rodape__link--dados{color:var(--gold)}
+.rodape__link:hover{opacity:.72}
 .rodape__link + .rodape__link::before{
   content:"";
   position:absolute;
-  left:-11px;
-  top:9px;bottom:9px;
+  left:-15px;
+  top:2px;bottom:2px;
   width:1px;
   background:var(--line);
 }
 .rodape__aviso{
-  margin:12px 0 0;
-  font-size:10.5px;
-  line-height:1.6;
+  margin:14px 0 0;
+  font-size:11px;
+  line-height:1.7;
 }
 
 /* Numa tela estreita os dois links não cabem lado a lado: eles descem
