@@ -3609,6 +3609,8 @@ body:has(.carrinho__barra:not([hidden])) .zap-flutuante{
   transition:border-color .18s ease,color .18s ease,background .18s ease;
 }
 .atend-chip svg{flex:none}
+/* a opção de frase longa ocupa a linha inteira da grade */
+.atend-chip--largo{grid-column:1 / -1}
 /* Rede de seguranca: se um dia a etiqueta crescer, ela encurta com
    reticencias DENTRO da caixa em vez de passar por cima do vizinho.
    `min-width:0` e o que permite encolher — sem ele o flex nao cede. */
@@ -3620,13 +3622,18 @@ body:has(.carrinho__barra:not([hidden])) .zap-flutuante{
   background:#fdfaf4;
 }
 
-/* ---- o cartão do Paraguai ---- */
+/* ---- o cartão de onde a loja atende (era o do Paraguai) ---- */
 
+/* OS VÃOS ENTRE OS CARTÕES DESTA PÁGINA CAÍRAM DE 14 PARA 8px.
+   Brian, 25/09/2026: "diminuir também um pouco os espaços entre os
+   cards". O formulário, este cartão e os três passos são uma coisa só
+   — o pedido de atendimento e o que acontece depois dele —, e 14px de
+   creme entre eles os separava como se fossem assuntos diferentes. */
 .atend-pais{
   display:flex;
   align-items:flex-start;
   gap:12px;
-  margin-top:14px;
+  margin-top:8px;
   background:var(--card);
   padding:14px;
   border:1px solid var(--line);
@@ -3644,20 +3651,14 @@ body:has(.carrinho__barra:not([hidden])) .zap-flutuante{
 .atend-pais__corpo{flex:1;min-width:0}
 .atend-pais__titulo{font-size:14px;font-weight:600;margin:0}
 .atend-pais__texto{font-size:12.5px;line-height:1.55;color:var(--muted);margin:4px 0 0}
-.atend-pais__bandeira{
-  flex:none;
-  width:30px;height:21px;
-  border-radius:3px;
-  overflow:hidden;
-  box-shadow:0 0 0 1px rgba(0,0,0,.08);
-}
-.atend-pais__bandeira svg{display:block;width:100%;height:100%}
+/* A bandeira que morava aqui saiu com o cartão virando "em Manaus"
+   (25/09/2026); o CSS dela saiu junto. */
 
 /* ---- os três passos ---- */
 
 .atend-passos{
   list-style:none;
-  margin:14px 0 0;
+  margin:8px 0 0;
   background:var(--card);
   padding:16px 4px 4px;
   border:1px solid var(--line);

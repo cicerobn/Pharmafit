@@ -418,6 +418,8 @@ window.PHARMAFIT_ES ={
   "Esse cupom não existe ou já não vale mais.": "Ese cupón no existe o ya no es válido.",
   "Não consegui conferir o cupom agora. Tente de novo em instantes.": "No pude verificar el cupón ahora. Intente de nuevo en unos instantes.",
   "Falar com a Pharma Fit no WhatsApp": "Hablar con Pharma Fit por WhatsApp",
+  "Atendimento personalizado em Manaus": "Atención personalizada en Manaos",
+  "Gostaria de mais informações": "Quisiera más información",
   "Varejo": "Minorista",
   "Vai levar bastante quantidade?": "¿Va a llevar bastante cantidad?",
   "Valores e condições sob consulta. Produtos de uso sob orientação profissional.": "Valores y condiciones a consultar. Productos de uso bajo orientación profesional.",
