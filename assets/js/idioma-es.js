@@ -387,7 +387,7 @@ window.PHARMAFIT_ES ={
   "Soluções premium para transformar sua saúde, performance e bem-estar.": "Soluciones premium para transformar su salud, rendimiento y bienestar.",
   "Sou profissional ou clínica": "Soy profesional o clínica",
   "Sua cidade": "Su ciudad",
-  "Sua jornada de saúde e performance começa aqui": "Su camino de salud y rendimiento empieza aquí",
+  "Sua escolha premium em Tirzepatida, Retatrutida e Peptídeos. Entrega grátis em Manaus": "Su elección premium en Tirzepatida, Retatrutida y Péptidos. Envío gratis en Manaos",
   "Sua senha": "Su contraseña",
   "Suas condições são combinadas no WhatsApp.": "Sus condiciones se acuerdan por WhatsApp.",
   "Suas informações com segurança": "Sus datos con seguridad",
