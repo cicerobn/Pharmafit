@@ -1,12 +1,16 @@
 /* =========================================================
    PHARMA FIT — a tela do carrinho
 
-   precisa: carrinho, minha-area, pedido
+   precisa: carrinho, minha-area, pedido, cupom
 
    O `pedido.js` entrou nesta lista em 17/09/2026: o botão "Fechar
    pedido no WhatsApp" passou a REGISTRAR o pedido, e quem sabe gravar
    pedido é aquele arquivo. Ele se anuncia em `window.PharmaFitPedido`,
    então tem de rodar antes deste.
+
+   O `cupom.js` entrou em 24/09/2026, com o cupom de desconto: o total
+   do resumo, a mensagem do WhatsApp e o pedido gravado passam a levar
+   o cupom, e quem sabe perguntar ao banco se um código vale é ele.
    ========================================================= */
 (function () {
   'use strict';
@@ -14,6 +18,7 @@
   var C = window.PharmaFitCarrinho;
   var Moedas = window.PharmaFitMoedas;
   var Area = window.PharmaFitArea;
+  var Cupom = window.PharmaFitCupom;
   if (!C || !document.getElementById('itens')) return;
 
   var cfg = window.PHARMAFIT_CONFIG || {};
@@ -306,7 +311,30 @@
     document.getElementById('resumo-qtd').textContent =
       conta.unidades + (conta.unidades === 1 ? ' item' : ' itens');
     document.getElementById('resumo-soma').textContent = moeda(conta.total);
-    document.getElementById('resumo-total').textContent = moeda(conta.total);
+
+    /* O CUPOM, quando há um. O desconto sai do total dos produtos e o
+       resumo mostra as duas coisas — o que custaria e o que sai —, que é
+       o que faz a pessoa ver o cupom funcionando. */
+    var cupom = Cupom ? Cupom.atual() : null;
+    var desconto = cupom ? Cupom.desconto(conta.total, cupom) : 0;
+    conta.cupom = cupom;
+    conta.desconto = desconto;
+    conta.aPagar = Math.max(0, Math.round((conta.total - desconto) * 100) / 100);
+
+    var linhaDesconto = document.getElementById('resumo-desconto-linha');
+    var formCupom = document.getElementById('cupom-form');
+    if (linhaDesconto) {
+      linhaDesconto.hidden = !cupom;
+      if (cupom) {
+        document.getElementById('resumo-cupom-codigo').textContent =
+          cupom.codigo + ' (' + Cupom.rotulo(cupom) + ')';
+        document.getElementById('resumo-desconto').textContent = '− ' + moeda(desconto);
+      }
+    }
+    /* com cupom aplicado, o campo de digitar sai: um cupom por pedido */
+    if (formCupom) formCupom.hidden = !!cupom;
+
+    document.getElementById('resumo-total').textContent = moeda(conta.aPagar);
 
     /* As outras moedas, só se houver cotação. */
     var caixaMoedas = document.getElementById('resumo-moedas');
@@ -316,7 +344,7 @@
 
     if (Moedas) {
       try {
-        var outras = await Moedas.converter(conta.total);
+        var outras = await Moedas.converter(conta.aPagar);
         if (outras.length) {
           caixaMoedas.hidden = false;
           caixaMoedas.innerHTML = outras.map(function (m) {
@@ -348,7 +376,14 @@
     });
 
     linhas.push('');
-    linhas.push('Total: ' + moeda(conta.total));
+    if (conta.cupom && conta.desconto) {
+      linhas.push('Subtotal: ' + moeda(conta.total));
+      linhas.push('Cupom ' + conta.cupom.codigo + ' (' + Cupom.rotulo(conta.cupom) + '): − ' +
+                  moeda(conta.desconto));
+      linhas.push('Total: ' + moeda(conta.aPagar));
+    } else {
+      linhas.push('Total: ' + moeda(conta.total));
+    }
 
     if (dados.nome) linhas.push('Nome: ' + dados.nome);
     if (dados.telefone) linhas.push('WhatsApp: ' + dados.telefone);
@@ -451,7 +486,10 @@
           telefone: dados.telefone || '',
           endereco: dados.endereco || '',
           produto: i.nome,
-          quantidade: i.quantidade
+          quantidade: i.quantidade,
+          /* o código vai em cada linha do pedido, para a equipe ver o
+             cupom no painel ao confirmar o valor */
+          cupom: conta.cupom ? conta.cupom.codigo : ''
         }).catch(function () { /* o WhatsApp abre de todo jeito */ });
 
         /* e entra em "Meus pedidos" deste aparelho, como o modal faz */
@@ -477,7 +515,8 @@
      registrar o mesmo pedido duas vezes e não deixar o aviso de
      "enviado" pendurado num carrinho que a pessoa mudou depois. */
   function assinaturaDo(conta) {
-    return (conta && conta.itens ? conta.itens : []).map(function (i) {
+    return (conta && conta.cupom ? conta.cupom.codigo + '|' : '') +
+      (conta && conta.itens ? conta.itens : []).map(function (i) {
       return i.nome + 'x' + i.quantidade;
     }).join('|');
   }
@@ -576,6 +615,55 @@
      pessoa leva para a conversa do WhatsApp. */
   document.addEventListener('pharmafit-catalogo', function () { pintar(); });
   registrarAoFechar(document.getElementById('fechar'));
+
+  /* ---------- o cupom ---------- */
+
+  var formCupom = document.getElementById('cupom-form');
+  var campoCupom = document.getElementById('cupom-codigo');
+  var recadoCupom = document.getElementById('cupom-recado');
+  var botaoCupom = document.getElementById('cupom-aplicar');
+
+  function recado(texto, bom) {
+    if (!recadoCupom) return;
+    recadoCupom.hidden = !texto;
+    recadoCupom.className = 'cupom__recado' + (bom ? ' cupom__recado--ok' : ' cupom__recado--erro');
+    recadoCupom.textContent = texto || '';
+  }
+
+  if (Cupom && formCupom) {
+    formCupom.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      botaoCupom.disabled = true;
+      botaoCupom.textContent = 'Conferindo…';
+      var r = await Cupom.aplicar(campoCupom.value);
+      botaoCupom.disabled = false;
+      botaoCupom.textContent = 'Aplicar';
+      if (!r.ok) {
+        recado(r.erro, false);
+        campoCupom.focus();
+        return;
+      }
+      campoCupom.value = '';
+      recado('Cupom ' + r.cupom.codigo + ' aplicado: ' + Cupom.rotulo(r.cupom) + ' de desconto.', true);
+      pintar();
+    });
+
+    document.getElementById('cupom-tirar').addEventListener('click', function () {
+      Cupom.remover();
+      recado('', true);
+      pintar();
+      campoCupom.focus();
+    });
+
+    /* O cupom guardado é conferido de novo a cada visita: a equipe pode
+       ter desligado, ou ele pode ter vencido desde que a pessoa aplicou. */
+    Cupom.reconferir().then(function (r) {
+      if (r && r.saiu) {
+        recado('O cupom ' + r.saiu + ' não vale mais e saiu do seu pedido.', false);
+      }
+      if (r && r.mudou) pintar();
+    });
+  }
 
   /* ---------- o formulário de contato, ligado ---------- */
 

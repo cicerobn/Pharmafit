@@ -48,6 +48,12 @@
      * WhatsApp e o do painel —, que hoje é a totalidade deles. */
     if (pedido.compra_id) registro.compra_id = pedido.compra_id;
 
+    /* O CUPOM DE DESCONTO, quando a pessoa aplicou um no carrinho
+     * (24/09/2026). Vai só o CÓDIGO: o valor final continua sendo posto
+     * pela equipe ao confirmar, e é por isso que o painel mostra o
+     * cupom ao lado do pedido. O banco recusa código fora do formato. */
+    if (pedido.cupom) registro.cupom = String(pedido.cupom).toUpperCase();
+
     /* DE QUEM É O PEDIDO, quando a pessoa está logada.
      *
      * Sem isto, "Meus pedidos" só mostra o que está guardado NESTE

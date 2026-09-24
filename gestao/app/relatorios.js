@@ -196,6 +196,7 @@
 
     achar('volta').innerHTML = Moldura.svg('volta', 20, 1.9);
     achar('seta-completo').innerHTML = Moldura.svg('seta', 17, 1.9);
+    achar('seta-periodo').innerHTML = Moldura.svg('seta', 17, 1.9);
 
     var dados = await Moldura.dados();
     var meses = Analise.meses();

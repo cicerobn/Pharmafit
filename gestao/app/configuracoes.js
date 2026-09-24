@@ -84,6 +84,75 @@
     }).join('');
   }
 
+  /* ---------- o WhatsApp do site ----------
+
+     Brian, 24/09/2026: "editável o número para se esse for banido".
+     A chave leva o prefixo `publico_` porque é ele que a regra do banco
+     usa para o SITE poder ler (quem lê é o `assets/js/zap.js`). O resto
+     da tabela de configurações continua só da equipe. */
+  var CHAVE_ZAP = 'publico_whatsapp';
+  var Dados = window.PharmaFitDados;
+  var U = window.PharmaFitUtil;
+
+  function bonito(n) {
+    n = U.digitos(n);
+    if (n.length === 13) return '+' + n.slice(0, 2) + ' (' + n.slice(2, 4) + ') ' + n.slice(4, 9) + '-' + n.slice(9);
+    if (n.length === 12) return '+' + n.slice(0, 2) + ' (' + n.slice(2, 4) + ') ' + n.slice(4, 8) + '-' + n.slice(8);
+    return n;
+  }
+
+  function ligarFormularioZap(doBanco, doArquivo, aoSalvar) {
+    var form = document.querySelector('[data-zap-form]');
+    if (!form) return;
+    var campo = form.querySelector('[data-zap-numero]');
+    var recado = form.querySelector('[data-zap-recado]');
+    var botao = form.querySelector('[data-zap-salvar]');
+
+    function dizer(texto, bom) {
+      recado.hidden = false;
+      recado.className = 'folha__recado folha__recado--' + (bom ? 'bom' : 'ruim');
+      recado.textContent = texto;
+    }
+
+    /* O campo mostra o número que está valendo. Quando é o do arquivo,
+       o campo vem com ele escrito — ninguém precisa adivinhar qual é. */
+    campo.value = bonito(doBanco || doArquivo);
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var bruto = campo.value.trim();
+
+      /* Campo vazio é um pedido de verdade: "volte para o número de
+         sempre". Salvo vazio, e o site cai no número do arquivo. */
+      var numero = bruto ? U.whatsapp(bruto) : '';
+      if (bruto && !numero) {
+        dizer('Esse número não serve para o WhatsApp. Escreva com o DDD, ' +
+              'por exemplo (92) 99999-9999.', false);
+        campo.focus();
+        return;
+      }
+
+      botao.disabled = true;
+      botao.textContent = 'Salvando…';
+      try {
+        var r = await Dados.salvarConfig(CHAVE_ZAP, numero);
+        if (r && r.ok === false) throw new Error(r.erro || 'o banco recusou');
+        campo.value = bonito(numero || doArquivo);
+        aoSalvar(numero || doArquivo);
+        dizer(numero
+          ? 'Salvo. O site passa a usar ' + bonito(numero) + ' — em quem já está ' +
+            'com uma página aberta, a partir da próxima que abrir.'
+          : 'Número apagado. O site volta a usar o número padrão, ' + bonito(doArquivo) + '.', true);
+      } catch (err) {
+        dizer('Não consegui salvar: ' + (err && err.message ? err.message : 'erro desconhecido') +
+              '. O número antigo continua valendo.', false);
+      } finally {
+        botao.disabled = false;
+        botao.textContent = 'Salvar número';
+      }
+    });
+  }
+
   /* ---------- montar ---------- */
 
   (async function () {
@@ -99,18 +168,24 @@
 
     /* O cartão do negócio mostra o que ESTÁ cadastrado. Campo sem valor
        não vira "—" nem texto de exemplo: ele sai da tela, senão parece
-       cadastro pronto quando não está. */
-    var zap = String(cfg.WHATSAPP || '').replace(/\D+/g, '');
+       cadastro pronto quando não está.
+       O WhatsApp é o que o SITE usa de fato: o do banco quando a equipe
+       salvou um (bloco logo abaixo), senão o do arquivo de configuração. */
+    var DO_ARQUIVO = U.digitos(cfg.WHATSAPP);
     var elZap = document.querySelector('[data-empresa-zap]');
-    if (zap) {
-      var bonito = zap.length >= 12
-        ? '+' + zap.slice(0, 2) + ' (' + zap.slice(2, 4) + ') ' +
-          zap.slice(4, 9) + '-' + zap.slice(9)
-        : zap;
-      elZap.textContent = 'WhatsApp ' + bonito;
-    } else {
-      elZap.hidden = true;
+    function pintarCartaoZap(numero) {
+      if (numero) {
+        elZap.hidden = false;
+        elZap.textContent = 'WhatsApp ' + bonito(numero);
+      } else {
+        elZap.hidden = true;
+      }
     }
+
+    var doBanco = '';
+    try { doBanco = U.digitos(await Dados.lerConfig(CHAVE_ZAP, '')); } catch (e) { doBanco = ''; }
+    pintarCartaoZap(doBanco || DO_ARQUIVO);
+    ligarFormularioZap(doBanco, DO_ARQUIVO, pintarCartaoZap);
 
     var elDono = document.querySelector('[data-empresa-dono]');
     if (cfg.EMAIL_DONO) elDono.textContent = cfg.EMAIL_DONO;

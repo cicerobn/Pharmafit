@@ -2711,6 +2711,57 @@ body:has(.hero__art--foto) .topbar{
 .modal__acoes .btn--outline{width:auto;flex:none;padding-inline:20px}
 .modal__acoes .btn--primary{flex:1;font-size:15px;padding:13px 18px;min-width:0;justify-content:center;gap:10px}
 
+/* ---------- a bolinha do WhatsApp ----------
+
+   Brian, 24/09/2026: "Adiciona a bolinha flutuante para levar ao nosso
+   WhatsApp". Quem a desenha é o `zap.js`, em todas as páginas; o
+   número é o que a equipe salva no painel.
+
+   NO CANTO DIREITO, EM CIMA DA BARRA DE BAIXO, e nunca sobre ela: a
+   barra é a navegação do site inteiro e não pode ter um botão por
+   cima de "Conta". Os 16px acima dela são o respiro que separa uma da
+   outra no olho.
+
+   O VERDE É O DO WHATSAPP, e é o único verde da casa de propósito: a
+   bolinha tem de ser reconhecida antes de ser lida, e o que faz alguém
+   reconhecer o WhatsApp de longe é esta cor.
+
+   Abaixo do menu e das janelas (`z-index` 44, eles 60 para cima), e
+   abaixo da própria barra (45): quando o menu abre, ela some atrás
+   dele em vez de flutuar por cima da escolha. */
+.zap-flutuante{
+  position:fixed;
+  right:16px;
+  bottom:calc(var(--barra-pe) + 16px + env(safe-area-inset-bottom));
+  z-index:44;
+  width:54px;height:54px;
+  border-radius:50%;
+  display:grid;place-items:center;
+  background:#25d366;
+  color:#fff;
+  box-shadow:0 8px 22px rgba(37,211,102,.38),0 2px 6px rgba(0,0,0,.14);
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.zap-flutuante:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 12px 26px rgba(37,211,102,.45),0 2px 6px rgba(0,0,0,.14)}
+.zap-flutuante:active{transform:scale(.96)}
+
+/* NA PÁGINA DE PARCEIRO há uma barra de pedido grudada no pé (a
+   `.carrinho__barra`), da largura da tela. Com ela aberta, a bolinha
+   sobe para cima dela — em vez de cobrir o botão de fechar o pedido. */
+body:has(.carrinho__barra:not([hidden])) .zap-flutuante{
+  bottom:calc(var(--barra-pe) + 92px + env(safe-area-inset-bottom));
+}
+
+/* No computador a barra de baixo flutua a 14px do pé e tem 520px no
+   meio da tela: a bolinha vai para o canto, à altura do pé. */
+@media (min-width:900px){
+  .zap-flutuante{right:28px;bottom:28px;width:58px;height:58px}
+}
+
+@media print{
+  .zap-flutuante{display:none}
+}
+
 /* ---------- aviso flutuante ---------- */
 
 .toast{
@@ -5066,6 +5117,51 @@ textarea:focus-visible{
   padding:7px 0;
 }
 .resumo__linha span:last-child{font-weight:600;white-space:nowrap}
+
+/* ---- o cupom de desconto no resumo (24/09/2026) ----
+   Um campo e um botão na mesma linha, logo acima do total: é ali que o
+   olho procura o que muda o total. O desconto aparece como uma linha do
+   resumo, em verde, com o "tirar" ao lado do código — desfazer tem de
+   estar no mesmo lugar em que se vê o que foi feito. */
+.cupom{
+  display:flex;
+  gap:8px;
+  margin:6px 0 2px;
+}
+.cupom[hidden]{display:none}
+.cupom__campo{
+  flex:1;
+  min-width:0;
+  font:inherit;
+  font-size:14px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--ink);
+  background:#fbf9f5;
+  border:1px dashed var(--gold-soft);
+  border-radius:12px;
+  padding:10px 12px;
+  outline:none;
+}
+.cupom__campo::placeholder{text-transform:none;letter-spacing:0;color:var(--muted-2)}
+.cupom__campo:focus{border-style:solid;border-color:var(--gold);background:#fff}
+.cupom__aplicar{flex:none}
+.cupom__recado{margin:6px 0 0;font-size:12.5px;line-height:1.45}
+.cupom__recado--ok{color:#1f7a4d}
+.cupom__recado--erro{color:#b23b32}
+.resumo__linha--desconto,
+.resumo__linha--desconto span:last-child{color:#1f7a4d}
+.cupom__tirar{
+  margin-left:4px;
+  padding:4px 2px;
+  border:0;
+  background:none;
+  font:inherit;
+  font-size:12px;
+  color:var(--muted);
+  text-decoration:underline;
+  cursor:pointer;
+}
 .resumo__total{
   display:flex;
   align-items:baseline;

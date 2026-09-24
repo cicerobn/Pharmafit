@@ -96,6 +96,13 @@ for (const caminho of arquivosJs(join(RAIZ, 'gestao'))) {
                     /\.inserir\(\s*'([a-z_]+)'/g]) {
     for (const m of txt.matchAll(re)) anotar(m[1], curto);
   }
+  /* E o banco chamado DIRETO, sem passar pelo `dados.js`.
+     Entrou em 24/09/2026 com as telas de Cupons e de cliente VIP, que
+     falam com o banco direto de propósito (para erro aparecer como
+     erro). Sem esta linha as duas tabelas novas ficariam fora da cópia
+     de segurança e esta conferência passaria calada — o exato defeito
+     que ela existe para pegar. */
+  for (const m of txt.matchAll(/\.from\(\s*'pf_([a-z_]+)'/g)) anotar(m[1], curto);
 }
 
 /* E O SITE TAMBÉM, desde 17/09/2026.

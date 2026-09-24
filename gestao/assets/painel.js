@@ -117,6 +117,10 @@
               (Number(p.quantidade) > 1 ? ' · <b>' + p.quantidade + ' un.</b>' : '') +
               (Number(p.valor) ? ' · <b>' + moeda(p.valor) + '</b>' : '') +
             '</p>' +
+            /* o cupom que o cliente usou no carrinho (24/09/2026) */
+            (p.cupom ? '<p class="fila__cupom">Cupom <b>' + esc(p.cupom) + '</b>' +
+              (regraDoCupom(p.cupom) ? ' · ' + esc(textoDoCupom(regraDoCupom(p.cupom))) : '') +
+            '</p>' : '') +
             (p.endereco ? '<p class="fila__endereco">📍 ' + esc(p.endereco) + '</p>' : '') +
             (zap
               ? '<a class="fila__zap" href="' + zap + '" target="_blank" rel="noopener">' +
@@ -310,7 +314,35 @@
     pintarProdutos();
   }
 
+  /* ---------- os cupons ----------
+   *
+   * O pedido que vem do site guarda só o CÓDIGO do cupom (24/09/2026). A
+   * regra — quanto ele desconta — mora em `pf_cupons`, que a equipe lê.
+   * Ler aqui serve para duas coisas: escrever a regra ao lado do pedido
+   * e já descontar na sugestão de valor da confirmação. */
+  var cupons = {};
+
+  async function carregarCupons() {
+    try {
+      var sb = window.PharmaFitAuth && window.PharmaFitAuth.cliente();
+      if (!sb) return;
+      var r = await sb.from('pf_cupons').select('codigo,tipo,valor');
+      if (r.error || !r.data) return;
+      cupons = {};
+      r.data.forEach(function (x) { cupons[x.codigo] = x; });
+    } catch (e) { /* sem a regra, o código aparece sozinho */ }
+  }
+
+  function regraDoCupom(codigo) { return codigo ? cupons[codigo] || null : null; }
+
+  function textoDoCupom(r) {
+    return r.tipo === 'porcentagem'
+      ? String(Number(r.valor)).replace('.', ',') + '% de desconto'
+      : moeda(r.valor) + ' de desconto no pedido todo';
+  }
+
   async function recarregar() {
+    await carregarCupons();
     var d = await Dados.listarPainel();
     estado.pedidos = d.pedidos;
     estado.produtos = d.produtos;
@@ -447,7 +479,18 @@
       }
     }
 
-    return unitario * qtd;
+    var total = unitario * qtd;
+
+    /* O CUPOM DE PORCENTAGEM ENTRA NA SUGESTÃO. Porcentagem vale linha a
+       linha: 10% do pedido é 10% de cada produto dele. O de VALOR FIXO
+       não entra — ele é do pedido inteiro, e um pedido de três produtos
+       vira três linhas aqui; descontar em cada uma daria o triplo. Esse
+       a caixa só avisa, e quem confirma desconta uma vez. */
+    var regra = regraDoCupom(pedido.cupom);
+    if (regra && regra.tipo === 'porcentagem' && total > 0) {
+      total = Math.round(total * (1 - Number(regra.valor) / 100) * 100) / 100;
+    }
+    return total;
   }
 
   function abrirValor(pedido) {
@@ -465,6 +508,19 @@
       (pedido.produto || '') + (qtd > 1 ? ' · ' + qtd + ' unidades' : '');
     var campo = document.getElementById('cv-valor');
     campo.value = Number(pedido.valor) > 0 ? Number(pedido.valor) : (sugestao > 0 ? sugestao : '');
+
+    var elCupom = document.getElementById('cv-cupom');
+    if (elCupom) {
+      var regra = regraDoCupom(pedido.cupom);
+      elCupom.hidden = !pedido.cupom;
+      elCupom.textContent = !pedido.cupom ? '' :
+        !regra ? 'O cliente usou o cupom ' + pedido.cupom + ', que não existe mais no painel. ' +
+                 'Confira o desconto combinado no WhatsApp.' :
+        regra.tipo === 'porcentagem'
+          ? 'Cupom ' + pedido.cupom + ': ' + textoDoCupom(regra) + ' — já descontado no valor sugerido.'
+          : 'Cupom ' + pedido.cupom + ': ' + textoDoCupom(regra) + '. Se o pedido tiver mais de um ' +
+            'produto, desconte só em um deles.';
+    }
 
     var pag = document.getElementById('cv-pagamento');
     pag.innerHTML = (cfg.PAGAMENTOS || ['Pix']).map(function (m) {

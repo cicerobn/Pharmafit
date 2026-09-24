@@ -16,8 +16,8 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="../assets/css/styles.css?v=821a7a40">
-<link rel="stylesheet" href="assets/gestao.css?v=377882ab">
+<link rel="stylesheet" href="../assets/css/styles.css?v=0091c356">
+<link rel="stylesheet" href="assets/gestao.css?v=373a82f5">
 </head>
 <body>
 
@@ -297,6 +297,10 @@
       Venda de <b id="cv-quem"></b> — <span id="cv-produto"></span>.<br>
       Informe o valor fechado no WhatsApp para entrar no faturamento.
     </p>
+    <!-- O cupom do pedido, quando o cliente usou um no carrinho do site
+         (24/09/2026). Nasce escondido; o `painel.js` escreve a regra do
+         cupom e se ela já está descontada na sugestão de valor. -->
+    <p class="cv-cupom" id="cv-cupom" hidden></p>
 
     <div class="field">
       <label class="field__label" for="cv-valor">Valor da venda (R$)</label>
@@ -493,6 +497,6 @@
 <script src="assets/analise.js?v=e2445f21"></script>
 <script src="assets/menu.js?v=89452c62"></script>
 <script src="assets/notificacoes.js?v=eb076428"></script>
-<script src="assets/painel.js?v=4bba022d"></script>
+<script src="assets/painel.js?v=edeee92f"></script>
 </body>
 </html>

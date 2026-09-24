@@ -157,7 +157,11 @@
       return '<li><a class="item" href="../index.html?pedido=' + encodeURIComponent(p.id) + '">' +
         '<span class="item__icone">' + Moldura.svg('caixa', 19, 1.6) + '</span>' +
         '<span class="item__corpo">' +
-          '<span class="item__numero">' + esc(numeroDe(p)) + '</span>' +
+          '<span class="item__numero">' + esc(numeroDe(p)) +
+            /* o cupom do carrinho do site, ao lado do número: é onde o
+               olho passa antes de abrir o pedido (24/09/2026) */
+            (p.cupom ? ' <span class="item__cupom">cupom ' + esc(p.cupom) + '</span>' : '') +
+          '</span>' +
           '<span class="item__nome">' + esc(p.cliente || 'Sem nome') + '</span>' +
           '<span class="item__linha">' + esc(resumoDaLinha(p)) + '</span>' +
         '</span>' +

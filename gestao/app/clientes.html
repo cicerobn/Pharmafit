@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=d0c43623">
+<link rel="stylesheet" href="app.css?v=fa285758">
 </head>
 <body>
 
@@ -44,6 +44,9 @@
       <div class="bloco__corpo" style="padding-top:12px">
         <p class="numero__rotulo" style="margin-bottom:8px">Ordenar por</p>
         <div class="chips-ordem"><button class="chip-ordem is-ativo" type="button" data-ordem="mais">Quem mais gastou</button><button class="chip-ordem" type="button" data-ordem="pedidos">Mais pedidos</button><button class="chip-ordem" type="button" data-ordem="recentes">Compra mais recente</button><button class="chip-ordem" type="button" data-ordem="nome">Nome</button></div>
+        <!-- Só os clientes VIP (24/09/2026). Filtro, e não ordem: ele se
+             soma a qualquer uma das ordens de cima. -->
+        <div class="chips-ordem" style="margin-top:8px"><button class="chip-ordem" type="button" data-so-vip aria-pressed="false">★ Só VIP</button></div>
       </div>
     </div>
 
@@ -82,7 +85,7 @@
 <script src="../assets/auth.js?v=9db91d6d"></script>
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
-<script src="app.js?v=0c694996"></script>
-<script src="clientes.js?v=a73b2110"></script>
+<script src="app.js?v=ed2f7d61"></script>
+<script src="clientes.js?v=6377e98d"></script>
 </body>
 </html>

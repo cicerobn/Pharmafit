@@ -422,11 +422,26 @@
 
   /* A PERGUNTA QUE DECIDE SE O BOTÃO EXISTE. Ela roda depois da tela
      montar, sem travar nada: o carrinho não espera por ela. */
+  /* COM CUPOM, NÃO HÁ PAGAMENTO NA HORA (24/09/2026).
+     O banco confere cada item da cobrança contra o preço de tabela
+     (`pf_confere_preco`) e recusaria o valor com desconto — a pessoa
+     chegaria à tela do PIX e levaria um "os valores não conferem".
+     Enquanto houver cupom, o pedido fecha pelo WhatsApp, onde a equipe
+     confirma o valor com o desconto. Tirou o cupom, o botão volta. */
+  var gatewayPronto = false;
+  function temCupom() {
+    return !!(window.PharmaFitCupom && window.PharmaFitCupom.atual());
+  }
+  function mostrarOuEsconder() {
+    if (!caixaBotao) return;
+    caixaBotao.hidden = !(gatewayPronto && !temCupom());
+  }
+  document.addEventListener('pharmafit-cupom', mostrarOuEsconder);
+
   gatewayDePe().then(function (pronto) {
-    if (pronto) {
-      caixaBotao.hidden = false;
-      corrigirOAviso();
-    }
+    gatewayPronto = !!pronto;
+    mostrarOuEsconder();
+    if (pronto) corrigirOAviso();
     mostrarDiagnostico();
   });
 

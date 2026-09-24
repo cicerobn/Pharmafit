@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=d0c43623">
+<link rel="stylesheet" href="app.css?v=fa285758">
 </head>
 <body>
 
@@ -38,6 +38,33 @@
         </span>
         <span class="empresa__seta" data-empresa-seta></span>
       </a>
+    </section>
+
+    <!-- O WHATSAPP DO SITE, TROCÁVEL DAQUI.
+         Brian, 24/09/2026: "editável o número para se esse for banido".
+         Antes o número morava num arquivo do código, e trocar exigia
+         publicar o site — justamente quando o número acabou de ser
+         banido e as vendas estão caindo num número que ninguém lê.
+         Salvo aqui, ele vai para o banco, e o site inteiro (a bolinha
+         verde, o botão de fechar o pedido, o rodapé) passa a usar o
+         novo na próxima vez que alguém abrir uma página. -->
+    <p class="rotulo-secao">WhatsApp do site</p>
+    <section class="bloco">
+      <form class="bloco__corpo zap-form" data-zap-form novalidate>
+        <label class="campo">
+          <span class="campo__rotulo">Número com DDD</span>
+          <input type="tel" inputmode="tel" autocomplete="off" data-zap-numero
+                 placeholder="(92) 99999-9999">
+        </label>
+        <p class="campo__nota" data-zap-nota>
+          É para este número que vão a bolinha verde do site, o botão de
+          fechar o pedido e todos os outros links de WhatsApp. Se ele for
+          banido, troque aqui e salve: o site muda sozinho, sem precisar
+          publicar nada.
+        </p>
+        <p class="folha__recado" data-zap-recado role="status" hidden></p>
+        <button class="botao botao--forte" type="submit" data-zap-salvar>Salvar número</button>
+      </form>
     </section>
 
     <p class="rotulo-secao">Geral</p>
@@ -74,7 +101,7 @@
 <script src="../assets/auth.js?v=9db91d6d"></script>
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
-<script src="app.js?v=0c694996"></script>
-<script src="configuracoes.js?v=35f38b62"></script>
+<script src="app.js?v=ed2f7d61"></script>
+<script src="configuracoes.js?v=790a1fc1"></script>
 </body>
 </html>

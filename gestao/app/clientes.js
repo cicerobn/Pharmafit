@@ -19,7 +19,52 @@
   var moeda = U.moeda;
   var esc = U.esc;
 
-  var estado = { clientes: [], ordem: 'mais', busca: '' };
+  var estado = { clientes: [], ordem: 'mais', busca: '', vip: {}, soVip: false };
+
+  /* ---------------------------------------------------------
+     CLIENTE VIP
+
+     Brian, 24/09/2026: "Pegar um cliente, ir no perfil dele e colocar
+     ele como cliente VIP".
+
+     A marca mora em `pf_vip`, pela MESMA chave com que esta tela junta
+     os pedidos de uma pessoa (os dígitos do telefone, ou o nome quando
+     não há telefone). Não existe tabela de clientes para pôr uma coluna
+     "vip": o cliente aqui nasce dos pedidos. Com a chave, a marca segue
+     a pessoa em todo pedido novo que ela fizer com o mesmo telefone.
+
+     Fala com o banco direto, e não pelo `dados.js`: lá, quando o banco
+     erra, a lista cai em silêncio para o aparelho. Aqui um VIP que "deu
+     certo" só neste celular seria pior que um erro na tela.
+     --------------------------------------------------------- */
+  async function carregarVip() {
+    var sb = Auth.cliente();
+    if (!sb) return;
+    try {
+      var r = await sb.from('pf_vip').select('chave');
+      if (r.error || !r.data) return;
+      estado.vip = {};
+      r.data.forEach(function (x) { estado.vip[x.chave] = true; });
+    } catch (e) { /* sem a lista, ninguém aparece como VIP — e nada quebra */ }
+  }
+
+  function eVip(c) { return !!(c && estado.vip[c.chave]); }
+
+  async function alternarVip(c) {
+    var sb = Auth.cliente();
+    if (!sb) return { ok: false, erro: 'sem conexão com o banco' };
+    var r = eVip(c)
+      ? await sb.from('pf_vip').delete().eq('chave', c.chave)
+      : await sb.from('pf_vip').insert({ chave: c.chave, nome: c.nome });
+    if (r.error) return { ok: false, erro: r.error.message };
+    if (eVip(c)) delete estado.vip[c.chave];
+    else estado.vip[c.chave] = true;
+    return { ok: true };
+  }
+
+  var SELO_VIP = '<span class="selo-vip" title="Cliente VIP">' +
+    '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+    '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>VIP</span>';
 
   /* Uma cor por pessoa, tirada do nome. Sempre a mesma para o mesmo
      nome — é o que deixa a lista reconhecível ao rolar. */
@@ -93,6 +138,7 @@
     var termo = U.normalizar(estado.busca.trim());
 
     var lista = estado.clientes.filter(function (c) {
+      if (estado.soVip && !eVip(c)) return false;
       if (!termo) return true;
       return U.normalizar(c.nome + ' ' + c.telefone).indexOf(termo) !== -1;
     });
@@ -148,14 +194,17 @@
     if (!lista.length) {
       conta.textContent = '';
       var nenhum = !estado.clientes.length;
+      var semVip = !nenhum && estado.soVip && !estado.busca.trim();
       alvo.innerHTML = '<li><div class="vazio">' +
         '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
         'stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
         '<path d="M16 20v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="8" r="4"/></svg>' +
         '<p class="vazio__titulo">' +
-          (nenhum ? 'Nenhum cliente ainda' : 'Nada com essa busca') + '</p>' +
+          (nenhum ? 'Nenhum cliente ainda' : semVip ? 'Nenhum cliente VIP ainda'
+                  : 'Nada com essa busca') + '</p>' +
         '<p class="vazio__texto">' + (nenhum
           ? 'A lista se monta sozinha a partir dos pedidos: quem comprar aparece aqui.'
+          : semVip ? 'Abra um cliente e toque em "Marcar como VIP".'
           : 'Tente outro nome ou telefone.') + '</p>' +
       '</div></li>';
       return;
@@ -183,7 +232,9 @@
           '<span class="item__inicial" style="color:' + cor[0] + ';background:' + cor[1] + '">' +
             esc(iniciais(c.nome)) + '</span>' +
           '<span class="item__corpo">' +
-            '<span class="item__nome">' + esc(c.nome) + '</span>' +
+            /* o selo vem ANTES do nome: o nome corta com "…" quando não
+               cabe, e o que vem por último é o que desaparece */
+            '<span class="item__nome">' + (eVip(c) ? SELO_VIP + ' ' : '') + esc(c.nome) + '</span>' +
             '<span class="item__linha">' + esc(c.telefone || 'sem telefone') + '</span>' +
           '</span>' +
           '<span class="item__lado">' +
@@ -259,6 +310,10 @@
       '</div>' +
       '<div class="folha__corpo">' +
         '<p class="ficha-tel" data-ficha-tel></p>' +
+        /* O BOTÃO DE VIP fica no alto da ficha, junto do nome e do
+           telefone: é um dado sobre a PESSOA, não sobre um pedido. */
+        '<button class="ficha-vip" type="button" data-ficha-vip aria-pressed="false"></button>' +
+        '<p class="ficha-vip__recado" data-ficha-vip-recado role="status" hidden></p>' +
         /* O QUE O CLIENTE DIGITOU NA COMPRA.
            O endereço de entrega estava sendo gravado e não aparecia em
            lugar nenhum do painel novo: a equipe tinha o dado e não
@@ -300,6 +355,7 @@
     document.body.appendChild(folha);
 
     folha.querySelector('[data-fechar-ficha]').addEventListener('click', fechar);
+    folha.querySelector('[data-ficha-vip]').addEventListener('click', aoTocarVip);
     veu.addEventListener('click', fechar);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && folha.classList.contains('is-aberta')) fechar();
@@ -320,6 +376,9 @@
     }).length;
 
     folha.querySelector('[data-ficha-nome]').textContent = c.nome;
+    fichaAberta = c;
+    pintarBotaoVip(c);
+    folha.querySelector('[data-ficha-vip-recado]').hidden = true;
     folha.querySelector('[data-ficha-tel]').textContent = c.telefone || 'sem telefone';
 
     /* O endereço mais recente que ele digitou. `lista` já está ordenada
@@ -399,6 +458,34 @@
     Moldura.foco.entrar(folha);
   }
 
+  var fichaAberta = null;
+
+  function pintarBotaoVip(c) {
+    var b = folha.querySelector('[data-ficha-vip]');
+    var sim = eVip(c);
+    b.setAttribute('aria-pressed', String(sim));
+    b.classList.toggle('is-vip', sim);
+    b.innerHTML = Moldura.svg('estrela', 16, 1.8) +
+      '<span>' + (sim ? 'Cliente VIP · tocar para tirar' : 'Marcar como VIP') + '</span>';
+  }
+
+  async function aoTocarVip() {
+    if (!fichaAberta) return;
+    var b = folha.querySelector('[data-ficha-vip]');
+    var recado = folha.querySelector('[data-ficha-vip-recado]');
+    b.disabled = true;
+    var r = await alternarVip(fichaAberta);
+    b.disabled = false;
+    if (!r.ok) {
+      recado.hidden = false;
+      recado.textContent = 'Não consegui salvar: ' + r.erro + '.';
+      return;
+    }
+    recado.hidden = true;
+    pintarBotaoVip(fichaAberta);
+    pintar();
+  }
+
   function fechar() {
     if (!folha) return;
     folha.classList.remove('is-aberta');
@@ -410,6 +497,7 @@
   async function carregar() {
     try {
       var r = await Moldura.dados();
+      await carregarVip();
       estado.clientes = montar(r.pedidos);
       document.getElementById('carregando').hidden = true;
       document.getElementById('erro').hidden = true;
@@ -454,6 +542,16 @@
       caixa.hidden = !abrindo;
       botaoFiltro.setAttribute('aria-expanded', String(abrindo));
     });
+
+    var botaoSoVip = document.querySelector('[data-so-vip]');
+    if (botaoSoVip) {
+      botaoSoVip.addEventListener('click', function () {
+        estado.soVip = !estado.soVip;
+        botaoSoVip.classList.toggle('is-ativo', estado.soVip);
+        botaoSoVip.setAttribute('aria-pressed', String(estado.soVip));
+        pintar();
+      });
+    }
 
     document.querySelectorAll('[data-ordem]').forEach(function (b) {
       b.addEventListener('click', function () {

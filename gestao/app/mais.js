@@ -32,7 +32,14 @@
        relatório completo, com comparação de meses e planilha, continua
        na tela grande e está linkado lá dentro. */
     { rotulo: 'Relatórios', pe: 'Faturamento, lucro e gráficos do mês', icone: 'grafico', href: 'relatorios.html' },
-    { rotulo: 'Gastos', pe: 'Lançar e ver as despesas', icone: 'dinheiro', href: '../despesas.html' }
+    /* Brian, 24/09/2026: "Vendas do dia 01 ao 10 quanto eu vendi, quanto
+       eu lucrei" e "relatorio diario (...) e ter como imprimir". */
+    { rotulo: 'Vendas por período', pe: 'Escolher as datas, ver o que saiu e imprimir', icone: 'calendario', href: 'vendas.html' },
+    { rotulo: 'Gastos', pe: 'Lançar e ver as despesas', icone: 'dinheiro', href: '../despesas.html' },
+    /* Brian, 24/09/2026: "cupons para fazer promoção". Fica junto do
+       dinheiro, porque cupom é desconto — é assunto de venda, não de
+       ajuste do sistema. */
+    { rotulo: 'Cupons', pe: 'Criar e desligar cupons de desconto do site', icone: 'etiqueta', href: 'cupons.html' }
   ];
 
   /* A REGRA DESTA TELA, escrita para eu não errar de novo: aqui fica o

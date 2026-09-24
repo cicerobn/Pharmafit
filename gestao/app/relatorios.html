@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=d0c43623">
+<link rel="stylesheet" href="app.css?v=fa285758">
 </head>
 <body>
 
@@ -39,6 +39,21 @@
     </div>
 
     <div data-conteudo hidden>
+
+      <!-- O relatório por datas escolhidas (24/09/2026). Fica no alto:
+           esta tela é do mês, e quem quer um dia ou um intervalo
+           precisa achar a porta antes de rolar. -->
+      <section class="bloco">
+        <div class="bloco__corpo" style="padding-top:14px">
+          <a class="item" href="vendas.html">
+            <span class="item__corpo">
+              <span class="item__nome">Vendas por período</span>
+              <span class="item__linha">Escolher as datas, o que saiu, quem comprou e imprimir</span>
+            </span>
+            <span class="item__seta" data-seta-periodo></span>
+          </a>
+        </div>
+      </section>
 
       <!-- Os dois números do topo usam a grade `.numeros` que já existe
            no painel, e não uma classe nova: ela já tem o
@@ -105,7 +120,7 @@
 <script src="../assets/auth.js?v=9db91d6d"></script>
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
-<script src="app.js?v=0c694996"></script>
-<script src="relatorios.js?v=c238841d"></script>
+<script src="app.js?v=ed2f7d61"></script>
+<script src="relatorios.js?v=765793a6"></script>
 </body>
 </html>
