@@ -5856,17 +5856,17 @@ textarea:focus-visible{
 /* ---------------------------------------------------------
    O TOPO EM BANNER (desde 24/09/2026)
 
-   Brian: "quero que a imagem vire banner". A foto nova já tem o
-   título escrito, então o topo deixa de ser "texto por cima de foto"
+   Brian: "quero que a imagem vire banner" — a foto "Sua escolha
+   premium", que ele subiu no GitHub. Ela já tem o título escrito, então o topo deixa de ser "texto por cima de foto"
    e vira uma imagem só, de ponta a ponta. As regras de `.hero__title`
    e `.hero__art--foto` acima ficam para o caso de o topo antigo
    voltar; nenhuma página as usa enquanto for o banner.
 
-   No celular o banner vai de borda a borda, sem margem: a foto tem
-   fundo quase branco (#fcfcfc) e o bloco usa a mesma cor, para não
-   aparecer emenda entre a foto e a página. A 390px ele mede 233px de
-   altura — 10px a mais que o topo anterior, então as categorias
-   continuam no mesmo lugar da tela.
+   No celular o banner vai de borda a borda, sem margem: o lado
+   esquerdo da foto é branco (#fefefe) e o bloco usa a mesma cor, para
+   não aparecer emenda entre a foto e a página. A 390px ele mede 229px
+   de altura — quase o mesmo do topo anterior (223px), então as
+   categorias continuam no mesmo lugar da tela.
 
    No computador a foto para em 820px e fica no meio. Na largura
    inteira da coluna (1024px) ela media 611px de altura e empurrava as
@@ -5877,7 +5877,7 @@ textarea:focus-visible{
   display:block;
   padding:0;
   min-height:0;
-  background:#fcfcfc;
+  background:#fefefe;
 }
 .hero__banner{
   display:block;
@@ -5886,7 +5886,11 @@ textarea:focus-visible{
 }
 @media (min-width:900px){
   .hero--banner{padding:8px 48px 0}
-  .hero__banner{max-width:820px;margin-inline:auto}
+  /* Cantos redondos e sombra só aqui: centrada no branco, a foto
+     termina no bege quente da direita, e sem acabamento essa borda
+     parecia imagem cortada. No celular ela vai de ponta a ponta e
+     não tem borda para mostrar. */
+  .hero__banner{max-width:820px;margin-inline:auto;border-radius:20px;box-shadow:var(--shadow-md)}
 }
 
 /* =========================================================

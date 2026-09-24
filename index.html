@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=dd5f2289">
+<link rel="stylesheet" href="assets/css/styles.css?v=f049f9f7">
 </head>
 <body>
 
@@ -81,12 +81,15 @@
 
   <!-- ===== hero ===== -->
   <section class="hero hero--banner">
-    <!-- O TOPO VIROU UM BANNER SÓ, A FOTO QUE ELE MANDOU.
-         Brian, 24/09/2026: "quero que a imagem vire banner". A imagem
-         já traz o título escrito nela ("Sua jornada de saúde e
-         performance começa aqui"), com o frasco, a seringa e o anel
-         dourado — então o título que o site escrevia por cima da foto
-         antiga saiu da tela: ficaria repetido.
+    <!-- O TOPO É UM BANNER SÓ, A FOTO QUE ELE SUBIU NO GITHUB.
+         Brian, 24/09/2026: "coloque a foto que enviei no git" e "sim,
+         quero que a imagem vire banner". A foto é a que ele mesmo subiu
+         no repositório ("WhatsApp Image 2026-09-23 at 22.05.30.jpeg", na
+         raiz): "Sua escolha premium em Tirzepatida, Retatrutida e
+         Peptídeos", com as caixas dos produtos e o selo "Entrega grátis
+         em Manaus". Eu tinha posto antes a outra foto, a que ele mandou
+         na conversa ("Sua jornada de saúde…"), e ele respondeu "CADE"
+         — era esta. A outra fica guardada em assets/img.
 
          O TÍTULO CONTINUA NA PÁGINA, SÓ QUE ESCONDIDO DOS OLHOS
          (`.visually-hidden`). Texto dentro de foto não é lido pelo
@@ -94,24 +97,23 @@
          o que diz aos dois do que a página trata. O `alt` da imagem
          fica vazio de propósito: o leitor de tela já leu o título e
          diria a mesma frase duas vezes.
-         Consequência que ele sabe: em espanhol o banner continua em
-         português — a frase é parte da foto.
+         Consequência: em espanhol o banner continua em português — a
+         frase é parte da foto.
 
-         A foto chegou como print, com a barrinha de rolagem cinza na
-         borda direita (9px); os WebP são a imagem SEM essa faixa, em
-         dois tamanhos (20 KB no celular, 39 KB no computador). O .jpg
-         original fica guardado ao lado, como ele mandou.
-
-         `width`/`height` com a medida real (1240×740) para o navegador
-         reservar o espaço certo antes de a foto chegar, e
-         `fetchpriority="high"` porque é a primeira coisa da tela. -->
-    <h1 class="visually-hidden">Sua jornada de saúde e performance começa aqui</h1>
+         Três tamanhos (45 KB no celular, 95 KB e 149 KB no computador):
+         a foto tem letra miúda no selo de entrega, e em tela retina o
+         tamanho menor a deixaria borrada. `width`/`height` com a medida
+         real (1600×941) para o navegador reservar o espaço certo antes
+         de a foto chegar, e `fetchpriority="high"` porque é a primeira
+         coisa da tela. -->
+    <h1 class="visually-hidden">Sua escolha premium em Tirzepatida, Retatrutida e Peptídeos. Entrega grátis em Manaus</h1>
     <img class="hero__banner"
-         src="assets/img/banner-jornada-saude-640.webp"
-         srcset="assets/img/banner-jornada-saude-640.webp 640w,
-                 assets/img/banner-jornada-saude-1240.webp 1240w"
+         src="assets/img/banner-escolha-premium-640.webp"
+         srcset="assets/img/banner-escolha-premium-640.webp 640w,
+                 assets/img/banner-escolha-premium-1100.webp 1100w,
+                 assets/img/banner-escolha-premium-1600.webp 1600w"
          sizes="(min-width:900px) 820px, 100vw"
-         width="1240" height="740"
+         width="1600" height="941"
          fetchpriority="high"
          alt="">
   </section>
@@ -316,7 +318,7 @@
 <script src="assets/js/catalogo-banco.js?v=ea2ffecd" defer></script>
 <script src="assets/js/loja.js?v=cb890991" defer></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb" defer></script>
-<script src="assets/js/idioma-es.js?v=5a854648" defer></script>
+<script src="assets/js/idioma-es.js?v=af5d8141" defer></script>
 <script src="assets/js/idioma.js?v=81611de9" defer></script>
 <script src="assets/js/app.js?v=83df186b" defer></script>
 <script src="assets/js/favoritos.js?v=3adc8c87" defer></script>
