@@ -96,6 +96,16 @@
           Validacao.erro(campo, 'Informe um número maior que zero.');
           return false;
         }
+        /* QUANTIDADE É NÚMERO INTEIRO. O campo com `step="1"` (a
+           quantidade do atacado) ia para uma coluna de número inteiro no
+           banco: "2,5" passava por aqui, o banco recusava, e a pessoa via
+           só "Não conseguimos enviar agora" — sem saber que o problema
+           era a vírgula. Achado na conferência de 24/09/2026. */
+        if (regras.indexOf('numero') !== -1 && valor && campo.getAttribute('step') === '1' &&
+            !Number.isInteger(Number(String(valor).replace(',', '.')))) {
+          Validacao.erro(campo, 'Informe um número inteiro, sem vírgula.');
+          return false;
+        }
       }
       return true;
     },
