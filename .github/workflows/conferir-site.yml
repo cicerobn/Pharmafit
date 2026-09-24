@@ -18,14 +18,15 @@
 
 name: Conferir o site no ar
 
+# SÓ MANUAL DESDE 24/09/2026 (aba Actions → "Run workflow").
+# Rodava a cada publicação e uma vez por dia, e falhava sempre: procura o
+# site nos endereços de teste *.hostingersite.com, e a Hostinger bloqueia o
+# GitHub — 1min30 de espera, falha e e-mail de erro a cada vez. Os
+# conferidores sem internet já rodam no `publicar.yml` antes de toda
+# publicação. Para voltar a valer, a variável SITE_URL precisa apontar
+# para o domínio de verdade e a Hostinger precisa deixar o GitHub entrar.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-  # Uma vez por dia: hospedagem que quebra sozinha existe, e é melhor saber
-  # por um aviso do que por um cliente.
-  schedule:
-    - cron: '0 11 * * *'
 
 jobs:
   conferir:
