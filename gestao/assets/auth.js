@@ -242,8 +242,29 @@
       if (!sb) return { ok: false, erro: 'Recuperação de senha exige o Supabase configurado.' };
 
       try {
-        var redirect = location.href.replace(/[^/]*$/, 'index.html');
+        /* O LINK DO E-MAIL VOLTA PARA A TELA DE SENHA NOVA (24/09/2026).
+           Antes voltava para `index.html`: a pessoa entrava no painel
+           pelo link e nunca criava a senha nova — no próximo acesso,
+           continuava sem saber a senha. */
+        var redirect = location.href.replace(/[^/]*$/, 'login.html?nova-senha=1');
         var r = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect });
+        if (r.error) return { ok: false, erro: traduzErro(r.error.message) };
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
+    /** Grava a senha nova de quem chegou pelo link do e-mail. */
+    novaSenha: async function (senha) {
+      await pronto;
+      if (!sb) return { ok: false, erro: 'Sem conexão com o banco.' };
+      try {
+        var s = await sb.auth.getSession();
+        if (!s || !s.data || !s.data.session) {
+          return { ok: false, erro: 'O link expirou ou já foi usado. Peça outro em "Esqueci minha senha".' };
+        }
+        var r = await sb.auth.updateUser({ password: senha });
         if (r.error) return { ok: false, erro: traduzErro(r.error.message) };
         return { ok: true };
       } catch (e) {

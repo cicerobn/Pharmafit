@@ -67,10 +67,40 @@
 
   /* Se a pessoa já está dentro, esta tela não tem o que fazer: manda
      para a conta em vez de pedir a senha de novo. */
-  (async function () {
-    var u = await Conta.usuario();
-    if (u) location.replace('conta.html');
-  })();
+  /* CHEGOU PELO LINK DO "ESQUECI MINHA SENHA"? (24/09/2026)
+     Então a tela é a de criar a senha nova, e o "já tem conta, vai para
+     a conta" NÃO roda: o link já traz uma sessão, e ela levaria a pessoa
+     para a conta sem nunca trocar a senha. */
+  var recuperando = /[?&]nova-senha=1/.test(location.search) || /type=recovery/.test(location.hash);
+  if (recuperando) {
+    form.hidden = true;
+    var troca = document.querySelector('.entrada__troca');
+    if (troca) troca.hidden = true;
+    var titulo = document.querySelector('.page-title');
+    if (titulo) titulo.textContent = 'Criar senha nova';
+    var formNova = document.getElementById('form-nova-senha');
+    formNova.hidden = false;
+    formNova.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      calar();
+      var s1 = document.getElementById('nova-senha').value;
+      var s2 = document.getElementById('nova-senha2').value;
+      if (s1.length < 8) return dizer('A senha precisa de pelo menos 8 caracteres.');
+      if (s1 !== s2) return dizer('As duas senhas não são iguais.');
+      var b = document.getElementById('salvar-senha');
+      b.disabled = true;
+      var r = await Conta.novaSenha(s1);
+      b.disabled = false;
+      if (!r.ok) return dizer(r.erro);
+      dizer('Senha nova salva. Abrindo a sua conta…', 'ok');
+      setTimeout(function () { location.replace('conta.html'); }, 1200);
+    });
+  } else {
+    (async function () {
+      var u = await Conta.usuario();
+      if (u) location.replace('conta.html');
+    })();
+  }
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();

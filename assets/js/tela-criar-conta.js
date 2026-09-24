@@ -94,8 +94,10 @@
     if (digitos(telefone).length < 10) {
       return dizer('O WhatsApp precisa do DDD e do número completo.');
     }
-    if (senha.length < 6) {
-      return dizer('A senha precisa de pelo menos 6 caracteres.');
+    /* 8, e não 6, desde 24/09/2026: senha de 6 se adivinha rápido, e o
+       Supabase do projeto passa a exigir 8 também. */
+    if (senha.length < 8) {
+      return dizer('A senha precisa de pelo menos 8 caracteres.');
     }
     if (senha !== senha2) {
       return dizer('As duas senhas estão diferentes.');
