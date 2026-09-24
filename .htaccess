@@ -21,6 +21,26 @@ AddDefaultCharset UTF-8
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
+# ---- proteção contra gente mal-intencionada (24/09/2026) --
+# Brian: "deixar o site seguro contra pessoas mal intencionadas".
+#  · nosniff: o navegador não "adivinha" que um arquivo é script.
+#  · SAMEORIGIN: nenhum site de fora consegue abrir o nosso dentro de
+#    uma moldura invisível para enganar o clique (clickjacking) — o
+#    golpe clássico contra o painel.
+#  · Referrer: sites de fora não recebem o endereço completo de onde
+#    a pessoa veio (ex.: "gestao/cliente.html?c=Nome do Cliente").
+#  · Permissions: câmera, microfone e localização desligados — o site
+#    não usa nenhum dos três, então nenhum script pode pedi-los.
+#  · HSTS: depois da primeira visita o navegador só aceita HTTPS,
+#    e ninguém no meio do Wi-Fi rebaixa a conexão para HTTP.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+  Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
 # ---- tipos de arquivo ------------------------------------
 <IfModule mod_mime.c>
   AddType application/manifest+json .webmanifest

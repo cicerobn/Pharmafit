@@ -308,7 +308,7 @@
       '<div class="product__pe">' +
         '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
       '</div>' +
-      '<p class="product__installment">' + Preco.htmlParcelas(p.venda) + '</p>';
+      '<p class="product__installment">' + Preco.htmlParcelas(p.venda, p.parcelas, p.parcelaValor) + '</p>';
   }
 
   /* ---------- grade de produtos ---------- */
@@ -717,7 +717,7 @@
        quer a lista toda vai em Produtos, na barra de baixo. */
     var destaques = visiveis().slice(0, 3);
 
-    trilho.innerHTML = destaques.map(function (p, i) {
+    trilho.innerHTML = destaques.map(function (p) {
       return '' +
         /* O CARTÃO INTEIRO LEVA AO PRODUTO, MAS ELE NÃO É MAIS UMA
            ÂNCORA — e a diferença é o botão de comprar.
@@ -747,17 +747,27 @@
              menor, porque o cartão tem 110px (ver `.protocol .fav`). */
           coracaoHtml +
           molduraFoto(p, 'protocol__media') +
-            /* A ETIQUETA SÓ NO PRIMEIRO.
-               Até 23/09/2026 os três levavam "MAIS PROCURADO", porque a
-               etiqueta falava da fila e não do produto. Na foto que o
-               Brian mandou nesse dia ("exatamente assim") só o primeiro
-               tem — e faz sentido: três etiquetas iguais lado a lado não
-               distinguem nada, e uma só aponta o mais procurado de fato,
-               que é o primeiro da ordem que a equipe escolhe no painel.
-               A etiqueta que a equipe escolhe para cada produto (mais
-               vendido / promoção) continua mandando na LISTA de produtos
-               e na página do produto. */
-            (i === 0 ? etiquetaHtml({ destaque: 'mais-procurado' }, 'badge') : '') +
+            /* A ETIQUETA QUE A EQUIPE ESCOLHEU PARA O PRODUTO.
+               Até 24/09/2026 aqui ia "MAIS PROCURADO" sempre no primeiro
+               cartão (`i === 0`), e a escolha do painel era ignorada
+               nesta fila. Brian: "Esse selo só tá aparecendo nesse
+               produto, a opção de eu mesmo alterar e escolher qual
+               produto não tá funcionando". Agora vale o que está no
+               painel (Produtos → etiqueta), aqui e na lista. */
+            etiquetaHtml(p, 'badge') +
+            /* O DESCONTO EM VERMELHO, NO PÉ DA FOTO.
+               Brian, 24/09/2026: "Os descontos da cx que aparece em
+               vermelho só aparece quando clicar em ver todos os
+               produtos, não está aparecendo nos destaques". Ele saiu
+               daqui porque ao lado do preço não cabia na coluna de 92px
+               e desalinhava os três preços (ver o comentário do preço,
+               abaixo). Sobre a foto, no canto de baixo, ele não mexe em
+               altura nenhuma: a fileira continua alinhada. */
+            (p.antes && !semEstoque(p) && Preco.desconto(p.antes, p.venda)
+              ? '<span class="selo-off protocol__off' +
+                  (Preco.desconto(p.antes, p.venda) >= 20 ? ' selo-off--forte' : '') + '">' +
+                  '<span>-' + Preco.desconto(p.antes, p.venda) + '%</span></span>'
+              : '') +
             /* 300px: aqui o cartão tem ~110px, e os três estão no alto
                da página inicial — nenhum deles é preguiçoso. */
             fotoHtml(p, 300, true) +
@@ -793,9 +803,10 @@
                três cartões ficavam com o preço em alturas diferentes —
                um com o preço no pé, dois com preço e selo no meio.
                Parecia desalinhado porque estava.
-               Nada se perde: a etiqueta PROMOÇÃO em cima da foto já diz
-               que é promoção, e a porcentagem com o preço antigo
-               riscado está na lista de produtos e na página do produto. */
+               Desde 24/09/2026 a porcentagem voltou a esta fila, mas
+               sobre a foto (`.protocol__off`), onde não desalinha nada;
+               o preço antigo riscado continua na lista e na página do
+               produto. */
             '<p class="protocol__valor">' + Preco.formatar(p.venda) + '</p>' +
             /* O MESMO BOTÃO DA VITRINE, num tamanho que cabe em 92px de
                coluna (`--curto`). Os três da fila estão sempre em

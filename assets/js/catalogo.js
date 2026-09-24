@@ -21,7 +21,8 @@
      estoque -> null = sem controle de estoque; número = controla e
                 desconta a cada venda confirmada (0 = "sem estoque",
                 o site troca o botão por "Avise-me quando chegar")
-     parcelas-> quantas vezes sem juros (padrão 3)
+     parcelas-> quantas vezes (padrão 3; 0 = sem parcelamento). No banco,
+                `parcela_valor` escolhe o valor de cada uma (ver `parcelamento`)
 
    ---------------------------------------------------------
    PREÇO POR QUANTIDADE (atacado) — opcional
@@ -192,26 +193,54 @@ window.PharmaFitPreco = {
     });
   },
 
+  /**
+   * O PARCELAMENTO DE UM PRODUTO, ESCOLHIDO NO PAINEL.
+   *
+   * Brian, 24/09/2026: "falta o 3x sem juros lá pra mim mesmo escolher
+   * o valor que aparece, e quantas vezes". Até aqui era sempre 3x, com
+   * o valor calculado — nenhum campo mudava isso.
+   *
+   * Agora cada produto tem, no painel, `parcelas` (quantas vezes; 0 =
+   * não mostra parcelamento) e `parcela_valor` (opcional). Sem valor
+   * escolhido, a parcela é o preço dividido e a frase diz "sem juros".
+   * COM valor escolhido, a frase só diz "sem juros" se as parcelas
+   * somarem o preço: parcela que soma mais que o preço à vista é
+   * parcela COM juros, e escrever "sem juros" nela seria propaganda
+   * enganosa. Aí sai "ou 3x de R$ 366,33", sem a promessa.
+   *
+   * Devolve null quando não há o que mostrar.
+   */
+  parcelamento: function (valor, vezes, valorParcela) {
+    vezes = (vezes === undefined || vezes === null || vezes === '') ? 3 : Number(vezes);
+    valor = Number(valor || 0);
+    if (!(vezes >= 1) || !(valor > 0)) return null;
+    var escolhido = Number(valorParcela) > 0 ? Number(valorParcela) : 0;
+    var cada = escolhido || valor / vezes;
+    return {
+      vezes: vezes,
+      cada: cada,
+      semJuros: cada * vezes <= valor + 0.01
+    };
+  },
+
   /** Valor de cada parcela sem juros (padrão: 3x). */
   parcela: function (valor, vezes) {
     vezes = vezes || 3;
     return Number(valor || 0) / vezes;
   },
 
-  /** "ou 3x sem juros de R$ 333,00"
+  /** "ou 3x sem juros de R$ 333,00" — ou "ou 3x de R$ 366,33" com juros.
    *
    * Era "ou EM ATÉ 3x…". As duas palavras saíram por medida, não por
    * gosto: com elas a frase pedia 150px e a coluna do cartão da
    * vitrine tem 146 — quatro pixels custavam uma linha inteira (14px
    * de altura) em TODO cartão, num cartão que o Brian pediu menor
-   * (18/09/2026). Medi as duas saídas e escolhi esta: diminuir a letra
-   * para caber deixaria o texto menos legível, e o site sempre calcula
-   * em 3 vezes, então "ou 3x" diz o mesmo que "ou em até 3x" sem
-   * prometer nada diferente. */
-  textoParcelas: function (valor, vezes) {
-    vezes = vezes || 3;
-    return 'ou ' + vezes + 'x sem juros de ' +
-      window.PharmaFitPreco.formatar(window.PharmaFitPreco.parcela(valor, vezes));
+   * (18/09/2026). */
+  textoParcelas: function (valor, vezes, valorParcela) {
+    var P = window.PharmaFitPreco;
+    var c = P.parcelamento(valor, vezes, valorParcela);
+    if (!c) return '';
+    return 'ou ' + c.vezes + 'x ' + (c.semJuros ? 'sem juros ' : '') + 'de ' + P.formatar(c.cada);
   },
 
   /**
@@ -227,14 +256,15 @@ window.PharmaFitPreco = {
    * partir "ou 3x sem juros de R$ 366,33" em pedaços faria a frase
    * inteira deixar de casar. Por isso cada pedaço aqui é uma frase
    * fechada, com o seu próprio padrão em `idioma-es.js`:
-   *   "3x sem juros"  ·  "de R$ 366,33"
+   *   "3x sem juros" (ou "3x")  ·  "de R$ 366,33"
    */
-  htmlParcelas: function (valor, vezes) {
-    vezes = vezes || 3;
+  htmlParcelas: function (valor, vezes, valorParcela) {
     var P = window.PharmaFitPreco;
+    var c = P.parcelamento(valor, vezes, valorParcela);
+    if (!c) return '';
     return '<span class="parcela">' +
-        '<span class="parcela__chip">' + vezes + 'x sem juros</span>' +
-        '<span class="parcela__valor">de ' + P.formatar(P.parcela(valor, vezes)) + '</span>' +
+        '<span class="parcela__chip">' + c.vezes + 'x' + (c.semJuros ? ' sem juros' : '') + '</span>' +
+        '<span class="parcela__valor">de ' + P.formatar(c.cada) + '</span>' +
       '</span>';
   },
 
