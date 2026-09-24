@@ -46,8 +46,6 @@ on:
 
 permissions:
   contents: write
-  # Para o último passo poder chamar o `conferir-site.yml` depois do merge.
-  actions: write
 
 jobs:
   publicar:
@@ -211,12 +209,9 @@ jobs:
 
           echo "No ar: a Hostinger publica a main."
 
-          echo "No ar: a Hostinger publica a main."
-
-      # O push acima foi feito com o token do Actions, e push com esse token
-      # não dispara workflow nenhum — inclusive não dispara o `conferir-site`,
-      # que é quem olha o site DEPOIS de publicado. Então ele é chamado aqui.
-      - name: Chamar a conferência do site no ar
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run conferir-site.yml --ref main
+      # AQUI ESTE ARQUIVO CHAMAVA O `conferir-site.yml` (24/09/2026: saiu).
+      # Ele repetia todos os conferidores acima e depois tentava abrir o
+      # site nos endereços antigos *.hostingersite.com — que a Hostinger
+      # bloqueia para o GitHub. Resultado: 1min30 de espera e falha em
+      # TODA publicação, há dias, com e-mail de erro para o Brian. Ele
+      # continua existindo, só que manual (aba Actions → Run workflow).
