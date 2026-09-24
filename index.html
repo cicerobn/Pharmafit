@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=797209fa">
+<link rel="stylesheet" href="assets/css/styles.css?v=dd5f2289">
 </head>
 <body>
 
@@ -80,88 +80,40 @@
   </header>
 
   <!-- ===== hero ===== -->
-  <section class="hero">
-    <div class="hero__grid">
-      <div class="hero__copy">
-        <h1 class="hero__title">Sua jornada de <em>saúde</em> e <em>performance</em> começa aqui</h1>
-        <!-- O TRACINHO DOURADO SAIU DAQUI.
-             Brian, 18/09/2026, com o recorte dele: "Tire essa linha".
-             Identifiquei qual das linhas do site era medindo o recorte:
-             o fundo dele é #fdfdfd, que no site inteiro só existe neste
-             bloco, e a linha era dourada de 3px de altura — o `.rule`.
-             Ele existia para separar o título do parágrafo de apoio.
-             Esse parágrafo saiu hoje, também a pedido dele, e o
-             tracinho ficou fechando um texto que não tem mais nada
-             embaixo. Ele continua embaixo do título das outras páginas;
-             saiu da inicial e de Produtos, que são as duas que ele
-             apontou. -->
-        <!-- O TEXTO DE APOIO DO TOPO SAIU DAQUI.
-             Brian, 18/09/2026, com a foto do parágrafo: "Tire essas
-             escritas". Era "Tratamentos com tirzepatida e acompanhamento
-             especializado para transformar seu corpo, sua mente e seu
-             bem-estar. Atendimento no Paraguai 🇵🇾".
+  <section class="hero hero--banner">
+    <!-- O TOPO VIROU UM BANNER SÓ, A FOTO QUE ELE MANDOU.
+         Brian, 24/09/2026: "quero que a imagem vire banner". A imagem
+         já traz o título escrito nela ("Sua jornada de saúde e
+         performance começa aqui"), com o frasco, a seringa e o anel
+         dourado — então o título que o site escrevia por cima da foto
+         antiga saiu da tela: ficaria repetido.
 
-             Nada do que ele dizia se perdeu de vista: as categorias
-             logo abaixo mostram tirzepatida, retatrutida e peptídeos
-             com nome e contagem, e o rodapé e o menu dizem onde é o
-             atendimento. O parágrafo repetia em prosa o que a tela já
-             mostra em objeto — e empurrava a primeira fila de produtos
-             para baixo da dobra no celular.
+         O TÍTULO CONTINUA NA PÁGINA, SÓ QUE ESCONDIDO DOS OLHOS
+         (`.visually-hidden`). Texto dentro de foto não é lido pelo
+         Google nem pelo leitor de tela de quem não enxerga; o `<h1>` é
+         o que diz aos dois do que a página trata. O `alt` da imagem
+         fica vazio de propósito: o leitor de tela já leu o título e
+         diria a mesma frase duas vezes.
+         Consequência que ele sabe: em espanhol o banner continua em
+         português — a frase é parte da foto.
 
-             O traço (`.rule`) FICA. Ele separava o título do texto e
-             agora fecha o título: sem ele, o título encosta na foto e
-             no bloco de categorias sem nada marcando onde o topo
-             termina. -->
+         A foto chegou como print, com a barrinha de rolagem cinza na
+         borda direita (9px); os WebP são a imagem SEM essa faixa, em
+         dois tamanhos (20 KB no celular, 39 KB no computador). O .jpg
+         original fica guardado ao lado, como ele mandou.
 
-        <!-- A DESCRIÇÃO DA ABA NÃO MUDOU, e é de propósito: a
-             `<meta name="description">` lá em cima continua dizendo o
-             que a Pharma Fit faz. Ela não aparece na tela — aparece no
-             Google e no quadradinho do WhatsApp, onde não há categoria
-             nenhuma embaixo para explicar o que este site é. -->
-
-        <!-- O BOTÃO "Quero meu atendimento" SAIU DAQUI.
-             Brian pediu para tirar em 17/09/2026. Ele estava no
-             desenho que o próprio Brian mandou, então não é
-             engano meu de composição — é decisão dele, depois de
-             ver no ar.
-             O caminho para o atendimento não se perdeu: continua
-             no "Atendimento" da barra de baixo, que aparece em
-             todas as 16 páginas, e no menu. -->
-      </div>
-      <!-- A FOTO DO TOPO, DO JEITO QUE ELE DESENHOU.
-           Ele mandou a imagem em 17/09/2026 e depois mandou o desenho
-           da tela: "tem que ficar exatamente assim". Nele a foto é o
-           FUNDO do topo — encostada na direita, entrando por trás da
-           barra de cima — e o título e o texto ficam POR CIMA dela, na
-           parte branca da esquerda. A composição foi feita para isso: o
-           branco da esquerda existe para o texto morar nele.
-
-           É A IMAGEM INTEIRA, não recortada. Eu havia cortado 188px da
-           esquerda quando ela era um cartão enquadrado, e isso mudava a
-           proporção (0,99 em vez de 1,155): a foto ficava mais alta que
-           larga e o desenho dele não fechava. Os pontos que dão para
-           reconhecer nas duas imagens — o arco do anel, a borda do
-           frasco, a folha cortada na direita, a base de mármore —
-           batem com a imagem inteira, e é ela que está aqui.
-
-           1.395 KB viraram 42 KB e 21 KB em WebP, em dois tamanhos: no
-           topo da página, peso é tempo de espera no 4G, e esta é a
-           primeira coisa que o cliente vê.
-
-           `width`/`height` com a medida REAL do arquivo — o 1160 que
-           estava aqui era errado e fazia o navegador reservar um
-           espaço que não era o da foto. `fetchpriority="high"` porque
-           ela está acima da dobra: adiar a imagem do topo é adiar a
-           primeira impressão. -->
-      <img class="hero__art hero__art--foto"
-           src="assets/img/hero-tirzepatida-620.webp"
-           srcset="assets/img/hero-tirzepatida-620.webp 620w,
-                   assets/img/hero-tirzepatida-1040.webp 1040w"
-           sizes="(min-width:900px) 520px, 76vw"
-           width="1348" height="1167"
-           fetchpriority="high"
-           alt="Frasco de tirzepatida Pharma Fit ao lado de uma seringa">
-    </div>
+         `width`/`height` com a medida real (1240×740) para o navegador
+         reservar o espaço certo antes de a foto chegar, e
+         `fetchpriority="high"` porque é a primeira coisa da tela. -->
+    <h1 class="visually-hidden">Sua jornada de saúde e performance começa aqui</h1>
+    <img class="hero__banner"
+         src="assets/img/banner-jornada-saude-640.webp"
+         srcset="assets/img/banner-jornada-saude-640.webp 640w,
+                 assets/img/banner-jornada-saude-1240.webp 1240w"
+         sizes="(min-width:900px) 820px, 100vw"
+         width="1240" height="740"
+         fetchpriority="high"
+         alt="">
   </section>
 
   <!-- ===== categorias =====
@@ -364,7 +316,7 @@
 <script src="assets/js/catalogo-banco.js?v=ea2ffecd" defer></script>
 <script src="assets/js/loja.js?v=cb890991" defer></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb" defer></script>
-<script src="assets/js/idioma-es.js?v=b29dc32e" defer></script>
+<script src="assets/js/idioma-es.js?v=5a854648" defer></script>
 <script src="assets/js/idioma.js?v=81611de9" defer></script>
 <script src="assets/js/app.js?v=83df186b" defer></script>
 <script src="assets/js/favoritos.js?v=3adc8c87" defer></script>
