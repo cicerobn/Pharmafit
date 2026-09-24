@@ -62,6 +62,16 @@
           </label>
         </div>
 
+        <!-- LIMITE DE PESSOAS (desde 24/09/2026): "só as 50 primeiras
+             pessoas". Conta pessoas pelo telefone, e não pedidos — quem
+             leva três produtos grava três linhas e continua sendo uma
+             pessoa só. Vazio = sem limite. -->
+        <label class="campo">
+          <span class="campo__rotulo">Limite de pessoas (opcional)</span>
+          <input type="text" inputmode="numeric" data-cupom-limite autocomplete="off"
+                 placeholder="Ex.: 50 — vazio = sem limite">
+        </label>
+
         <p class="folha__recado" data-cupom-recado role="status" hidden></p>
         <button class="botao botao--forte" type="submit" data-cupom-criar>Criar cupom</button>
       </form>
@@ -86,6 +96,6 @@
 <script src="../assets/dados.js?v=6d871582"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
 <script src="app.js?v=ed2f7d61"></script>
-<script src="cupons.js?v=daa197e0"></script>
+<script src="cupons.js?v=a7fc2df8"></script>
 </body>
 </html>

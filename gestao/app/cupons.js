@@ -7,8 +7,9 @@
    A equipe cria o cupom aqui, com o código, o tipo (porcentagem ou
    valor fixo), o valor e, se quiser, até quando ele vale. O cliente
    digita o código no carrinho do site; quem responde se vale é a
-   função `pf_cupom` do banco, que só enxerga cupom LIGADO e dentro da
-   validade. Desligar aqui tira o cupom do site na hora.
+   função `pf_cupom` do banco, que só enxerga cupom LIGADO, dentro da
+   validade e, quando tem limite de pessoas, com vaga sobrando.
+   Desligar aqui tira o cupom do site na hora.
 
    ESTA TELA FALA COM O BANCO DIRETO, e não pelo `dados.js`: lá, quando
    o banco erra, a lista cai em silêncio para o que está guardado no
@@ -56,6 +57,9 @@
   /** Em que pé o cupom está, do jeito que o site vai tratá-lo. */
   function situacao(c) {
     if (!c.ativo) return { texto: 'Desligado', classe: 'cancelado' };
+    if (c.limite_pessoas && usosDe(c) >= c.limite_pessoas) {
+      return { texto: 'Esgotado', classe: 'pendente' };
+    }
     if (c.valido_ate && String(c.valido_ate).slice(0, 10) < hojeManaus()) {
       return { texto: 'Vencido', classe: 'pendente' };
     }
@@ -72,6 +76,30 @@
   /* ---------- a lista ---------- */
 
   var cupons = [];
+  /* código → quantas PESSOAS já usaram (telefones diferentes) */
+  var usos = {};
+
+  function usosDe(c) { return usos[c.codigo] || 0; }
+
+  /* A MESMA CONTA DO BANCO. A função `pf_cupom`, que decide se o
+     cupom ainda vale no site, conta telefones diferentes (só os
+     dígitos) entre os pedidos com aquele código. Aqui conta igual, para
+     o "12 de 50" da tela bater com o que o site faz: se as duas contas
+     divergissem, o painel diria "valendo" para um cupom que o site já
+     recusa. */
+  async function carregarUsos(sb) {
+    usos = {};
+    var r = await sb.from('pf_pedidos').select('cupom,telefone')
+      .not('cupom', 'is', null).limit(10000);
+    if (r.error) return;
+    var vistos = {};
+    (r.data || []).forEach(function (p) {
+      var chave = p.cupom + '|' + String(p.telefone || '').replace(/\D/g, '');
+      if (vistos[chave]) return;
+      vistos[chave] = true;
+      usos[p.cupom] = (usos[p.cupom] || 0) + 1;
+    });
+  }
 
   async function carregar() {
     var sb = Auth.cliente();
@@ -79,6 +107,7 @@
     var r = await sb.from('pf_cupons').select('*').order('criado_em', { ascending: false });
     if (r.error) { cupons = []; return r.error.message; }
     cupons = r.data || [];
+    await carregarUsos(sb);
     return '';
   }
 
@@ -98,11 +127,16 @@
     lista.innerHTML = cupons.map(function (c) {
       var s = situacao(c);
       var validade = c.valido_ate ? 'vale até ' + dataBonita(c.valido_ate) : 'sem data para acabar';
+      var n = usosDe(c);
+      var quantos = c.limite_pessoas
+        ? n + ' de ' + c.limite_pessoas + (c.limite_pessoas === 1 ? ' pessoa' : ' pessoas')
+        : (n === 1 ? '1 pessoa usou' : n + ' pessoas usaram');
       return '<li class="item cupom-linha" data-id="' + U.esc(c.id) + '">' +
         '<span class="item__icone">' + Moldura.svg('etiqueta', 19, 1.6) + '</span>' +
         '<span class="item__corpo">' +
           '<span class="item__nome cupom-linha__codigo">' + U.esc(c.codigo) + '</span>' +
-          '<span class="item__linha">' + U.esc(descricao(c)) + ' · ' + U.esc(validade) + '</span>' +
+          '<span class="item__linha">' + U.esc(descricao(c)) + ' · ' + U.esc(validade) +
+            ' · ' + U.esc(quantos) + '</span>' +
           '<span class="cupom-linha__acoes">' +
             '<button class="cupom-linha__botao" type="button" data-alternar>' +
               (c.ativo ? 'Desligar' : 'Ligar') + '</button>' +
@@ -135,6 +169,8 @@
     var codigo = achar('cupom-codigo').value.trim().toUpperCase().replace(/\s+/g, '');
     var valor = numero(achar('cupom-valor').value);
     var ate = achar('cupom-ate').value || null;
+    var limiteTexto = achar('cupom-limite').value.trim();
+    var limite = limiteTexto ? (/^\d+$/.test(limiteTexto) ? Number(limiteTexto) : NaN) : null;
 
     if (!/^[A-Z0-9_-]{3,24}$/.test(codigo)) {
       achar('cupom-codigo').focus();
@@ -148,6 +184,10 @@
       achar('cupom-valor').focus();
       return dizer('Porcentagem vai até 100%.', false);
     }
+    if (limiteTexto && !(Number.isInteger(limite) && limite > 0)) {
+      achar('cupom-limite').focus();
+      return dizer('O limite de pessoas é um número inteiro maior que zero — ou deixe vazio para não ter limite.', false);
+    }
     if (ate && ate < hojeManaus()) {
       achar('cupom-ate').focus();
       return dizer('A data já passou: o cupom nasceria vencido.', false);
@@ -160,7 +200,8 @@
       var sb = Auth.cliente();
       if (!sb) throw new Error('sem conexão com o banco');
       var r = await sb.from('pf_cupons').insert({
-        codigo: codigo, tipo: tipo, valor: Math.round(valor * 100) / 100, valido_ate: ate
+        codigo: codigo, tipo: tipo, valor: Math.round(valor * 100) / 100, valido_ate: ate,
+        limite_pessoas: limite
       });
       if (r.error) {
         /* 23505 = código repetido: o índice único do banco recusou */
@@ -171,7 +212,9 @@
       achar('cupom-codigo').value = '';
       achar('cupom-valor').value = '';
       achar('cupom-ate').value = '';
+      achar('cupom-limite').value = '';
       dizer('Cupom ' + codigo + ' criado: ' + descricao({ tipo: tipo, valor: valor }) +
+            (limite ? ', para as ' + limite + ' primeiras pessoas' : '') +
             '. Ele já vale no carrinho do site.', true);
       await recarregar();
     } catch (err) {
