@@ -102,6 +102,29 @@
         </button>
       </form>
 
+      <!-- SENHA NOVA, para quem chegou pelo link do "Esqueci minha
+           senha" (24/09/2026). Antes o link levava direto ao painel e a
+           senha nova nunca era criada. -->
+      <form class="auth__form" id="form-nova" novalidate hidden>
+        <div class="alert alert--erro" id="nova-erro" role="alert"><span id="nova-erro-texto"></span></div>
+        <div class="alert alert--ok" id="nova-ok" role="status"><span id="nova-ok-texto"></span></div>
+        <div class="field">
+          <label class="field__label" for="nova-senha">Senha nova</label>
+          <div class="field__box">
+            <input type="password" id="nova-senha" autocomplete="new-password" minlength="8"
+                   placeholder="Pelo menos 8 caracteres" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="nova-senha2">Repita a senha nova</label>
+          <div class="field__box">
+            <input type="password" id="nova-senha2" autocomplete="new-password" minlength="8"
+                   placeholder="A mesma senha" required>
+          </div>
+        </div>
+        <button class="btn btn--primary btn--block" type="submit" id="nova-salvar">Salvar senha nova</button>
+      </form>
+
       <div class="note-demo" id="nota-demo" hidden>
         <b>Modo demonstração.</b> O Supabase ainda não foi configurado, então o acesso é
         validado só no navegador — não use com dados reais.
@@ -119,7 +142,7 @@
 </main>
 
 <script src="assets/config.js?v=55118931"></script>
-<script src="assets/auth.js?v=9db91d6d"></script>
+<script src="assets/auth.js?v=2fb8bdb5"></script>
 <script>
 (function () {
   'use strict';
@@ -201,7 +224,44 @@
    * novo leva para Gastos e para o Dashboard antigo. Então o novo é o
    * lugar por onde se começa, e o antigo é um dos lugares onde se
    * chega. */
-  Auth.usuario().then(function (u) { if (u) location.replace('app/inicio.html'); });
+  /* CHEGOU PELO LINK DO E-MAIL? Então a tela é a da senha nova, e o
+     "já está logado, vai ao painel" logo abaixo NÃO pode rodar: o link
+     já traz uma sessão, e ela mandaria a pessoa ao painel sem nunca
+     criar a senha. O `type=recovery` do endereço é o que o Supabase
+     põe no link; o `nova-senha=1` é o nosso, que sobrevive mesmo
+     depois de o Supabase limpar o endereço. */
+  var recuperando = /[?&]nova-senha=1/.test(location.search) || /type=recovery/.test(location.hash);
+  if (recuperando) {
+    form.hidden = true;
+    document.querySelector('.auth__title').textContent = 'Criar senha nova';
+    document.querySelector('.auth__lead').textContent = 'Escolha a senha que você vai usar daqui para frente.';
+    var formNova = document.getElementById('form-nova');
+    formNova.hidden = false;
+    var novaErro = document.getElementById('nova-erro');
+    var novaOk = document.getElementById('nova-ok');
+    var dizNova = function (msg, bom) {
+      (bom ? novaErro : novaOk).classList.remove('is-visible');
+      document.getElementById(bom ? 'nova-ok-texto' : 'nova-erro-texto').textContent = msg;
+      (bom ? novaOk : novaErro).classList.add('is-visible');
+    };
+    document.getElementById('nova-senha').focus();
+    formNova.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var s1 = document.getElementById('nova-senha').value;
+      var s2 = document.getElementById('nova-senha2').value;
+      if (s1.length < 8) return dizNova('A senha precisa de pelo menos 8 caracteres.');
+      if (s1 !== s2) return dizNova('As duas senhas não são iguais.');
+      var b = document.getElementById('nova-salvar');
+      b.disabled = true; b.textContent = 'Salvando…';
+      var r = await Auth.novaSenha(s1);
+      b.disabled = false; b.textContent = 'Salvar senha nova';
+      if (!r.ok) return dizNova(r.erro);
+      dizNova('Senha nova salva. Entrando no painel…', true);
+      setTimeout(function () { location.replace('app/inicio.html'); }, 1200);
+    });
+  } else {
+    Auth.usuario().then(function (u) { if (u) location.replace('app/inicio.html'); });
+  }
 
   /* mostrar / ocultar senha */
   document.getElementById('ver-senha').addEventListener('click', function () {

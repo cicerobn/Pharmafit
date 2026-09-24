@@ -42,8 +42,12 @@
     if (m.indexOf('already registered') !== -1 || m.indexOf('already been registered') !== -1) {
       return 'Já existe conta com este e-mail. Tente entrar.';
     }
-    if (m.indexOf('password') !== -1 && m.indexOf('6') !== -1) {
-      return 'A senha precisa de pelo menos 6 caracteres.';
+    if (m.indexOf('password') !== -1 && (m.indexOf('6') !== -1 || m.indexOf('8') !== -1 ||
+        m.indexOf('weak') !== -1 || m.indexOf('short') !== -1)) {
+      return 'A senha precisa de pelo menos 8 caracteres.';
+    }
+    if (m.indexOf('different from the old') !== -1 || m.indexOf('same password') !== -1) {
+      return 'A senha nova precisa ser diferente da antiga.';
     }
     if (m.indexOf('rate limit') !== -1 || m.indexOf('too many') !== -1) {
       return 'Muitas tentativas seguidas. Espere um minuto e tente de novo.';
@@ -304,11 +308,31 @@
       if (sb) { try { await sb.auth.signOut(); } catch (e) {} }
     },
 
+    /** Grava a senha nova de quem chegou pelo link do e-mail. */
+    novaSenha: async function (senha) {
+      var sb = await cliente();
+      if (!sb) return recadoSemBanco();
+      try {
+        var s = await sb.auth.getSession();
+        if (!s || !s.data || !s.data.session) {
+          return { ok: false, erro: 'O link expirou ou já foi usado. Peça outro em "Esqueci minha senha".' };
+        }
+        var r = await sb.auth.updateUser({ password: String(senha || '') });
+        if (r.error) return { ok: false, erro: traduzir(r.error.message) };
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: traduzir(e && e.message) };
+      }
+    },
+
     esqueciSenha: async function (email) {
       var sb = await cliente();
       if (!sb) return recadoSemBanco();
       try {
-        var volta = location.href.replace(/[^/]*$/, 'entrar.html');
+        /* `?nova-senha=1`: o link do e-mail abre a tela de criar a
+           senha nova (tela-entrar.js). Sem ele a pessoa entrava na conta
+           pelo link e nunca trocava a senha (achado em 24/09/2026). */
+        var volta = location.href.replace(/[^/]*$/, 'entrar.html?nova-senha=1');
         var r = await sb.auth.resetPasswordForEmail(String(email || '').trim(), {
           redirectTo: volta
         });
