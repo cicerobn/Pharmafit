@@ -23,6 +23,7 @@
 # =============================================================================
 
 candidatos="
+https://pharmafitmao.com.br
 https://darkblue-deer-373108.hostingersite.com
 https://powderblue-pony-338424.hostingersite.com
 "

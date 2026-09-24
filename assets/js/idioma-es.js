@@ -552,6 +552,11 @@ window.PHARMAFIT_ES_PADROES = [
      sem juros" poder ficar em destaque: o tradutor casa frase inteira
      por nó de texto, então cada pedaço precisa do seu padrão. */
   { pt: /^(\d+)x sem juros$/, es: "$1 cuotas sin interés" },
+  /* PARCELA COM JUROS (24/09/2026): quando a equipe escolhe no painel
+     um valor de parcela que soma mais que o preço, a frase sai sem o
+     "sem juros" — e precisa do seu próprio padrão. */
+  { pt: /^ou (\d+)x de (.+)$/, es: "o $1 cuotas de $2" },
+  { pt: /^(\d+)x$/, es: "$1 cuotas" },
   /* O RÓTULO DA BOLINHA DO CARRINHO, em cada cartão da vitrine. Ele
      nasceu em 18/09/2026, quando o botão escrito virou símbolo: o nome
      do produto entra dentro da frase, então ela nunca estaria no

@@ -222,7 +222,7 @@
             (desconto ? '<span class="selo-off">-' + desconto + '%</span>' : '') + '</p>'
           : '') +
         '<p class="product__price">' + Preco.formatar(item.venda) + '</p>' +
-        '<p class="product__installment">' + Preco.htmlParcelas(item.venda) + '</p>' +
+        '<p class="product__installment">' + Preco.htmlParcelas(item.venda, item.parcelas, item.parcelaValor) + '</p>' +
       '</div>';
   }
 

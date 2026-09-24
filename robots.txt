@@ -28,6 +28,6 @@ Disallow: /parceiro.html
 Disallow: /loja/
 Disallow: /loja-fonte/
 
-# Quando o domínio próprio existir, este endereço precisa ser o completo
-# (https://dominio/sitemap.xml) — a regra do robots pede endereço absoluto.
-Sitemap: /sitemap.xml
+# Endereço completo desde 24/09/2026, com o domínio próprio: a regra do
+# robots pede endereço absoluto, e "/sitemap.xml" sozinho era ignorado.
+Sitemap: https://pharmafitmao.com.br/sitemap.xml

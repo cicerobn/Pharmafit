@@ -1054,6 +1054,20 @@ body:has(.hero__banner) .topbar{
   inset:0;
   z-index:1;
 }
+/* O "-23%" DOS DESTAQUES, no canto de baixo da foto (24/09/2026).
+   Menor que o da lista porque o cartão tem 110px; `position` absoluta
+   para não empurrar nome nem preço — é o que mantém os três preços na
+   mesma altura. A moldura da foto (`.protocol__media`) é a referência. */
+.protocol .protocol__off{
+  position:absolute;
+  left:6px;
+  bottom:6px;
+  z-index:3;
+  font-size:9px;
+  padding:2px 6px;
+  border-radius:6px;
+}
+
 .protocol__valor{
   /* `margin-top:auto` encosta o preço no pé do cartão, então os três
      ficam com o preço na MESMA altura mesmo quando um nome ocupa uma

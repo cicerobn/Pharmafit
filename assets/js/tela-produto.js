@@ -260,7 +260,7 @@
       }
       achar('valor').textContent = moeda(produto.venda);
       achar('parcelas').textContent = Preco && Preco.textoParcelas
-        ? Preco.textoParcelas(produto.venda) : '';
+        ? Preco.textoParcelas(produto.venda, produto.parcelas, produto.parcelaValor) : '';
       return;
     }
 

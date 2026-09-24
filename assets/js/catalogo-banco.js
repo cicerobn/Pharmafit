@@ -122,6 +122,15 @@
         p.destaque = b.destaque || '';
       }
 
+      /* O PARCELAMENTO que a equipe escolhe no painel (24/09/2026).
+         Mesma regra da etiqueta: só quando a coluna veio. `parcelas` 0
+         é escolha ("não mostrar parcelamento"), e por isso vale mesmo
+         sendo zero. */
+      if (Object.prototype.hasOwnProperty.call(b, 'parcelas')) {
+        p.parcelas = b.parcelas;
+        p.parcelaValor = b.parcela_valor || 0;
+      }
+
       mudou = true;
     });
 
@@ -140,7 +149,9 @@
            melhor que um retângulo vazio do tamanho de uma foto */
         imagem: b.imagem || 'assets/img/prod-frasco.svg',
         fotoDeVerdade: !!b.imagem,
-        destaque: b.destaque || ''
+        destaque: b.destaque || '',
+        parcelas: b.parcelas,
+        parcelaValor: b.parcela_valor || 0
       });
       mudou = true;
     });

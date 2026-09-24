@@ -121,6 +121,7 @@
   /* A etiqueta escolhida, ao lado da situação, na lista. */
   var NOME_ETIQUETA = {
     'mais-vendido': { texto: 'Mais vendido', classe: 'vendido' },
+    'mais-procurado': { texto: 'Mais procurado', classe: 'vendido' },
     'promocao': { texto: 'Promoção', classe: 'promo' }
   };
 
@@ -288,6 +289,12 @@
     return !!p && Object.prototype.hasOwnProperty.call(p, 'destaque');
   }
 
+  /* O PARCELAMENTO, com a mesma regra: o campo só aparece quando a
+     coluna `parcelas` veio na linha do produto (24/09/2026). */
+  function podeParcelar(p) {
+    return !!p && Object.prototype.hasOwnProperty.call(p, 'parcelas');
+  }
+
   function podeTrocarFoto(p) {
     var sb = window.PharmaFitAuth && window.PharmaFitAuth.cliente
       ? window.PharmaFitAuth.cliente() : null;
@@ -420,6 +427,28 @@
           '</div>' +
         '</div>' +
 
+        /* O PARCELAMENTO QUE O CLIENTE VÊ ("ou 3x sem juros de…").
+           Brian, 24/09/2026: "falta o 3x sem juros lá pra mim mesmo
+           escolher o valor que aparece, e quantas vezes". Valor vazio =
+           o site divide o preço e escreve "sem juros". Valor que soma
+           mais que o preço = o site escreve só "3x de R$ …", sem
+           prometer "sem juros" (ver `parcelamento` no catalogo.js). */
+        '<div class="folha__linha" data-parcelamento hidden>' +
+          '<div class="campo" data-campo="parcelas">' +
+            '<label class="campo__rotulo" for="ed-parcelas">Parcelas</label>' +
+            '<input type="number" id="ed-parcelas" min="0" max="24" step="1" inputmode="numeric" ' +
+              'placeholder="3">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+          '<div class="campo" data-campo="parcela-valor">' +
+            '<label class="campo__rotulo" for="ed-parcela-valor">Valor da parcela (R$)</label>' +
+            '<input type="number" id="ed-parcela-valor" min="0" step="0.01" inputmode="decimal" ' +
+              'placeholder="vazio = preço ÷ parcelas">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+        '</div>' +
+        '<p class="campo__nota" data-parcelamento-nota hidden></p>' +
+
         /* A ETIQUETA QUE O CLIENTE VÊ NO CARTÃO.
            Brian, 18/09/2026: "Deixe que essas barras de 'mais vendido,
            promocao' esteja so em alguns produtos especificos que eu
@@ -432,6 +461,7 @@
           '<label class="campo__rotulo" for="ed-destaque">Etiqueta na vitrine</label>' +
           '<select id="ed-destaque" data-destaque>' +
             '<option value="">Nenhuma</option>' +
+            '<option value="mais-procurado">Mais procurado (dourada)</option>' +
             '<option value="mais-vendido">Mais vendido (dourada)</option>' +
             '<option value="promocao">Promoção (vermelha)</option>' +
           '</select>' +
@@ -475,6 +505,9 @@
     desc.addEventListener('input', function () { conta.textContent = desc.value.length; });
 
     folha.querySelector('#ed-preco').addEventListener('input', pintarLucro);
+    folha.querySelector('#ed-preco').addEventListener('input', mostrarParcelamento);
+    folha.querySelector('#ed-parcelas').addEventListener('input', mostrarParcelamento);
+    folha.querySelector('#ed-parcela-valor').addEventListener('input', mostrarParcelamento);
     folha.querySelector('#ed-custo').addEventListener('input', pintarLucro);
 
     var arquivo = folha.querySelector('[data-arquivo-foto]');
@@ -645,6 +678,25 @@
     }
   }
 
+  /* A FRASE EXATA QUE O SITE VAI MOSTRAR, enquanto ele digita — com a
+     mesma conta do site (`PharmaFitPreco.textoParcelas`), para a prévia
+     nunca prometer "sem juros" onde o site não vai escrever. */
+  function mostrarParcelamento() {
+    var nota = folha.querySelector('[data-parcelamento-nota]');
+    if (folha.querySelector('[data-parcelamento]').hidden || !window.PharmaFitPreco) {
+      nota.hidden = true;
+      return;
+    }
+    var preco = numero(folha.querySelector('#ed-preco'));
+    var vezes = numero(folha.querySelector('#ed-parcelas'));
+    var cada = numero(folha.querySelector('#ed-parcela-valor'));
+    var frase = window.PharmaFitPreco.textoParcelas(preco, vezes === null ? 3 : vezes, cada);
+    nota.hidden = false;
+    nota.textContent = frase
+      ? 'No site vai aparecer: "' + frase + '".'
+      : 'No site: sem linha de parcelamento.';
+  }
+
   function numero(el) {
     var t = String(el.value || '').trim().replace(',', '.');
     if (t === '') return null;
@@ -714,6 +766,8 @@
     var categoria = folha.querySelector('[data-categoria]').value;
     var ativo = folha.querySelector('[data-ativo]').checked;
     var destaque = String(folha.querySelector('[data-destaque]').value || '');
+    var parcelas = numero(folha.querySelector('#ed-parcelas'));
+    var parcelaValor = numero(folha.querySelector('#ed-parcela-valor'));
 
     var ruim = false;
     if (nome.length < 2) { erroNo('nome', 'Escreva o nome do produto.'); ruim = true; }
@@ -749,6 +803,15 @@
                          'ou escolha outra etiqueta.');
       ruim = true;
     }
+    if (podeParcelar(editando)) {
+      if (parcelas !== null && (isNaN(parcelas) || parcelas < 0 || parcelas > 24 ||
+                                !Number.isInteger(parcelas))) {
+        erroNo('parcelas', 'De 0 a 24, sem vírgula. 0 = não mostrar parcelamento.'); ruim = true;
+      }
+      if (parcelaValor !== null && (isNaN(parcelaValor) || parcelaValor < 0)) {
+        erroNo('parcela-valor', 'Valor inválido.'); ruim = true;
+      }
+    }
     if (ruim) return;
 
     var botao = folha.querySelector('[data-salvar]');
@@ -772,6 +835,10 @@
          o salvar INTEIRO — a equipe perderia a mudança de preço por
          causa de uma coluna que falta. */
       if (podeEtiquetar(editando)) campos.destaque = destaque || null;
+      if (podeParcelar(editando)) {
+        campos.parcelas = parcelas === null ? 3 : parcelas;
+        campos.parcela_valor = parcelaValor > 0 ? Math.round(parcelaValor * 100) / 100 : null;
+      }
 
       var urlVelha = editando.imagem || '';
       if (podeTrocarFoto(editando)) {
@@ -837,6 +904,12 @@
     var caixaEtiqueta = folha.querySelector('[data-campo="destaque"]');
     caixaEtiqueta.hidden = !podeEtiquetar(p);
     folha.querySelector('[data-destaque]').value = String(p.destaque || '');
+
+    folha.querySelector('[data-parcelamento]').hidden = !podeParcelar(p);
+    folha.querySelector('#ed-parcelas').value =
+      p.parcelas === undefined || p.parcelas === null ? '' : p.parcelas;
+    folha.querySelector('#ed-parcela-valor').value = Number(p.parcela_valor) > 0 ? p.parcela_valor : '';
+    mostrarParcelamento();
 
     /* Atendente não vê o preço de compra: o campo sai da folha, e a
        linha de lucro com ele. Campo escondido também não é enviado no
