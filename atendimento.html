@@ -23,7 +23,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="assets/css/styles.css?v=0091c356">
+<link rel="stylesheet" href="assets/css/styles.css?v=797209fa">
 </head>
 <body>
 
@@ -172,22 +172,31 @@
            pessoa quer, que é justamente o que este campo evita. -->
       <fieldset class="atend-inter">
         <legend class="field__label">Tenho interesse em:</legend>
+        <!-- AS OPÇÕES SÃO AS CATEGORIAS DA LOJA, e não objetivos.
+             Brian, 25/09/2026: "coloque as opções de Tenho interesse em:
+             Tirzepatida - Retatrutida - Peptideos - Gostaria de mais
+             informações". Eram Tirzepatida, Emagrecimento, Performance e
+             Bem-estar — três objetivos e um produto misturados. Agora são
+             as três categorias do catálogo, com os mesmos desenhos dos
+             discos da página inicial, e uma saída para quem ainda não sabe
+             o que quer. "Mais informações" ocupa a linha inteira: é a frase
+             mais longa e, cortada com "…", deixaria de dizer o que é. -->
         <div class="atend-inter__lista" data-interesses>
           <button class="atend-chip is-vale" type="button" data-interesse="Tirzepatida" aria-pressed="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3l7 7-9 9-7-7z"/><path d="M8.5 8.5 15 15"/><path d="M3 21l3-1"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="10.2" y="2.4" width="3.6" height="3.4" rx="1.2"/><rect x="9.2" y="5.6" width="5.6" height="12" rx="1.9"/><path d="M10.8 8.8h2.4"/><path d="M12 17.6v3.6"/></svg>
             <span>Tirzepatida</span>
           </button>
-          <button class="atend-chip" type="button" data-interesse="Emagrecimento" aria-pressed="false">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-8.5-8.5"/><path d="M12 12l5-3"/><path d="M12 3.5V7"/></svg>
-            <span>Emagrecimento</span>
+          <button class="atend-chip" type="button" data-interesse="Retatrutida" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 8.1 13.4 10.5v4.8l-4.2 2.4-4.2-2.4v-4.8z"/><path d="m13.4 10.5 2.5-1.4"/><circle cx="17.4" cy="8.1" r="1.7"/></svg>
+            <span>Retatrutida</span>
           </button>
-          <button class="atend-chip" type="button" data-interesse="Performance" aria-pressed="false">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
-            <span>Performance</span>
+          <button class="atend-chip" type="button" data-interesse="Peptídeos" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.9" cy="17" r="2.5"/><circle cx="12" cy="12" r="2.5"/><circle cx="18.1" cy="7" r="2.5"/><path d="m7.9 15.4 2.1-1.8M14 10.4l2.1-1.8"/></svg>
+            <span>Peptídeos</span>
           </button>
-          <button class="atend-chip" type="button" data-interesse="Bem-estar" aria-pressed="false">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21c5-3 8-6.5 8-11a4 4 0 0 0-8-1 4 4 0 0 0-8 1c0 4.5 3 8 8 11z"/></svg>
-            <span>Bem-estar</span>
+          <button class="atend-chip atend-chip--largo" type="button" data-interesse="Gostaria de mais informações" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.6v.1"/></svg>
+            <span>Gostaria de mais informações</span>
           </button>
         </div>
       </fieldset>
@@ -195,28 +204,23 @@
       <p class="aviso-forma aviso-forma--erro" id="at-recado" role="alert" hidden></p>
      </div>
 
-      <!-- o cartão do Paraguai -->
+      <!-- O CARTÃO DE ONDE A LOJA ATENDE.
+           Era "Atendimento personalizado no Paraguai", com a bandeira do
+           Paraguai ao lado. Brian, 25/09/2026: "Tirar a bandeira e colocar
+           Atendimento personalizado em Manaus". Sem bandeira nenhuma: o
+           escudo à esquerda já dá ao cartão o seu desenho. -->
       <div class="atend-pais">
         <span class="atend-pais__ico" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.4 8-8 9-4.6-1-8-4-8-9V6z"/><path d="m9.2 12.2 1.9 1.9 3.7-3.8"/></svg>
         </span>
         <div class="atend-pais__corpo">
-          <p class="atend-pais__titulo">Atendimento personalizado no Paraguai</p>
+          <p class="atend-pais__titulo">Atendimento personalizado em Manaus</p>
           <p class="atend-pais__texto">
             Oferecemos protocolos exclusivos com medicamentos originais,
             acompanhamento médico e suporte completo antes, durante e após o
             tratamento.
           </p>
         </div>
-        <span class="atend-pais__bandeira" aria-label="Paraguai">
-          <svg viewBox="0 0 28 20" aria-hidden="true">
-            <rect width="28" height="20" rx="2.5" fill="#fff"/>
-            <path d="M0 2.5A2.5 2.5 0 0 1 2.5 0h23A2.5 2.5 0 0 1 28 2.5V6.7H0z" fill="#d52b1e"/>
-            <path d="M0 13.3h28v4.2A2.5 2.5 0 0 1 25.5 20h-23A2.5 2.5 0 0 1 0 17.5z" fill="#0038a8"/>
-            <circle cx="14" cy="10" r="2.4" fill="none" stroke="#0038a8" stroke-width=".8"/>
-            <circle cx="14" cy="10" r="1.2" fill="#fedf00"/>
-          </svg>
-        </span>
       </div>
 
       <!-- os três passos -->
@@ -414,7 +418,7 @@
 <script src="assets/js/favoritos.js?v=3adc8c87" defer></script>
 <script src="assets/js/paginas.js?v=3cbf8a54" defer></script>
 <script src="assets/js/carrinho.js?v=92c0e6bb" defer></script>
-<script src="assets/js/idioma-es.js?v=8b1b5d14" defer></script>
+<script src="assets/js/idioma-es.js?v=b29dc32e" defer></script>
 <script src="assets/js/idioma.js?v=81611de9" defer></script>
 <script src="assets/js/app.js?v=83df186b" defer></script>
 <script src="assets/js/conta.js?v=5b35fb28" defer></script>
