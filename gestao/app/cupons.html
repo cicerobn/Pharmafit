@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cupons — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1d1b18">
+<link rel="icon" href="../../assets/img/logo-pf-marca.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="app.css?v=fa285758">
+</head>
+<body>
+
+<div class="app">
+  <main>
+
+    <div class="pagina">
+      <a class="pagina__volta" href="mais.html" data-volta aria-label="Voltar"></a>
+      <h1 class="pagina__titulo">Cupons</h1>
+    </div>
+
+    <!-- CUPONS DE DESCONTO (Brian, 24/09/2026: "cupons para fazer
+         promoção / Cupom de % ou de valor").
+         A equipe cria aqui; o cliente digita o código no carrinho do
+         site e o banco diz se vale. O cupom vai escrito na mensagem do
+         WhatsApp e gravado no pedido, e o valor final continua sendo
+         confirmado pela equipe, como todo pedido. -->
+    <p class="rotulo-secao">Novo cupom</p>
+    <section class="bloco">
+      <form class="bloco__corpo cupom-form" data-cupom-form novalidate>
+        <label class="campo">
+          <span class="campo__rotulo">Código</span>
+          <input type="text" data-cupom-codigo maxlength="24" autocomplete="off"
+                 autocapitalize="characters" spellcheck="false" placeholder="Ex.: PROMO10">
+        </label>
+        <p class="campo__nota">É o que o cliente digita no carrinho. Letras e números,
+          de 3 a 24, sem espaço.</p>
+
+        <div class="campo">
+          <span class="campo__rotulo">Tipo de desconto</span>
+          <div class="chips-ordem" role="radiogroup" aria-label="Tipo de desconto">
+            <button class="chip-ordem is-ativo" type="button" role="radio" aria-checked="true"
+                    data-cupom-tipo="porcentagem">Porcentagem (%)</button>
+            <button class="chip-ordem" type="button" role="radio" aria-checked="false"
+                    data-cupom-tipo="valor">Valor fixo (R$)</button>
+          </div>
+        </div>
+
+        <div class="cupom-form__linha">
+          <label class="campo">
+            <span class="campo__rotulo" data-cupom-valor-rotulo>Desconto (%)</span>
+            <input type="text" inputmode="decimal" data-cupom-valor autocomplete="off" placeholder="10">
+          </label>
+          <label class="campo">
+            <span class="campo__rotulo">Vale até (opcional)</span>
+            <input type="date" data-cupom-ate>
+          </label>
+        </div>
+
+        <p class="folha__recado" data-cupom-recado role="status" hidden></p>
+        <button class="botao botao--forte" type="submit" data-cupom-criar>Criar cupom</button>
+      </form>
+    </section>
+
+    <p class="rotulo-secao">Cupons criados</p>
+    <section class="bloco">
+      <ul class="lista" data-cupons></ul>
+      <div class="vazio" data-cupons-vazio hidden>
+        <p class="vazio__titulo">Nenhum cupom ainda</p>
+        <p class="vazio__texto">O primeiro que você criar aparece aqui, e já vale no carrinho do site.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="../assets/config.js?v=55118931"></script>
+<script src="../assets/util.js?v=a2c25918"></script>
+<script src="../../assets/js/catalogo.js?v=8c34c6d9"></script>
+<script src="../assets/auth.js?v=9db91d6d"></script>
+<script src="../assets/dados.js?v=6d871582"></script>
+<script src="../assets/analise.js?v=e2445f21"></script>
+<script src="app.js?v=ed2f7d61"></script>
+<script src="cupons.js?v=daa197e0"></script>
+</body>
+</html>

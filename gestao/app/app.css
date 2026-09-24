@@ -753,6 +753,49 @@ a{color:inherit;text-decoration:none}
   white-space:nowrap;
 }
 .item__seta{flex:none;color:var(--muted-2)}
+/* o cupom que o cliente usou no carrinho, ao lado do número do pedido */
+.item__cupom{margin-left:6px;color:#1f7a4d;font-weight:700;letter-spacing:.02em}
+
+/* ---- cliente VIP (24/09/2026) ----
+   O selo vai colado no nome, na frente dele, na lista: é o que
+   se procura com os olhos ao rolar. Dourado da casa, pequeno, para não
+   competir com o valor à direita. */
+.selo-vip{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  margin-right:2px;
+  padding:1px 6px 1px 5px;
+  border-radius:999px;
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  color:#fff;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+  vertical-align:2px;
+}
+/* O botão da ficha: contorno quando não é VIP, dourado cheio quando é.
+   A forma muda junto da palavra, para dar para ver o estado sem ler. */
+.ficha-vip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  margin:10px 0 2px;
+  padding:9px 14px;
+  border:1px solid var(--gold);
+  border-radius:999px;
+  background:var(--card);
+  color:var(--gold);
+  font:inherit;font-size:13.5px;font-weight:600;
+  cursor:pointer;
+}
+.ficha-vip.is-vip{
+  background:linear-gradient(135deg,var(--gold-2),var(--gold));
+  color:#fff;
+}
+.ficha-vip.is-vip svg{fill:currentColor}
+.ficha-vip[disabled]{opacity:.6}
+.ficha-vip__recado{margin:6px 0 0;font-size:12.5px;color:#a8322a}
 
 /* ---------------------------------------------------------
    Ordenação e contagem
@@ -1221,7 +1264,13 @@ body.travado{overflow:hidden}
    volta. A aba de baixo continua marcada em "Mais", porque é de lá que
    se chega — mas a aba sozinha não é caminho de volta: ela recarrega a
    lista em vez de voltar para ela. */
-.pagina--dentro{display:flex;align-items:center;gap:10px}
+/* `flex-wrap`: numa tela de 320px o título "Relatórios" e o seletor
+   do mês não cabem lado a lado — medido em 24/09/2026, o seletor
+   passava 11px da borda e a tela inteira rolava para o lado. Agora o
+   seletor desce para a linha de baixo quando não cabe. */
+.pagina--dentro{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pagina--dentro .periodo{max-width:100%}
+.pagina--dentro .periodo select{max-width:100%}
 .pagina__volta{
   flex:none;
   width:38px;height:38px;
@@ -1669,6 +1718,36 @@ body.travado{overflow:hidden}
   font-size:13px;line-height:1.5;
 }
 .folha__recado--ruim{background:var(--st-cancelado-bg);color:var(--st-cancelado)}
+
+/* O formulário do WhatsApp do site (Configurações, 24/09/2026): campo,
+   explicação, recado e botão empilhados, com o mesmo respiro da folha. */
+.zap-form{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+
+/* ---- a tela de Cupons (24/09/2026) ----
+   O formulário empilha como o do WhatsApp; valor e validade dividem a
+   linha quando cabem. Na lista, o código vem em destaque — é o que a
+   equipe procura com os olhos — e as ações ficam embaixo dele, pequenas:
+   desligar e excluir são coisas que se faz de vez em quando, não a cada
+   visita. */
+.cupom-form{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+.cupom-form__linha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:340px){ .cupom-form__linha{grid-template-columns:1fr} }
+.cupom-linha{align-items:flex-start}
+.cupom-linha__codigo{letter-spacing:.06em;font-size:15px}
+/* a regra e a validade quebram linha em vez de cortar com "…": "vale
+   até 31/12/2026" cortado no meio é justamente a informação que some */
+.cupom-linha .item__linha{white-space:normal}
+.cupom-linha__acoes{display:flex;gap:14px;margin-top:7px}
+.cupom-linha__botao{
+  padding:4px 0;
+  border:0;
+  background:none;
+  font:inherit;font-size:12.5px;font-weight:600;
+  color:var(--gold);
+  cursor:pointer;
+}
+.cupom-linha__botao--perigo{color:#b23b32}
+.cupom-linha__botao[disabled]{opacity:.5}
 .folha__recado--bom{background:var(--st-pago-bg);color:var(--st-pago)}
 
 @media (min-width:520px){
@@ -1885,4 +1964,111 @@ textarea:focus-visible,
   color:#fff;
   font-size:13.5px;
   font-weight:600;
+}
+
+
+/* =========================================================
+   VENDAS POR PERÍODO (24/09/2026) — tela e folha impressa
+   ========================================================= */
+
+.escolha-periodo__corpo{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+
+/* Quatro números em duas linhas de dois no celular; em tela larga, os
+   quatro lado a lado. */
+@media (min-width:640px){
+  .numeros--quatro{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+/* O cabeçalho da folha: só existe no papel. Na tela a página já diz de
+   onde é e o período está nos campos logo acima. */
+.relatorio__cabeca{display:none}
+
+.tabela-relatorio{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+}
+.tabela-relatorio th{
+  text-align:left;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--muted);
+  padding:0 6px 8px;
+  border-bottom:1px solid var(--line);
+}
+.tabela-relatorio td{
+  padding:9px 6px;
+  border-bottom:1px solid var(--line-2);
+  vertical-align:top;
+}
+.tabela-relatorio tfoot td{
+  border-bottom:0;
+  border-top:1px solid var(--line);
+  font-weight:600;
+}
+.tabela-relatorio .num{text-align:right;white-space:nowrap}
+.tabela-relatorio .forte{font-weight:700;color:var(--ink)}
+.tabela-relatorio .nowrap{white-space:nowrap}
+.tabela-relatorio th:first-child,.tabela-relatorio td:first-child{padding-left:0}
+.tabela-relatorio th:last-child,.tabela-relatorio td:last-child{padding-right:0}
+.tabela-relatorio__cupom{color:#1f7a4d;font-size:11.5px;font-weight:600}
+.tabela-relatorio__lucro{display:block;margin-top:2px;font-size:11.5px;font-weight:500;color:var(--st-pago)}
+/* Até 360px a letra da tabela desce um ponto e o respiro entre colunas
+   aperta: é o que faz as colunas de dinheiro caberem sem rolar. */
+@media (max-width:360px){
+  .tabela-relatorio{font-size:12px}
+  .tabela-relatorio th,.tabela-relatorio td{padding-left:3px;padding-right:3px}
+  .tabela-relatorio--pedidos{font-size:11.5px}
+}
+.tabela-relatorio__quem{display:block;font-weight:600}
+.tabela-relatorio__oque{display:block;color:var(--ink-2)}
+
+/* Pedido por pedido tem cinco colunas: no celular a letra desce um
+   ponto para a tabela caber sem rolar para o lado. */
+.tabela-relatorio--pedidos{font-size:12.5px}
+
+.quem-comprou{list-style:none;margin:0;padding:0}
+.quem-comprou__pessoa{padding:10px 0;border-bottom:1px solid var(--line-2)}
+.quem-comprou__pessoa:last-child{border-bottom:0}
+.quem-comprou__topo{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.quem-comprou__nome{font-weight:600;font-size:14px;min-width:0}
+.quem-comprou__tel{font-weight:400;font-size:12px;color:var(--muted);white-space:nowrap}
+.quem-comprou__valor{font-weight:600;font-size:14px;white-space:nowrap}
+.quem-comprou__itens{list-style:none;margin:4px 0 0;padding:0;font-size:13px;color:var(--ink-2)}
+.quem-comprou__itens li{padding:1px 0}
+
+/* ---------- a folha impressa ----------
+   Sai o que é de tela (a barra de cima, a de baixo, o menu, os campos
+   de data e o botão) e entra o cabeçalho com a loja e o período. Tudo
+   em preto sobre branco, sem sombra nem fundo: impressora de balcão
+   gasta tinta à toa com creme e dourado, e fundo colorido some em
+   impressão sem cor. */
+@media print{
+  @page{margin:14mm 12mm}
+  html,body,.app,main{background:#fff !important;color:#000}
+  .topo,.barra,.gaveta,.veu,.aviso-banco,
+  .pagina,.escolha-periodo,[data-escolha],[data-erro]{display:none !important}
+  .app,main{padding:0 !important;margin:0 !important;max-width:none !important}
+  .relatorio__cabeca{
+    display:block;
+    margin:0 0 14px;
+    padding-bottom:10px;
+    border-bottom:2px solid #000;
+  }
+  .relatorio__marca{margin:0;font-size:12px;font-weight:700;letter-spacing:.24em}
+  .relatorio__titulo{margin:4px 0 0;font-size:20px;font-weight:700}
+  .relatorio__periodo{margin:2px 0 0;font-size:14px}
+  .relatorio__gerado{margin:2px 0 0;font-size:10.5px;color:#444}
+  .numeros{padding:0;gap:8px;grid-template-columns:repeat(4,minmax(0,1fr)) !important}
+  .numero,.bloco{border:1px solid #999 !important;box-shadow:none !important;background:#fff !important}
+  .bloco{margin:12px 0 0 !important;break-inside:auto}
+  .numero{padding:8px 10px;break-inside:avoid}
+  .numero__valor{font-size:16px}
+  .aviso-conta{margin:10px 0 0;background:#fff;border:1px solid #999;color:#000}
+  .tabela-relatorio th,.tabela-relatorio td{color:#000;border-color:#bbb}
+  .tabela-relatorio tr{break-inside:avoid}
+  .quem-comprou__pessoa{break-inside:avoid}
+  .tabela-relatorio__cupom,.quem-comprou__tel{color:#333}
 }

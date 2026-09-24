@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vendas por período — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1d1b18">
+<link rel="icon" href="../../assets/img/logo-pf-marca.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="app.css?v=fa285758">
+</head>
+<body>
+
+<div class="app">
+  <main>
+
+    <div class="pagina">
+      <a class="pagina__volta" href="relatorios.html" data-volta aria-label="Voltar"></a>
+      <h1 class="pagina__titulo">Vendas por período</h1>
+    </div>
+
+    <!-- O RELATÓRIO QUE SE ESCOLHE PELO CALENDÁRIO.
+         Brian, 24/09/2026: "Vendas do dia 01 ao 10 quanto eu vendi, quanto
+         eu lucrei e tudo o que saiu de cada pedidos. Exemplo: 200 Tg, 20
+         Tirzec, 10 lipoles" e "Relatorio diario, lucro diario, selecionar
+         data, ver quantos vendeu, ver fulano comprou x tg (...) e ter como
+         imprimir esse relatorio".
+         Um dia é um período que começa e termina na mesma data: a mesma
+         tela responde as duas perguntas. -->
+    <section class="bloco escolha-periodo" data-escolha>
+      <div class="bloco__corpo escolha-periodo__corpo">
+        <div class="chips-ordem" data-atalhos>
+          <button class="chip-ordem is-ativo" type="button" data-atalho="hoje">Hoje</button>
+          <button class="chip-ordem" type="button" data-atalho="ontem">Ontem</button>
+          <button class="chip-ordem" type="button" data-atalho="7dias">Últimos 7 dias</button>
+          <button class="chip-ordem" type="button" data-atalho="mes">Este mês</button>
+          <button class="chip-ordem" type="button" data-atalho="mespassado">Mês passado</button>
+        </div>
+        <div class="cupom-form__linha">
+          <label class="campo">
+            <span class="campo__rotulo">De</span>
+            <input type="date" data-de>
+          </label>
+          <label class="campo">
+            <span class="campo__rotulo">Até</span>
+            <input type="date" data-ate>
+          </label>
+        </div>
+        <button class="botao botao--forte" type="button" data-imprimir>Imprimir este relatório</button>
+      </div>
+    </section>
+
+    <p class="aviso-conta" data-erro hidden></p>
+
+    <div class="relatorio" data-relatorio>
+
+      <!-- o cabeçalho que só aparece no papel: sem ele a folha impressa
+           não diz de que loja nem de que período é -->
+      <header class="relatorio__cabeca">
+        <p class="relatorio__marca">PHARMA FIT</p>
+        <p class="relatorio__titulo">Relatório de vendas</p>
+        <p class="relatorio__periodo" data-periodo-texto></p>
+        <p class="relatorio__gerado" data-gerado></p>
+      </header>
+
+      <div class="numeros numeros--quatro">
+        <article class="numero">
+          <p class="numero__rotulo">Vendido</p>
+          <p class="numero__valor" data-vendido>—</p>
+        </article>
+        <article class="numero" data-cartao-lucro>
+          <p class="numero__rotulo">Lucro</p>
+          <p class="numero__valor" data-lucro>—</p>
+        </article>
+        <article class="numero">
+          <p class="numero__rotulo">Pedidos</p>
+          <p class="numero__valor" data-pedidos>—</p>
+        </article>
+        <article class="numero">
+          <p class="numero__rotulo">Unidades</p>
+          <p class="numero__valor" data-unidades>—</p>
+        </article>
+      </div>
+
+      <p class="aviso-conta" data-sem-custo hidden></p>
+
+      <section class="bloco">
+        <div class="bloco__topo"><h2 class="bloco__titulo">O que saiu</h2></div>
+        <div class="bloco__corpo">
+          <table class="tabela-relatorio" data-produtos></table>
+          <p class="vazio__texto" data-vazio hidden>Nenhuma venda confirmada neste período.</p>
+        </div>
+      </section>
+
+      <section class="bloco" data-bloco-clientes>
+        <div class="bloco__topo"><h2 class="bloco__titulo">Quem comprou</h2></div>
+        <div class="bloco__corpo">
+          <ul class="quem-comprou" data-clientes></ul>
+        </div>
+      </section>
+
+      <section class="bloco" data-bloco-pedidos>
+        <div class="bloco__topo"><h2 class="bloco__titulo">Pedido por pedido</h2></div>
+        <div class="bloco__corpo">
+          <table class="tabela-relatorio tabela-relatorio--pedidos" data-pedidos-lista></table>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+</div>
+
+<script src="../assets/config.js?v=55118931"></script>
+<script src="../assets/util.js?v=a2c25918"></script>
+<script src="../../assets/js/catalogo.js?v=8c34c6d9"></script>
+<script src="../assets/auth.js?v=9db91d6d"></script>
+<script src="../assets/dados.js?v=6d871582"></script>
+<script src="../assets/analise.js?v=e2445f21"></script>
+<script src="app.js?v=ed2f7d61"></script>
+<script src="vendas.js?v=17abd0c1"></script>
+</body>
+</html>

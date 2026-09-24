@@ -50,7 +50,10 @@
        quanto. `cobrancas` é onde o código PIX e o valor líquido ficam. */
     { nome: 'compras',        para: 'compras pagas no site' },
     { nome: 'compra_itens',   para: 'o que cada compra levou' },
-    { nome: 'cobrancas',      para: 'pagamentos do site (PIX e cartão)' }
+    { nome: 'cobrancas',      para: 'pagamentos do site (PIX e cartão)' },
+    /* 24/09/2026: os cupons de desconto e a marca de cliente VIP. */
+    { nome: 'cupons',         para: 'cupons de desconto do site' },
+    { nome: 'vip',            para: 'clientes marcados como VIP' }
   ];
 
   var conexaoTestada = null; /* { url, chave } que passou no teste */
@@ -223,7 +226,7 @@
      e o arquivo sai incompleto sem dizer que saiu. */
   var COLECOES = ['pedidos', 'produtos', 'despesas', 'representantes', 'orcamentos',
                   'espera', 'atendimentos', 'pessoal', 'notas', 'configuracoes',
-                  'clientes', 'compras', 'compra_itens', 'cobrancas'];
+                  'clientes', 'compras', 'compra_itens', 'cobrancas', 'cupons', 'vip'];
 
   var CHAVE_BACKUP = 'pharmafit_ultimo_backup';
 
@@ -280,12 +283,17 @@
       if (!Array.isArray(doArquivo) || !doArquivo.length) continue;
 
       var atuais = await Dados.listar(colecao);
+      /* A identidade da linha é o `id` — menos em `pf_vip`, que não tem
+         `id`: a chave dela é a própria `chave` do cliente. Sem isto,
+         todas as linhas de VIP teriam a mesma identidade ("undefined") e
+         a restauração pularia todas assim que houvesse uma. */
+      var idDe = function (r) { return String(r.id != null ? r.id : r.chave); };
       var jaTem = {};
-      atuais.forEach(function (r) { jaTem[String(r.id)] = true; });
+      atuais.forEach(function (r) { jaTem[idDe(r)] = true; });
 
       for (var k = 0; k < doArquivo.length; k++) {
         var registro = doArquivo[k];
-        if (!registro || jaTem[String(registro.id)]) { pulados++; continue; }
+        if (!registro || jaTem[idDe(registro)]) { pulados++; continue; }
 
         var r = await Dados.inserir(colecao, registro);
         if (r.ok) novos++; else pulados++;
