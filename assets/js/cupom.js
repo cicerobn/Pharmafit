@@ -27,7 +27,8 @@
 
    O cupom fica guardado no aparelho junto do carrinho, e é conferido
    de novo toda vez que o carrinho abre: se a equipe desligou o cupom
-   ou ele venceu, ele sai sozinho, com um recado dizendo por quê.
+   ou ele venceu — ou bateu o limite de pessoas que a equipe pôs —, ele
+   sai sozinho, com um recado dizendo por quê.
    ========================================================= */
 (function () {
   'use strict';
