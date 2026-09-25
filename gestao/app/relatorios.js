@@ -199,6 +199,12 @@
     achar('seta-periodo').innerHTML = Moldura.svg('seta', 17, 1.9);
 
     var dados = await Moldura.dados();
+    /* OS GASTOS NÃO ERAM CARREGADOS AQUI (achado em 25/09/2026): o
+       `Moldura.dados()` traz pedidos e produtos, e `dados.despesas`
+       ficava vazio — o "Lucro líquido" desta tela era faturamento menos
+       custo, sem nenhum gasto. Agora entram os gastos lançados e as
+       contas a pagar já pagas no mês (`Dados.listarGastos`). */
+    dados.despesas = await window.PharmaFitDados.listarGastos();
     var meses = Analise.meses();
 
     /* DOIS NÍVEIS DE ACESSO.
@@ -238,6 +244,9 @@
          esconder. Esconder uma vez não basta quando a tela redesenha. */
       if (verCusto) {
         achar('lucro').textContent = moeda(r.lucro);
+        achar('lucro-gastos').textContent = r.gasto
+          ? 'Já descontados ' + moeda(r.gasto) + ' de gastos e contas pagas'
+          : 'Nenhum gasto nem conta paga no mês';
         pintarVariacao(achar('lucro-delta'), r.lucro, anterior && anterior.lucro);
       }
 

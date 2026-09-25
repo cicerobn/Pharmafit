@@ -118,7 +118,10 @@
         '<td>' + esc(g.descricao) + '</td>' +
         '<td>' + esc(g.categoria) + '</td>' +
         '<td class="col-num custo">' + moeda(g.valor) + '</td>' +
-        '<td class="col-num"><button class="btn-mini" type="button" data-excluir-gasto="' + esc(g.id) + '">excluir</button></td>' +
+        /* conta paga não se exclui daqui: ela mora em Contas a pagar */
+        '<td class="col-num">' + (g.conta
+          ? '<a class="btn-mini" href="app/contas.html">ver</a>'
+          : '<button class="btn-mini" type="button" data-excluir-gasto="' + esc(g.id) + '">excluir</button>') + '</td>' +
         '</tr>';
     }).join('');
 
@@ -168,7 +171,7 @@
   async function recarregar() {
     var painel = await Dados.listarPainel();
     estado.pedidos = painel.pedidos;
-    estado.despesas = await Dados.listar('despesas');
+    estado.despesas = await Dados.listarGastos();
     pintarMes(estado.atual || estado.meses[0].chave);
     pintarHistorico();
   }

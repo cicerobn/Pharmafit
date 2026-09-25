@@ -380,7 +380,7 @@
     var painel = await Dados.listarPainel();
     estado.pedidos = painel.pedidos;
     estado.produtos = painel.produtos;
-    estado.despesas = await Dados.listar('despesas');
+    estado.despesas = await Dados.listarGastos();
     estado.meta = Number(await Dados.lerConfig('meta_mensal', 0)) || 0;
 
     pintarAvisos();

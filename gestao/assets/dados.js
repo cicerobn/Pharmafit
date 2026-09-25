@@ -305,6 +305,43 @@
       }
     },
 
+    /**
+     * OS GASTOS QUE ENTRAM NO LUCRO DO MÊS (25/09/2026).
+     *
+     * Brian: "contas pagas descontadas do lucro do mês". São os gastos
+     * lançados em Gastos MAIS as contas a pagar já pagas, cada uma no mês
+     * em que foi PAGA (não no do vencimento: dinheiro que ainda não saiu
+     * não diminui o lucro). A conta vem no mesmo formato de um gasto,
+     * marcada com `conta: true` — quem desenha a tabela sabe que ela não
+     * se exclui por lá (é na tela Contas a pagar).
+     *
+     * Se a mesma despesa estiver lançada nos dois lugares, ela conta duas
+     * vezes: a partir de agora, conta de todo mês vai em Contas a pagar, e
+     * Gastos fica para o que é pago na hora.
+     */
+    listarGastos: async function () {
+      var despesas = await Dados.listar('despesas');
+      var contas = [];
+      try {
+        var sb = Auth.cliente();
+        if (sb) {
+          var r = await sb.from(T('contas_pagar')).select('id,nome,descricao,valor,pago_em')
+            .not('pago_em', 'is', null);
+          if (!r.error) contas = r.data || [];
+        }
+      } catch (e) { /* sem contas, o lucro fica só com os gastos */ }
+      return (despesas || []).concat(contas.map(function (c) {
+        return {
+          id: 'conta-' + c.id,
+          descricao: c.nome + (c.descricao ? ' — ' + c.descricao : ''),
+          categoria: 'Conta paga',
+          valor: Number(c.valor),
+          data: String(c.pago_em).slice(0, 10) + 'T12:00:00',
+          conta: true
+        };
+      }));
+    },
+
     /** Cria um pedido pendente. */
     criarPedido: async function (dados) {
       var pedido = {
