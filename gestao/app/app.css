@@ -2155,3 +2155,26 @@ textarea:focus-visible,
 .opcao-ed__linha--caixa{grid-template-columns:minmax(0,1fr) 78px}
 .opcao-ed__linha--caixa:has(> :only-child){grid-template-columns:minmax(0,1fr)}
 .opcao-ed__mini select{width:100%;min-width:0;font-size:13.5px;padding-inline:6px}
+
+/* ---------------------------------------------------------
+   A CENTRAL DE AVISOS DO SINO (25/09/2026)
+   Abre por baixo do topo, à direita. Cada aviso é um link para a
+   tela onde se resolve; vermelho quando é urgente (conta atrasada,
+   produto sem estoque).
+   --------------------------------------------------------- */
+button.sino{border:0;background:transparent;cursor:pointer;font:inherit;color:inherit}
+.avisos{position:fixed;z-index:60;top:calc(var(--topo-h) + env(safe-area-inset-top, 0px) + 4px);right:10px;
+  width:min(340px, calc(100vw - 20px));max-height:min(70vh, 520px);overflow:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 12px 32px rgba(29,27,24,.18);padding:10px}
+.avisos__titulo{margin:4px 6px 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.avisos__lista{display:flex;flex-direction:column;gap:6px}
+.avisos__vazio{margin:6px;font-size:14px;color:var(--muted)}
+.aviso{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;
+  background:var(--tela);color:var(--ink);text-decoration:none;border-left:3px solid var(--gold)}
+.aviso b{font-size:14px;font-weight:600;overflow-wrap:anywhere}
+.aviso span{font-size:12.5px;color:var(--muted)}
+.aviso--conta{border-left-color:var(--st-pendente)}
+.aviso--estoque{border-left-color:var(--st-separacao)}
+.aviso--forte{border-left-color:var(--st-cancelado);background:var(--st-cancelado-bg)}
+.aviso--forte span{color:var(--st-cancelado)}

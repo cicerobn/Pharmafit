@@ -118,6 +118,114 @@
     { rotulo: 'Ver o site', icone: 'loja', href: '../../index.html' }
   ];
 
+  /* ---------- a central de avisos do sino (25/09/2026) ---------- */
+
+  var avisos = { pedidos: 0, contas: [], estoque: [] };
+
+  function dataCurta(iso) {
+    var p = String(iso).slice(0, 10).split('-');
+    return p[2] + '/' + p[1];
+  }
+
+  function pintarAvisos() {
+    var conta = document.querySelector('[data-sino]');
+    var lista = document.querySelector('[data-avisos-lista]');
+    var total = (avisos.pedidos ? 1 : 0) + avisos.contas.length + avisos.estoque.length;
+    var numero = avisos.pedidos + avisos.contas.length + avisos.estoque.length;
+    if (conta) {
+      conta.hidden = numero === 0;
+      conta.textContent = numero > 99 ? '99+' : String(numero);
+    }
+    if (!lista) return;
+    var U = window.PharmaFitUtil;
+    var itens = [];
+    if (avisos.pedidos) {
+      itens.push('<a class="aviso aviso--pedido" href="pedidos.html?ver=pendentes">' +
+        '<b>' + avisos.pedidos + (avisos.pedidos === 1 ? ' pedido esperando' : ' pedidos esperando') + '</b>' +
+        '<span>Confirmar valor e pagamento</span></a>');
+    }
+    avisos.contas.forEach(function (c) {
+      itens.push('<a class="aviso aviso--conta' + (c.quando === 'atrasada' ? ' aviso--forte' : '') + '" href="contas.html">' +
+        '<b>' + U.esc(c.nome) + ' · ' + U.moeda(c.valor) + '</b>' +
+        '<span>' + (c.quando === 'atrasada' ? 'Conta atrasada desde ' + dataCurta(c.vencimento)
+          : c.quando === 'hoje' ? 'Conta vence hoje' : 'Conta vence amanhã') + '</span></a>');
+    });
+    avisos.estoque.forEach(function (p) {
+      itens.push('<a class="aviso aviso--estoque' + (Number(p.estoque) <= 0 ? ' aviso--forte' : '') + '" href="produtos.html">' +
+        '<b>' + U.esc(p.nome) + '</b>' +
+        '<span>' + (Number(p.estoque) <= 0 ? 'Sem estoque — o site mostra "avise-me"'
+          : 'Estoque baixo: ' + p.estoque + (Number(p.estoque) === 1 ? ' unidade' : ' unidades')) + '</span></a>');
+    });
+    lista.innerHTML = itens.length
+      ? itens.join('')
+      : '<p class="avisos__vazio">Nada pedindo atenção agora.</p>';
+    void total;
+  }
+
+  async function carregarAvisos() {
+    var sb = Auth && Auth.cliente ? Auth.cliente() : null;
+    if (!sb) return;
+    var agora = new Date(Date.now() - 4 * 3600 * 1000);
+    var hoje = agora.toISOString().slice(0, 10);
+    var amanha = new Date(agora.getTime() + 86400000).toISOString().slice(0, 10);
+    try {
+      var verDinheiro = await Moldura.podeVerCusto();
+      var rs = await Promise.all([
+        sb.from('pf_pedidos').select('id').eq('status', 'pendente').limit(500),
+        verDinheiro
+          ? sb.from('pf_contas_pagar').select('nome,valor,vencimento,pago_em').is('pago_em', null).lte('vencimento', amanha)
+          : Promise.resolve({ data: [] }),
+        sb.from('pf_produtos').select('nome,estoque,ativo,fraciona_de').eq('ativo', true).not('estoque', 'is', null).lte('estoque', 2)
+      ]);
+      if (rs[0] && !rs[0].error) avisos.pedidos = (rs[0].data || []).length;
+      avisos.contas = ((rs[1] && rs[1].data) || []).filter(function (c) {
+        return !c.pago_em && c.vencimento <= amanha;
+      }).sort(function (a, b) { return String(a.vencimento).localeCompare(String(b.vencimento)); })
+        .map(function (c) {
+          c.quando = c.vencimento < hoje ? 'atrasada' : (c.vencimento === hoje ? 'hoje' : 'amanha');
+          return c;
+        });
+      /* ampola ligada à caixa não tem estoque próprio: fica de fora */
+      avisos.estoque = ((rs[2] && rs[2].data) || []).filter(function (p) {
+        return p.ativo !== false && !p.fraciona_de && p.estoque !== null && p.estoque !== undefined &&
+               p.estoque !== '' && Number(p.estoque) <= 2;
+      }).sort(function (a, b) { return Number(a.estoque) - Number(b.estoque); }).slice(0, 8);
+    } catch (e) { /* sem avisos novos; o sino continua com o que tinha */ }
+    pintarAvisos();
+  }
+
+  function montarAvisos(topo) {
+    var botao = topo.querySelector('[data-sino-botao]');
+    if (!botao) return;
+    var caixa = document.createElement('div');
+    caixa.className = 'avisos';
+    caixa.hidden = true;
+    caixa.setAttribute('role', 'dialog');
+    caixa.setAttribute('aria-label', 'Avisos');
+    caixa.innerHTML = '<p class="avisos__titulo">Avisos</p><div class="avisos__lista" data-avisos-lista>' +
+      '<p class="avisos__vazio">Conferindo…</p></div>';
+    document.body.appendChild(caixa);
+
+    function fechar() {
+      caixa.hidden = true;
+      botao.setAttribute('aria-expanded', 'false');
+    }
+    botao.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var abrir = caixa.hidden;
+      caixa.hidden = !abrir;
+      botao.setAttribute('aria-expanded', String(abrir));
+      if (abrir) carregarAvisos();
+    });
+    document.addEventListener('click', function (e) {
+      if (!caixa.hidden && !caixa.contains(e.target)) fechar();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !caixa.hidden) { fechar(); botao.focus(); }
+    });
+    carregarAvisos();
+  }
+
   var Moldura = {
     svg: svg,
     ICONE: ICONE,
@@ -162,10 +270,15 @@
          * conferir o produto lá. */
         '<a class="topo__botao" href="../../index.html" ' +
           'aria-label="Ver o site da loja" data-ver-site>' + svg('loja', 21, 1.7) + '</a>' +
-        '<a class="topo__botao sino" href="pedidos.html?ver=pendentes" ' +
-          'aria-label="Pedidos esperando">' + svg('sino', 21, 1.7) +
+        /* O SINO VIROU A CENTRAL DE AVISOS (25/09/2026). Antes era só um
+         * atalho para os pedidos pendentes. Agora ele abre uma lista do
+         * que pede ação: pedidos esperando, contas atrasadas ou vencendo
+         * hoje/amanhã (Brian: "aviso no sininho") e produto acabando.
+         * Cada aviso leva direto para a tela onde se resolve. */
+        '<button class="topo__botao sino" type="button" data-sino-botao ' +
+          'aria-label="Avisos" aria-haspopup="true" aria-expanded="false">' + svg('sino', 21, 1.7) +
           '<span class="sino__conta" data-sino hidden>0</span>' +
-        '</a>';
+        '</button>';
       app.insertBefore(topo, app.firstChild);
 
       /* ---------- gaveta e véu ---------- */
@@ -254,19 +367,19 @@
         location.replace('../login.html');
       });
 
+      montarAvisos(topo);
+
       return { primeiro: primeiro, user: user };
     },
 
-    /** Põe no sino a quantidade de pedidos esperando alguma ação. */
+    /** Põe no sino a quantidade de pedidos esperando alguma ação.
+        (As telas que já carregaram os pedidos avisam por aqui, e a conta
+        do sino fica em dia sem uma segunda consulta.) */
     marcarSino: function (pedidos) {
-      var alvo = document.querySelector('[data-sino]');
-      if (!alvo) return;
-      var parados = (pedidos || []).filter(function (p) {
+      avisos.pedidos = (pedidos || []).filter(function (p) {
         return String(p.status || 'pendente').toLowerCase() === 'pendente';
       }).length;
-
-      alvo.hidden = parados === 0;
-      alvo.textContent = parados > 99 ? '99+' : String(parados);
+      pintarAvisos();
     },
 
     /** O "+" muda de função conforme a tela. */
