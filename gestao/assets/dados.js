@@ -355,6 +355,26 @@
       var produtos = await Dados.listar('produtos');
       var produto = produtos.filter(function (p) { return p.nome === nomeProduto; })[0];
 
+      /* AMPOLA QUE VEM DA CAIXA (25/09/2026). O cliente do Brian vende a
+         mesma caixa (ex.: Tirzedral 15 mg, 4 ampolas) fechada e em ampola
+         avulsa, com um estoque só. A ampola não tem estoque próprio: ela
+         tira da caixa. Conta tudo em ampolas — caixas × por caixa +
+         soltas —, desconta e devolve em caixas inteiras + as soltas que
+         sobraram. Vender 1 ampola de 13 caixas fechadas deixa 12 caixas e
+         3 soltas; as próximas ampolas saem primeiro das soltas. */
+      async function daCaixa(caixaId, porCaixa) {
+        var caixa = produtos.filter(function (p) { return String(p.id) === String(caixaId); })[0];
+        if (!caixa || caixa.estoque === null || caixa.estoque === undefined || caixa.estoque === '') {
+          return { controlado: false };
+        }
+        var f = Math.max(1, Number(porCaixa) || 1);
+        var total = Number(caixa.estoque) * f + Number(caixa.soltas || 0);
+        var sobra = Math.max(0, total - Number(quantidade || 1));
+        await Dados.atualizar('produtos', caixa.id, { estoque: Math.floor(sobra / f), soltas: sobra % f });
+        return { controlado: true, restante: sobra, acabou: sobra === 0, produto: nomeProduto };
+      }
+      if (produto && produto.fraciona_de) return daCaixa(produto.fraciona_de, produto.fracoes);
+
       /* PEDIDO DE UMA OPÇÃO ("Tirzepatida 15 mg — 1 ampola (Gluconex)",
          25/09/2026): o estoque que desce é o DA OPÇÃO, dentro do produto.
          Opção sem estoque controlado não mexe em nada — nem no estoque do
@@ -368,6 +388,7 @@
         });
         if (!dono) return { controlado: false };
         var op = dono.opcoes[idx];
+        if (op.fraciona_de) return daCaixa(op.fraciona_de, op.fracoes);
         if (op.estoque === null || op.estoque === undefined || op.estoque === '') {
           return { controlado: false };
         }
