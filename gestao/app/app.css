@@ -2072,3 +2072,28 @@ textarea:focus-visible,
   .quem-comprou__pessoa{break-inside:avoid}
   .tabela-relatorio__cupom,.quem-comprou__tel{color:#333}
 }
+
+/* ---------------------------------------------------------
+   OPÇÕES DO PRODUTO NA FICHA (25/09/2026)
+   Uma linha por opção: foto quadrada à esquerda, nome em cima, preço /
+   estoque / custo lado a lado embaixo, e o × para tirar.
+   --------------------------------------------------------- */
+.opcoes-ed__rotulo{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin:8px 0 4px}
+.opcoes-ed__rotulo input{flex:1;min-width:0}
+.opcoes-ed__lista{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.opcao-ed{display:grid;grid-template-columns:56px minmax(0,1fr) 28px;gap:8px;align-items:start;
+  padding:8px;border:1px solid rgba(29,27,24,.12);border-radius:12px;background:#fff}
+.opcao-ed__foto{width:56px;height:56px;border-radius:10px;border:1px dashed rgba(29,27,24,.25);
+  background:#faf8f4;display:flex;align-items:center;justify-content:center;padding:0;overflow:hidden;
+  font-size:11px;color:#8a8378;cursor:pointer}
+.opcao-ed__foto img{width:100%;height:100%;object-fit:contain}
+.opcao-ed__campos{display:flex;flex-direction:column;gap:6px;min-width:0}
+.opcao-ed__campos input{width:100%;min-width:0}
+.opcao-ed__linha{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px}
+.opcao-ed__mini{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:10.5px;font-weight:600;color:var(--muted)}
+.opcao-ed__mini input{font-size:14px;padding-inline:8px}
+.opcao-ed__tirar{width:28px;height:28px;border:0;border-radius:50%;background:#f4efe6;color:#8f2b2b;
+  font-size:18px;line-height:1;cursor:pointer}
+.opcoes-ed__mais{margin-top:8px;align-self:flex-start;border:1px dashed rgba(29,27,24,.3);background:transparent;
+  border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:600;color:var(--gold);cursor:pointer}
+.opcoes-ed{display:flex;flex-direction:column}

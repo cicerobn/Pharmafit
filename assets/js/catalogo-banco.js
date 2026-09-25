@@ -49,6 +49,58 @@
      * 17/09/2026: dava para ler a margem inteira, produto por produto.
      *
      * `pf_produtos_publico` é a mesma lista sem essa coluna. */
+    /* AS OPÇÕES DE UM PRODUTO (25/09/2026).
+     *
+     * O cliente do Brian vende ampola avulsa de tirzepatida de sete
+     * marcas e não queria sete produtos no catálogo: "criar uma aba de
+     * um produto… clicava e apareciam lá as opções". Cada opção vira
+     * aqui um item de venda ESCONDIDO da vitrine, com o nome
+     * "<produto> (<opção>)". É esse nome que vai no carrinho, no pedido,
+     * na mensagem do WhatsApp, no PIX e nos relatórios — o banco
+     * reconhece o mesmo nome (`pf_produto_ou_opcao`). Assim nenhuma
+     * dessas partes precisou aprender o que é "opção": para elas, é um
+     * produto como outro qualquer, só que fora da vitrine.
+     *
+     * Na vitrine fica o produto principal, com `opcoes` apontando para
+     * os itens escondidos; quem mostra a escolha é a página do produto.
+     */
+    function aplicarOpcoes(p, b) {
+      if (!Object.prototype.hasOwnProperty.call(b, 'opcoes')) return;
+      for (var k = catalogo.length - 1; k >= 0; k--) {
+        if (catalogo[k].variante && catalogo[k].pai === p.nome) catalogo.splice(k, 1);
+      }
+      var lista = (Array.isArray(b.opcoes) ? b.opcoes : []).filter(function (o) {
+        return o && String(o.nome || '').trim();
+      });
+      p.opcoesRotulo = b.opcoes_rotulo || 'Marca';
+      p.opcoes = lista.map(function (o) {
+        var preco = Number(o.preco) > 0 ? Number(o.preco) : Number(p.venda || 0);
+        var estoque = (o.estoque === undefined || o.estoque === null || o.estoque === '')
+          ? null : Number(o.estoque);
+        var v = {
+          nome: p.nome + ' (' + String(o.nome).trim() + ')',
+          opcao: String(o.nome).trim(),
+          pai: p.nome,
+          variante: true,
+          foraDoSite: true,
+          categoria: p.categoria,
+          descricao: p.descricao,
+          venda: preco,
+          /* o preço riscado do produto só vale para a opção que custa o
+             mesmo que ele; opção com preço próprio não herda desconto */
+          antes: Number(p.antes) > preco ? Number(p.antes) : 0,
+          estoque: estoque,
+          imagem: o.imagem || p.imagem,
+          fotoDeVerdade: o.imagem ? true : !!p.fotoDeVerdade,
+          parcelas: p.parcelas,
+          parcelaValor: preco === Number(p.venda) ? p.parcelaValor : 0,
+          destaque: ''
+        };
+        catalogo.push(v);
+        return v;
+      });
+    }
+
     var doBanco = await Nuvem.buscar('produtos_publico', 'nome');
     if (!doBanco || !doBanco.length) return false;
 
@@ -130,6 +182,7 @@
         p.parcelas = b.parcelas;
         p.parcelaValor = b.parcela_valor || 0;
       }
+      aplicarOpcoes(p, b);
 
       mudou = true;
     });
@@ -138,7 +191,7 @@
     doBanco.forEach(function (b) {
       if (catalogo.some(function (p) { return p.nome === b.nome; })) return;
       if (b.ativo === false) return;
-      catalogo.push({
+      var novo = {
         nome: b.nome, categoria: b.categoria || 'Outros',
         /* sem `custo`: a vitrine não traz esse número, e o site não tem
            o que fazer com ele. Quem precisa dele é o painel, que lê a
@@ -152,7 +205,9 @@
         destaque: b.destaque || '',
         parcelas: b.parcelas,
         parcelaValor: b.parcela_valor || 0
-      });
+      };
+      catalogo.push(novo);
+      aplicarOpcoes(novo, b);
       mudou = true;
     });
 

@@ -272,6 +272,9 @@
   var veu = null;
   var editando = null;
   var fotoNova = null;      /* {blob, url} escolhida mas ainda não salva */
+  /* as opções em edição: {nome, preco, estoque, custo, imagem, fotoNova} */
+  var opcoesEd = [];
+  var opcaoDaFoto = -1;
   var fotoTirar = false;    /* pediu para voltar ao desenho padrão */
 
   /* A ETIQUETA DA VITRINE SEGUE A MESMA REGRA DA FOTO.
@@ -287,6 +290,11 @@
    * de demonstração mostra a etiqueta. Funciona, então aparece. */
   function podeEtiquetar(p) {
     return !!p && Object.prototype.hasOwnProperty.call(p, 'destaque');
+  }
+
+  /* AS OPÇÕES (marcas) DO PRODUTO, com a mesma regra (25/09/2026). */
+  function podeOpcoes(p) {
+    return !!p && Object.prototype.hasOwnProperty.call(p, 'opcoes');
   }
 
   /* O PARCELAMENTO, com a mesma regra: o campo só aparece quando a
@@ -449,6 +457,25 @@
         '</div>' +
         '<p class="campo__nota" data-parcelamento-nota hidden></p>' +
 
+        /* AS OPÇÕES DO PRODUTO (25/09/2026).
+           O cliente do Brian: "criar uma aba de um produto, por exemplo
+           Tirzepatida de uma ampola… clicava e apareciam lá as opções".
+           Cada linha é uma opção que o cliente escolhe na página do
+           produto; preço, estoque e custo vazios = valem os do produto.
+           No carrinho, no pedido e nos relatórios ela aparece como
+           "Produto (Opção)". */
+        '<div class="campo opcoes-ed" data-campo="opcoes" hidden>' +
+          '<span class="campo__rotulo">Opções para o cliente escolher</span>' +
+          '<p class="campo__nota">Ex.: as marcas da ampola avulsa. Deixe sem nenhuma para ' +
+            'um produto comum. Preço, estoque e custo vazios usam os do produto.</p>' +
+          '<label class="opcoes-ed__rotulo">O cliente escolhe a ' +
+            '<input type="text" data-opcoes-rotulo maxlength="30" placeholder="Marca"></label>' +
+          '<div class="opcoes-ed__lista" data-opcoes-ed></div>' +
+          '<button class="opcoes-ed__mais" type="button" data-opcao-nova>+ Adicionar opção</button>' +
+          '<input type="file" accept="image/*" data-opcao-arquivo hidden>' +
+          '<p class="campo__erro" data-erro hidden></p>' +
+        '</div>' +
+
         /* A ETIQUETA QUE O CLIENTE VÊ NO CARTÃO.
            Brian, 18/09/2026: "Deixe que essas barras de 'mais vendido,
            promocao' esteja so em alguns produtos especificos que eu
@@ -507,6 +534,51 @@
     folha.querySelector('#ed-preco').addEventListener('input', pintarLucro);
     folha.querySelector('#ed-preco').addEventListener('input', mostrarParcelamento);
     folha.querySelector('#ed-parcelas').addEventListener('input', mostrarParcelamento);
+
+    /* as opções: digitar, remover, adicionar, foto */
+    var edOpcoes = folha.querySelector('[data-opcoes-ed]');
+    edOpcoes.addEventListener('input', function (e) {
+      var campo = e.target.getAttribute('data-o');
+      var linha = e.target.closest('[data-i]');
+      if (!campo || !linha) return;
+      opcoesEd[Number(linha.getAttribute('data-i'))][campo] = e.target.value;
+    });
+    edOpcoes.addEventListener('click', function (e) {
+      var linha = e.target.closest('[data-i]');
+      if (!linha) return;
+      var i = Number(linha.getAttribute('data-i'));
+      if (e.target.closest('[data-opcao-tirar]')) {
+        opcoesEd.splice(i, 1);
+        pintarOpcoesEd();
+      } else if (e.target.closest('[data-opcao-foto]')) {
+        opcaoDaFoto = i;
+        folha.querySelector('[data-opcao-arquivo]').click();
+      }
+    });
+    folha.querySelector('[data-opcao-nova]').addEventListener('click', function () {
+      opcoesEd.push({ nome: '', preco: '', estoque: '', custo: '', imagem: '', fotoNova: null });
+      pintarOpcoesEd();
+      var nomes = folha.querySelectorAll('[data-opcoes-ed] [data-o="nome"]');
+      if (nomes.length) nomes[nomes.length - 1].focus();
+    });
+    folha.querySelector('[data-opcao-arquivo]').addEventListener('change', async function (e) {
+      var arq = e.target.files && e.target.files[0];
+      e.target.value = '';
+      var i = opcaoDaFoto;
+      if (!arq || !opcoesEd[i]) return;
+      try {
+        var img = await imagemDoArquivo(arq);
+        var tela = window.PharmaFitQuadrarFoto(img, 800);
+        paraWebp(tela, function (blob) {
+          if (opcoesEd[i].fotoNova) URL.revokeObjectURL(opcoesEd[i].fotoNova.url);
+          opcoesEd[i].fotoNova = { blob: blob, url: URL.createObjectURL(blob) };
+          pintarOpcoesEd();
+          dizer('Foto da opção pronta. Aperte SALVAR para ela entrar no site.', 'bom');
+        }, function (err) { dizer(String((err && err.message) || err), 'ruim'); });
+      } catch (err) {
+        dizer(String((err && err.message) || err), 'ruim');
+      }
+    });
     folha.querySelector('#ed-parcela-valor').addEventListener('input', mostrarParcelamento);
     folha.querySelector('#ed-custo').addEventListener('input', pintarLucro);
 
@@ -650,19 +722,51 @@
   }
 
   /** Sobe a foto e devolve o endereço público dela. */
-  async function subirFoto(id) {
+  function pintarOpcoesEd() {
+    var caixa = folha.querySelector('[data-opcoes-ed]');
+    caixa.innerHTML = opcoesEd.map(function (o, i) {
+      var foto = o.fotoNova ? o.fotoNova.url : (o.imagem || '');
+      return '<div class="opcao-ed" data-i="' + i + '">' +
+          '<button class="opcao-ed__foto" type="button" data-opcao-foto aria-label="Foto da opção">' +
+            (foto ? '<img src="' + esc(foto) + '" alt="">' : '<span>+ foto</span>') +
+          '</button>' +
+          '<div class="opcao-ed__campos">' +
+            '<input type="text" data-o="nome" maxlength="40" placeholder="Nome (ex.: Gluconex)" value="' + esc(o.nome) + '">' +
+            '<div class="opcao-ed__linha">' +
+              '<label class="opcao-ed__mini"><span>Preço (R$)</span>' +
+                '<input type="number" data-o="preco" min="0" step="0.01" inputmode="decimal" placeholder="—" value="' + esc(o.preco) + '"></label>' +
+              '<label class="opcao-ed__mini"><span>Estoque</span>' +
+                '<input type="number" data-o="estoque" min="0" step="1" inputmode="numeric" placeholder="livre" value="' + esc(o.estoque) + '"></label>' +
+              (verCusto
+                ? '<label class="opcao-ed__mini"><span>Custo (R$)</span>' +
+                    '<input type="number" data-o="custo" min="0" step="0.01" inputmode="decimal" placeholder="—" value="' + esc(o.custo) + '"></label>'
+                : '') +
+            '</div>' +
+          '</div>' +
+          '<button class="opcao-ed__tirar" type="button" data-opcao-tirar aria-label="Remover ' + esc(o.nome || 'opção') + '">×</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* Sobe um arquivo pronto (WebP) para o balde das fotos e devolve o
+     endereço público. `subirFoto` (a do produto) e as fotos das opções
+     passam por aqui. */
+  async function subirBlob(blob, base) {
     var sb = window.PharmaFitAuth.cliente();
-    /* O nome leva a hora: endereço novo a cada troca. Com nome fixo, o
-       cache do navegador e o do Supabase continuariam entregando a foto
-       antiga por horas, e a troca pareceria não ter funcionado. */
-    var nome = String(id).replace(/[^a-zA-Z0-9-]/g, '') + '-' + Date.now() + '.webp';
-    var r = await sb.storage.from(BALDE).upload(nome, fotoNova.blob, {
+    var nome = String(base).replace(/[^a-zA-Z0-9-]/g, '') + '-' + Date.now() + '.webp';
+    var r = await sb.storage.from(BALDE).upload(nome, blob, {
       contentType: 'image/webp',
       cacheControl: '31536000'
     });
     if (r.error) throw new Error('a foto não subiu: ' + r.error.message);
     var pub = sb.storage.from(BALDE).getPublicUrl(nome);
     return (pub && pub.data && pub.data.publicUrl) || '';
+  }
+
+  async function subirFoto(id) {
+    /* Nome novo a cada troca: com o mesmo nome, o cache do navegador e o
+       do Supabase continuariam entregando a foto antiga por horas. */
+    return subirBlob(fotoNova.blob, String(id));
   }
 
   /** Apaga do balde a foto que acabou de ser substituída. */
@@ -812,6 +916,29 @@
         erroNo('parcela-valor', 'Valor inválido.'); ruim = true;
       }
     }
+    var opcoesLimpa = null;
+    if (podeOpcoes(editando)) {
+      var vistos = {};
+      var problema = '';
+      var num = function (v) { var t = String(v == null ? '' : v).trim().replace(',', '.'); return t === '' ? null : Number(t); };
+      opcoesLimpa = opcoesEd.filter(function (o) {
+        /* linha totalmente vazia (tocou em "+" e desistiu) só some */
+        return String(o.nome || '').trim() || String(o.preco || '') || String(o.estoque || '') || o.fotoNova;
+      }).map(function (o) {
+        var nomeO = String(o.nome || '').trim();
+        var chave = nomeO.toLowerCase();
+        if (!nomeO) problema = problema || 'Toda opção precisa de um nome.';
+        else if (/[()]/.test(nomeO)) problema = problema || 'O nome da opção não pode ter parênteses ("' + nomeO + '").';
+        else if (vistos[chave]) problema = problema || 'Há duas opções chamadas "' + nomeO + '".';
+        vistos[chave] = true;
+        var pr = num(o.preco), es = num(o.estoque), cu = num(o.custo);
+        if (pr !== null && !(pr > 0)) problema = problema || 'Preço inválido em "' + nomeO + '".';
+        if (es !== null && !(Number.isInteger(es) && es >= 0)) problema = problema || 'Estoque inválido em "' + nomeO + '" (número inteiro, sem vírgula).';
+        if (cu !== null && !(cu >= 0)) problema = problema || 'Custo inválido em "' + nomeO + '".';
+        return { o: o, nome: nomeO, preco: pr, estoque: es, custo: cu };
+      });
+      if (problema) { erroNo('opcoes', problema); ruim = true; }
+    }
     if (ruim) return;
 
     var botao = folha.querySelector('[data-salvar]');
@@ -835,6 +962,25 @@
          o salvar INTEIRO — a equipe perderia a mudança de preço por
          causa de uma coluna que falta. */
       if (podeEtiquetar(editando)) campos.destaque = destaque || null;
+      if (opcoesLimpa) {
+        for (var k = 0; k < opcoesLimpa.length; k++) {
+          if (opcoesLimpa[k].o.fotoNova) {
+            botao.textContent = 'Enviando as fotos…';
+            opcoesLimpa[k].o.imagem = await subirBlob(opcoesLimpa[k].o.fotoNova.blob,
+              String(editando.id) + '-opcao-' + opcoesLimpa[k].nome);
+            opcoesLimpa[k].o.fotoNova = null;
+          }
+        }
+        campos.opcoes = opcoesLimpa.map(function (x) {
+          var o = { nome: x.nome };
+          if (x.preco !== null) o.preco = Math.round(x.preco * 100) / 100;
+          if (x.estoque !== null) o.estoque = x.estoque;
+          if (x.custo !== null) o.custo = Math.round(x.custo * 100) / 100;
+          if (x.o.imagem) o.imagem = x.o.imagem;
+          return o;
+        });
+        campos.opcoes_rotulo = String(folha.querySelector('[data-opcoes-rotulo]').value || '').trim().slice(0, 30) || 'Marca';
+      }
       if (podeParcelar(editando)) {
         campos.parcelas = parcelas === null ? 3 : parcelas;
         campos.parcela_valor = parcelaValor > 0 ? Math.round(parcelaValor * 100) / 100 : null;
@@ -904,6 +1050,15 @@
     var caixaEtiqueta = folha.querySelector('[data-campo="destaque"]');
     caixaEtiqueta.hidden = !podeEtiquetar(p);
     folha.querySelector('[data-destaque]').value = String(p.destaque || '');
+
+    folha.querySelector('[data-campo="opcoes"]').hidden = !podeOpcoes(p);
+    folha.querySelector('[data-opcoes-rotulo]').value = p.opcoes_rotulo || 'Marca';
+    opcoesEd = (Array.isArray(p.opcoes) ? p.opcoes : []).map(function (o) {
+      var v = function (x) { return x === undefined || x === null ? '' : String(x); };
+      return { nome: v(o.nome), preco: v(o.preco), estoque: v(o.estoque), custo: v(o.custo),
+               imagem: o.imagem || '', fotoNova: null };
+    });
+    pintarOpcoesEd();
 
     folha.querySelector('[data-parcelamento]').hidden = !podeParcelar(p);
     folha.querySelector('#ed-parcelas').value =

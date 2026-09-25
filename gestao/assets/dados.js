@@ -355,7 +355,29 @@
       var produtos = await Dados.listar('produtos');
       var produto = produtos.filter(function (p) { return p.nome === nomeProduto; })[0];
 
-      if (!produto) return { controlado: false };
+      /* PEDIDO DE UMA OPÇÃO ("Tirzepatida 15 mg — 1 ampola (Gluconex)",
+         25/09/2026): o estoque que desce é o DA OPÇÃO, dentro do produto.
+         Opção sem estoque controlado não mexe em nada — nem no estoque do
+         produto, que é de outra coisa. */
+      if (!produto) {
+        var dono = null, idx = -1;
+        produtos.forEach(function (p) {
+          (Array.isArray(p.opcoes) ? p.opcoes : []).forEach(function (o, i) {
+            if (!dono && nomeProduto === p.nome + ' (' + o.nome + ')') { dono = p; idx = i; }
+          });
+        });
+        if (!dono) return { controlado: false };
+        var op = dono.opcoes[idx];
+        if (op.estoque === null || op.estoque === undefined || op.estoque === '') {
+          return { controlado: false };
+        }
+        var sobra = Math.max(0, Number(op.estoque) - Number(quantidade || 1));
+        var novas = dono.opcoes.map(function (o, i) {
+          return i === idx ? Object.assign({}, o, { estoque: sobra }) : o;
+        });
+        await Dados.atualizar('produtos', dono.id, { opcoes: novas });
+        return { controlado: true, restante: sobra, acabou: sobra === 0, produto: nomeProduto };
+      }
       if (produto.estoque === null || produto.estoque === undefined || produto.estoque === '') {
         return { controlado: false };
       }

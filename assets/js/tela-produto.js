@@ -40,6 +40,17 @@
 
   var pedido = new URLSearchParams(location.search).get('p') || '';
   var produto = C.doCatalogo(pedido);
+  /* Endereço de uma OPÇÃO ("Produto (Gluconex)"), vindo do carrinho ou
+     de "Meus pedidos": abre o produto principal com a opção já
+     escolhida (ver `aplicarOpcoes` no catalogo-banco.js). */
+  var preEscolha = '';
+  function subirParaOPai() {
+    if (produto && produto.variante) {
+      preEscolha = produto.opcao;
+      produto = C.doCatalogo(produto.pai) || produto;
+    }
+  }
+  subirParaOPai();
 
   document.getElementById('carregando').hidden = true;
 
@@ -101,6 +112,7 @@
      * fora do ar. Aí nenhum dos dois avisos vem. */
     function aoChegar() {
       produto = C.doCatalogo(pedido);
+      subirParaOPai();
       clearTimeout(desistir);
       document.removeEventListener('pharmafit-catalogo', aoChegar);
       document.removeEventListener('pharmafit-catalogo-pronto', aoChegar);
@@ -140,6 +152,73 @@
 
   var quantidade = 1;
 
+  /* ---------- AS OPÇÕES (marcas) ----------
+     `pai` é o produto da vitrine; `produto` passa a ser a opção escolhida,
+     e é por ele que o carrinho, o WhatsApp e a conta andam — a opção é
+     um item de venda completo, com nome, preço, foto e estoque. Enquanto
+     nada foi escolhido, `produto` é o próprio pai e o botão de adicionar
+     pede a escolha antes. */
+  var pai = produto;
+  var escolhida = null;
+
+  function opcoesDoPai() {
+    return Preco && Preco.opcoesDe ? Preco.opcoesDe(pai) : null;
+  }
+  function precisaEscolher() {
+    return !!opcoesDoPai() && produto === pai;
+  }
+  function esgotada(v) {
+    return v.estoque !== null && v.estoque !== undefined && v.estoque !== '' && Number(v.estoque) <= 0;
+  }
+
+  function pintarOpcoes() {
+    var caixa = achar('opcoes');
+    var op = opcoesDoPai();
+    if (!op) { caixa.hidden = true; return; }
+    caixa.hidden = false;
+    achar('opcoes-rotulo').textContent = pai.opcoesRotulo || 'Opção';
+    achar('opcoes-lista').innerHTML = op.lista.map(function (v) {
+      var sel = escolhida === v.opcao;
+      var fora = esgotada(v);
+      var foto = window.PharmaFitFoto ? window.PharmaFitFoto(v.imagem, 160) : v.imagem;
+      return '<button class="opcao' + (sel ? ' is-ativa' : '') + '" type="button" role="radio" ' +
+          'aria-checked="' + sel + '" data-opcao="' + esc(v.opcao) + '"' + (fora ? ' disabled' : '') + '>' +
+          '<img class="opcao__foto" src="' + esc(foto) + '" alt="" loading="lazy">' +
+          '<span class="opcao__nome">' + esc(v.opcao) + '</span>' +
+          (fora
+            ? '<span class="opcao__detalhe">Esgotado</span>'
+            : (op.variaPreco ? '<span class="opcao__detalhe">' + moeda(v.venda) + '</span>' : '')) +
+        '</button>';
+    }).join('');
+  }
+
+  function escolher(nomeOpcao) {
+    var v = (pai.opcoes || []).filter(function (o) { return o.opcao === nomeOpcao; })[0];
+    if (!v || esgotada(v)) return;
+    escolhida = v.opcao;
+    produto = v;
+    achar('opcoes').classList.remove('is-alerta');
+    aplicarProduto();
+    pintarOpcoes();
+    pintarConta();
+    achar('estoque').textContent = temControle
+      ? (semEstoque ? 'Sem estoque' : Number(produto.estoque) + ' em estoque')
+      : '';
+  }
+
+  achar('opcoes-lista').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-opcao]');
+    if (b && !b.disabled) escolher(b.getAttribute('data-opcao'));
+  });
+
+  function pedirEscolha() {
+    var caixa = achar('opcoes');
+    caixa.classList.remove('is-alerta');
+    void caixa.offsetWidth; /* reinicia a animação do aviso */
+    caixa.classList.add('is-alerta');
+    caixa.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   /* ---------- o que vem do produto ----------
 
      NUMA FUNÇÃO, e não escrito direto, porque isto precisa acontecer
@@ -155,10 +234,18 @@
     temControle = !(produto.estoque === null || produto.estoque === undefined ||
                     produto.estoque === '');
     maximo = temControle ? Math.max(1, Number(produto.estoque)) : 999;
+    /* produto com opções e nada escolhido: esgotado só se TODAS estão */
+    if (precisaEscolher()) {
+      semEstoque = opcoesDoPai().aVenda === 0;
+      temControle = false;
+      maximo = 999;
+    }
     if (quantidade > maximo) quantidade = maximo;
 
-    achar('caminho-nome').textContent = produto.nome;
-    achar('nome').textContent = produto.nome;
+    /* o título é sempre o do produto da vitrine; a opção aparece
+       escolhida nos botões logo abaixo do preço */
+    achar('caminho-nome').textContent = pai.nome;
+    achar('nome').textContent = pai.nome;
     achar('categoria').textContent = produto.categoria || '';
     achar('desc').textContent = produto.descricao || '';
     document.title = produto.nome + ' — Pharma Fit';
@@ -234,10 +321,12 @@
     var Etiqueta = window.PharmaFitEtiqueta;
     selo.innerHTML = semEstoque
       ? '<span class="product__badge product__badge--off"><span>SEM ESTOQUE</span></span>'
-      : (Etiqueta ? Etiqueta(produto, 'product__badge') : '');
+      : (Etiqueta ? Etiqueta(pai, 'product__badge') : '');
   }
 
   aplicarProduto();
+  pintarOpcoes();
+  if (preEscolha && opcoesDoPai()) { var pre0 = preEscolha; preEscolha = ''; escolher(pre0); }
 
   /* ---------- as faixas ---------- */
 
@@ -258,7 +347,10 @@
       } else {
         antes.hidden = true;
       }
-      achar('valor').textContent = moeda(produto.venda);
+      var opv = precisaEscolher() ? opcoesDoPai() : null;
+      achar('valor').textContent = opv && opv.variaPreco
+        ? 'a partir de ' + moeda(opv.menor)
+        : moeda(produto.venda);
       achar('parcelas').textContent = Preco && Preco.textoParcelas
         ? Preco.textoParcelas(produto.venda, produto.parcelas, produto.parcelaValor) : '';
       return;
@@ -321,7 +413,8 @@
     achar('mais').disabled = quantidade >= maximo;
 
     var conta = achar('conta');
-    conta.hidden = false;
+    /* sem a opção escolhida não há conta a mostrar: o preço depende dela */
+    conta.hidden = precisaEscolher();
 
     achar('conta-linha').textContent =
       quantidade + ' × ' + moeda(r.preco);
@@ -400,6 +493,7 @@
     botaoAvisar.setAttribute('data-avise', produto.nome);
   } else {
     botaoAdicionar.addEventListener('click', function () {
+      if (precisaEscolher()) { pedirEscolha(); return; }
       /* A foto desta página voa até o carrinho da barra de cima, pela
          mesma função que a vitrine usa (`app.js`) — uma animação só,
          para as duas telas não terem cada uma a sua.
@@ -437,13 +531,13 @@
   var botaoFav = achar('favoritar');
   function pintarFav() {
     if (!Favoritos) { botaoFav.hidden = true; return; }
-    var salvo = Favoritos.ler().indexOf(produto.nome) !== -1;
+    var salvo = Favoritos.ler().indexOf(pai.nome) !== -1;
     achar('fav-texto').textContent = salvo ? 'Nos favoritos' : 'Favoritar';
     botaoFav.classList.toggle('is-salvo', salvo);
   }
   if (Favoritos) {
     botaoFav.addEventListener('click', function () {
-      Favoritos.alternar(produto.nome);
+      Favoritos.alternar(pai.nome);
       pintarFav();
     });
     pintarFav();
@@ -465,8 +559,8 @@
   }
   botaoShare.addEventListener('click', async function () {
     var dados = {
-      title: produto.nome + ' — Pharma Fit',
-      text: produto.nome,
+      title: pai.nome + ' — Pharma Fit',
+      text: pai.nome,
       url: location.href
     };
     try {
@@ -505,7 +599,7 @@
 
     var iguais = (window.PHARMAFIT_CATALOGO || []).filter(function (o) {
       if (o.foraDoSite) return false;
-      if (String(o.nome) === String(produto.nome)) return false;
+      if (String(o.nome) === String(pai.nome)) return false;
       return String(o.categoria || '') === String(produto.categoria || '');
     }).slice(0, 4);
 
@@ -538,6 +632,17 @@
      é o mesmo do catálogo, então ele já vem atualizado — só falta pôr na
      tela. */
   document.addEventListener('pharmafit-catalogo', function () {
+    /* o banco refaz as opções (objetos novos): a escolhida é achada de
+       novo pelo nome, ou volta a "escolha uma" se sumiu do painel */
+    if (escolhida) {
+      var v = (pai.opcoes || []).filter(function (o) { return o.opcao === escolhida; })[0];
+      if (v) produto = v; else { escolhida = null; produto = pai; }
+    } else if (preEscolha) {
+      var pre = preEscolha; preEscolha = '';
+      pintarOpcoes();
+      escolher(pre);
+    }
+    pintarOpcoes();
     aplicarProduto();
     pintarFaixas();
     pintarConta();
