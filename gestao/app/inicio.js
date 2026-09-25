@@ -319,11 +319,68 @@
     }).join('');
   }
 
+  /* ---------- contas a pagar, em vermelho ---------- */
+
+  /* A conta do cartão (25/09/2026): a barra inteira é o que é do MÊS —
+     o que falta pagar (tudo em aberto, atrasadas incluídas) mais o que
+     já foi pago neste mês. O vermelho é o que falta; marcar uma conta
+     como paga tira o valor dela do vermelho e põe no cinza. */
+  function pintarContas() {
+    var cartao = document.querySelector('[data-contas-inicio]');
+    var lista = estado.contas;
+    if (!lista) { cartao.hidden = true; return; }
+
+    var agora = new Date(Date.now() - 4 * 3600 * 1000).toISOString().slice(0, 10);
+    var mes = agora.slice(0, 7);
+    var abertas = lista.filter(function (c) { return !c.pago_em; });
+    var falta = abertas.reduce(function (t, c) { return t + Number(c.valor); }, 0);
+    var pagoMes = lista.filter(function (c) { return c.pago_em && String(c.pago_em).slice(0, 7) === mes; })
+      .reduce(function (t, c) { return t + Number(c.valor); }, 0);
+    var atrasadas = abertas.filter(function (c) { return c.vencimento < agora; });
+
+    cartao.hidden = false;
+    document.querySelector('[data-contas-valor]').textContent = falta
+      ? moeda(falta) + ' a pagar'
+      : 'Nada a pagar';
+    var base = falta + pagoMes;
+    document.querySelector('[data-contas-falta]').style.width =
+      (base ? Math.round((falta / base) * 100) : 0) + '%';
+    document.querySelector('[data-contas-legenda]').textContent =
+      (pagoMes ? moeda(pagoMes) + ' já pago este mês' : 'Nada pago ainda este mês') +
+      (atrasadas.length
+        ? ' · ' + atrasadas.length + (atrasadas.length === 1 ? ' atrasada' : ' atrasadas')
+        : '');
+
+    var proximas = abertas.slice().sort(function (a, b) {
+      return String(a.vencimento).localeCompare(String(b.vencimento));
+    }).slice(0, 3);
+    document.querySelector('[data-contas-proximas]').innerHTML = proximas.map(function (c) {
+      var p = String(c.vencimento).split('-');
+      var atrasada = c.vencimento < agora;
+      return '<span class="contas-inicio__item' + (atrasada ? ' contas-inicio__item--atrasada' : '') + '">' +
+        '<span>' + esc(c.nome) + '</span>' +
+        '<span>' + (atrasada ? 'venceu ' : 'vence ') + p[2] + '/' + p[1] + ' · <b>' + moeda(c.valor) + '</b></span>' +
+      '</span>';
+    }).join('');
+  }
+
+  async function carregarContas() {
+    try {
+      var sb = Auth.cliente();
+      if (!sb) { estado.contas = null; return; }
+      var r = await sb.from('pf_contas_pagar').select('nome,valor,vencimento,pago_em');
+      estado.contas = r.error ? null : (r.data || []);
+    } catch (e) {
+      estado.contas = null;
+    }
+  }
+
   /* ---------- tudo junto ---------- */
 
   function pintar() {
     pintarHoje();
     pintarBarras();
+    pintarContas();
     pintarNumeros();
     pintarFatias();
     pintarRecentes();
@@ -347,6 +404,7 @@
   async function carregar() {
     try {
       var r = await Moldura.dados();
+      await carregarContas();
       estado.pedidos = r.pedidos || [];
       estado.produtos = r.produtos || [];
       pintar();

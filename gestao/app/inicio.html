@@ -12,7 +12,7 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=c01fe180">
+<link rel="stylesheet" href="app.css?v=8c9fb713">
 </head>
 <body>
 
@@ -74,6 +74,25 @@
           </svg>
         </a>
       </section>
+
+      <!-- CONTAS A PAGAR, EM VERMELHO (Brian, 25/09/2026): "tem que ter
+           ela no gráfico da página inicial do painel na cor vermelha,
+           tipo ir mostrando lá quanto tem de contas, e de acordo com
+           que for pagamento ir diminuindo". A barra vermelha é o que
+           falta pagar; a parte cinza, o que já foi pago no mês. Cada
+           conta marcada como paga passa do vermelho para o cinza. -->
+      <a class="contas-inicio" href="contas.html" data-contas-inicio hidden>
+        <span class="contas-inicio__topo">
+          <span class="contas-inicio__rotulo">Contas a pagar</span>
+          <span class="contas-inicio__ver">Ver todas ›</span>
+        </span>
+        <span class="contas-inicio__valor" data-contas-valor>—</span>
+        <span class="contas-inicio__barra" aria-hidden="true">
+          <span class="contas-inicio__falta" data-contas-falta></span>
+        </span>
+        <span class="contas-inicio__legenda" data-contas-legenda></span>
+        <span class="contas-inicio__proximas" data-contas-proximas></span>
+      </a>
 
       <!-- os quatro números -->
       <div class="numeros">
@@ -146,7 +165,7 @@
 <script src="../assets/auth.js?v=2fb8bdb5"></script>
 <script src="../assets/dados.js?v=67d872c8"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
-<script src="app.js?v=ed2f7d61"></script>
-<script src="inicio.js?v=a0671715"></script>
+<script src="app.js?v=2d10b5d0"></script>
+<script src="inicio.js?v=989787cc"></script>
 </body>
 </html>

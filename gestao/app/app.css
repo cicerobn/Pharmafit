@@ -2097,3 +2097,57 @@ textarea:focus-visible,
 .opcoes-ed__mais{margin-top:8px;align-self:flex-start;border:1px dashed rgba(29,27,24,.3);background:transparent;
   border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:600;color:var(--gold);cursor:pointer}
 .opcoes-ed{display:flex;flex-direction:column}
+
+/* ---------------------------------------------------------
+   CONTAS A PAGAR (25/09/2026)
+   Valor em VERMELHO (pedido do Brian), descrição mais clara embaixo do
+   nome, e a "abinha" de pagar abrindo dentro da própria linha.
+   --------------------------------------------------------- */
+.contas-resumo__rotulo{margin:0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.contas-resumo__valor{margin:4px 0 2px;font-size:28px;font-weight:700;color:var(--st-cancelado);letter-spacing:-.02em}
+.contas-resumo__pe{margin:0;font-size:13px;color:var(--muted)}
+.contas-resumo .bloco__corpo{padding-top:14px;padding-bottom:14px}
+.conta-form{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+.conta-form__linha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:340px){ .conta-form__linha{grid-template-columns:1fr} }
+.conta-form__botoes{display:flex;gap:8px;flex-wrap:wrap}
+.conta-form__botoes .botao{flex:1 1 140px}
+.contas-abas{margin:18px 16px 10px}
+.cpagar-linha{align-items:flex-start}
+.cpagar-linha .item__corpo{min-width:0;flex:1}
+.cpagar-linha__topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cpagar-linha__topo .item__nome{white-space:normal}
+.cpagar-linha__valor{flex:none;font-weight:700;font-size:15px;color:var(--st-cancelado)}
+.cpagar-linha__descricao{display:block;margin-top:2px;font-size:13px;color:var(--muted-2);line-height:1.35}
+.cpagar-linha__pe{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px}
+.cpagar-linha__pe .item__linha{white-space:normal}
+.cpagar-linha--atrasada{box-shadow:inset 3px 0 0 var(--st-cancelado)}
+.cpagar-linha__paguei{color:var(--st-pago)}
+.conta-pagar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;padding:12px;
+  border-radius:12px;background:var(--st-pago-bg)}
+.conta-pagar__botoes{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.conta-pagar__botoes .botao{flex:1 1 130px}
+@media (max-width:340px){ .conta-pagar{grid-template-columns:1fr} }
+.conta-mes{display:flex;justify-content:space-between;gap:10px;padding:12px 16px 6px;
+  font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+
+/* o cartão vermelho do início */
+.contas-inicio{display:flex;flex-direction:column;gap:6px;margin:12px 16px 0;padding:14px 16px;
+  border-radius:18px;background:var(--card);border:1px solid var(--st-cancelado-bg);
+  color:inherit;text-decoration:none;box-shadow:0 1px 2px rgba(29,27,24,.04)}
+.contas-inicio__topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.contas-inicio__rotulo{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.contas-inicio__ver{font-size:12.5px;font-weight:600;color:var(--st-cancelado)}
+.contas-inicio__valor{font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--st-cancelado)}
+.contas-inicio__barra{display:block;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.contas-inicio__falta{display:block;height:100%;width:0;border-radius:99px;
+  background:linear-gradient(90deg,#d9473b,var(--st-cancelado));transition:width .6s ease}
+.contas-inicio__legenda{font-size:12.5px;color:var(--muted)}
+.contas-inicio__proximas{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.contas-inicio__proximas:empty{display:none}
+.contas-inicio__item{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink-2)}
+.contas-inicio__item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.contas-inicio__item span:last-child{flex:none;color:var(--muted)}
+.contas-inicio__item b{color:var(--st-cancelado);font-weight:700}
+.contas-inicio__item--atrasada span:last-child{color:var(--st-cancelado)}
+@media (prefers-reduced-motion:reduce){ .contas-inicio__falta{transition:none} }

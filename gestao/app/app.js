@@ -47,6 +47,8 @@
     calendario: '<path d="M4 6h16v14H4z"/><path d="M4 10h16M8 3v4M16 3v4"/>',
     rosca: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.6"/>',
     /* a etiqueta de preço: a tela de Cupons (24/09/2026) */
+    /* contas a pagar: o recibo (25/09/2026) */
+    conta: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
     etiqueta: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.4"/>',
     /* a estrela do cliente VIP (24/09/2026) */
     estrela: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
