@@ -288,6 +288,13 @@ window.PHARMAFIT_ES ={
   "Pele, cabelo e recuperação": "Piel, cabello y recuperación",
   "Pelo menos 8 caracteres": "Al menos 8 caracteres",
   "Senha nova": "Contraseña nueva",
+  "Marca": "Marca",
+  "Opção": "Opción",
+  "Escolha uma opção para adicionar ao carrinho.": "Elija una opción para agregar al carrito.",
+  "Escolha a opção": "Elija la opción",
+  "Escolher": "Elegir",
+  "a partir de": "desde",
+  "Esgotado": "Agotado",
   "Repita a senha nova": "Repita la contraseña nueva",
   "Salvar senha nova": "Guardar contraseña nueva",
   "Criar senha nova": "Crear contraseña nueva",
@@ -572,6 +579,8 @@ window.PHARMAFIT_ES_PADROES = [
      cliente paraguaio anunciava onze botões em português. */
   { pt: /^Adicionar (.+) ao carrinho$/, es: "Agregar $1 al carrito" },
   { pt: /^de (R\$ .+)$/, es: "de $1" },
+  /* "a partir de R$ 300,00" — produto com opções de preços diferentes (25/09/2026) */
+  { pt: /^a partir de (R\$ .+)$/, es: "desde $1" },
   { pt: /^ou até (\d+)x sem juros de (.+)$/, es: "o hasta $1 cuotas sin interés de $2" },
   { pt: /^ou em até (\d+)x sem juros de (.+)$/, es: "o en hasta $1 cuotas sin interés de $2" },
   { pt: /^Bom dia, (.+)$/, es: "Buenos días, $1" },

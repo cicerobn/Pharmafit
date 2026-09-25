@@ -223,6 +223,24 @@ window.PharmaFitPreco = {
     };
   },
 
+  /** Produto com opções (marcas): quantas estão à venda e o menor preço
+   *  entre elas. `null` para produto sem opções. */
+  opcoesDe: function (p) {
+    if (!p || !Array.isArray(p.opcoes) || !p.opcoes.length) return null;
+    var semEstoque = function (v) {
+      return v.estoque !== null && v.estoque !== undefined && v.estoque !== '' && Number(v.estoque) <= 0;
+    };
+    var aVenda = p.opcoes.filter(function (v) { return !semEstoque(v); });
+    var precos = p.opcoes.map(function (v) { return Number(v.venda || 0); }).filter(function (n) { return n > 0; });
+    var menor = precos.length ? Math.min.apply(null, precos) : Number(p.venda || 0);
+    return {
+      lista: p.opcoes,
+      aVenda: aVenda.length,
+      menor: menor,
+      variaPreco: precos.some(function (n) { return n !== precos[0]; })
+    };
+  },
+
   /** Valor de cada parcela sem juros (padrão: 3x). */
   parcela: function (valor, vezes) {
     vezes = vezes || 3;

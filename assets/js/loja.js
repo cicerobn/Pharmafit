@@ -15,6 +15,10 @@
       estoque null/indefinido = sem controle de estoque. */
   function semEstoque(p) {
     if (p.indisponivel) return true;
+    /* Produto com opções só está sem estoque quando TODAS as opções
+       estão: "Lipoland esgotou" não esgota a ampola de tirzepatida. */
+    var op = Preco.opcoesDe && Preco.opcoesDe(p);
+    if (op) return op.aVenda === 0;
     return p.estoque !== null && p.estoque !== undefined && p.estoque !== '' && Number(p.estoque) <= 0;
   }
 
@@ -306,7 +310,11 @@
           '</p>'
         : '') +
       '<div class="product__pe">' +
-        '<p class="product__price">' + Preco.formatar(p.venda) + '</p>' +
+        /* "a partir de" quando as opções têm preços diferentes */
+        (Preco.opcoesDe(p) && Preco.opcoesDe(p).variaPreco
+          ? '<p class="product__price"><small class="product__apartir">a partir de</small> ' +
+              Preco.formatar(Preco.opcoesDe(p).menor) + '</p>'
+          : '<p class="product__price">' + Preco.formatar(p.venda) + '</p>') +
       '</div>' +
       '<p class="product__installment">' + Preco.htmlParcelas(p.venda, p.parcelas, p.parcelaValor) + '</p>';
   }
@@ -358,6 +366,18 @@
      mesmo botão num cartão de 92px de coluna e pede a versão curta.
      Um botão só, dois tamanhos — e não dois botões. */
   function botaoComprar(p, extra) {
+    /* PRODUTO COM OPÇÕES NÃO VAI DIRETO AO CARRINHO: sem a marca, o
+       pedido não diz qual caixa separar. O botão leva à página do
+       produto, onde a escolha acontece. É um link, e não um botão, e
+       sem `data-por-no-carrinho` — o app.js não o intercepta. */
+    if (Preco.opcoesDe(p)) {
+      return '' +
+        '<a class="product__comprar' + (extra || '') + '" ' +
+          'href="produto.html?p=' + encodeURIComponent(p.nome) + '" ' +
+          'aria-label="Escolher ' + esc(p.opcoesRotulo || 'opção') + ' de ' + esc(p.nome) + '">' +
+          '<span class="product__comprar-txt">Escolher</span>' +
+        '</a>';
+    }
     return '' +
       '<button class="product__comprar' + (extra || '') + '" type="button" ' +
         'data-por-no-carrinho="' + esc(p.nome) + '" ' +
@@ -807,7 +827,13 @@
                sobre a foto (`.protocol__off`), onde não desalinha nada;
                o preço antigo riscado continua na lista e na página do
                produto. */
-            '<p class="protocol__valor">' + Preco.formatar(p.venda) + '</p>' +
+            /* com opções de preços diferentes: o menor, com "a partir de"
+               em cima (linha própria — o preço continua no pé do cartão,
+               alinhado com os outros dois) */
+            (Preco.opcoesDe(p) && Preco.opcoesDe(p).variaPreco
+              ? '<p class="protocol__valor"><small class="protocol__apartir">a partir de</small>' +
+                  Preco.formatar(Preco.opcoesDe(p).menor) + '</p>'
+              : '<p class="protocol__valor">' + Preco.formatar(p.venda) + '</p>') +
             /* O MESMO BOTÃO DA VITRINE, num tamanho que cabe em 92px de
                coluna (`--curto`). Os três da fila estão sempre em
                estoque? Não necessariamente — por isso o mesmo teste da
