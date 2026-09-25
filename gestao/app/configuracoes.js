@@ -155,6 +155,80 @@
 
   /* ---------- montar ---------- */
 
+  /* ---------- VERIFICAÇÃO EM DUAS ETAPAS (25/09/2026) ---------- */
+  function ligarDuasEtapas() {
+    var q = function (n) { return document.querySelector('[data-2e-' + n + ']'); };
+    var botao = q('botao');
+    var fase = 'carregando';   /* desligada | ativando | ligada */
+    var fatorNovo = null;
+    var fatorAtivo = null;
+
+    function dizer(texto, bom) {
+      var r = q('recado');
+      r.hidden = !texto;
+      r.className = 'folha__recado folha__recado--' + (bom ? 'bom' : 'ruim');
+      r.textContent = texto || '';
+    }
+
+    async function pintar() {
+      var estado = await Auth.duasEtapas();
+      q('passos').hidden = true;
+      if (!estado) {
+        q('estado').textContent = 'Não consegui conferir agora (sem conexão com o banco).';
+        botao.hidden = true;
+        return;
+      }
+      fatorAtivo = estado.fator;
+      if (estado.ativa) {
+        fase = 'ligada';
+        q('estado').innerHTML = '<span class="marca marca--pago">Ativa</span> Entrar no painel pede o código do celular.';
+        botao.textContent = 'Desativar verificação em duas etapas';
+        botao.className = 'botao';
+      } else {
+        fase = 'desligada';
+        q('estado').innerHTML = '<span class="marca marca--pendente">Desligada</span> Hoje só a senha protege o painel.';
+        botao.textContent = 'Ativar verificação em duas etapas';
+        botao.className = 'botao botao--forte';
+      }
+      botao.hidden = false;
+    }
+
+    botao.addEventListener('click', async function () {
+      dizer('');
+      botao.disabled = true;
+      try {
+        if (fase === 'desligada') {
+          var r = await Auth.iniciarDuasEtapas();
+          if (!r.ok) return dizer('Não consegui começar: ' + r.erro, false);
+          fatorNovo = r.id;
+          q('qr').src = r.qr;
+          q('chave').textContent = r.segredo;
+          q('passos').hidden = false;
+          q('codigo').value = '';
+          q('codigo').focus();
+          fase = 'ativando';
+          botao.textContent = 'Confirmar e ativar';
+        } else if (fase === 'ativando') {
+          var c = await Auth.confirmarDuasEtapas(fatorNovo, q('codigo').value);
+          if (!c.ok) return dizer(c.erro, false);
+          dizer('Pronto: a verificação em duas etapas está ativa. Da próxima vez que entrar, o painel ' +
+                'vai pedir o código do app. Guarde o celular com cuidado.', true);
+          await pintar();
+        } else if (fase === 'ligada') {
+          if (!window.confirm('Desativar a verificação em duas etapas? O painel volta a ser protegido só pela senha.')) return;
+          var d = await Auth.desligarDuasEtapas(fatorAtivo && fatorAtivo.id);
+          if (!d.ok) return dizer('Não desativei: ' + d.erro, false);
+          dizer('Verificação em duas etapas desativada.', true);
+          await pintar();
+        }
+      } finally {
+        botao.disabled = false;
+      }
+    });
+
+    pintar();
+  }
+
   (async function () {
     var user = await Auth.exigirLogin('../login.html');
     if (!user) return;
@@ -192,6 +266,16 @@
     else elDono.hidden = true;
 
     document.querySelector('[data-geral]').innerHTML = linhas(GERAL);
+
+    ligarDuasEtapas();
+
+    document.querySelector('[data-sair-todos]').addEventListener('click', async function () {
+      if (!window.confirm('Encerrar o acesso ao painel em TODOS os aparelhos (este também)? ' +
+                          'Use se perdeu o celular ou acha que a senha vazou.')) return;
+      var r = await Auth.sairDeTodos();
+      if (!r.ok) { window.alert('Não consegui: ' + r.erro); return; }
+      location.replace('../login.html');
+    });
 
     document.querySelector('[data-sair-aqui]').addEventListener('click', async function () {
       try { await Auth.sair(); } catch (e) {}

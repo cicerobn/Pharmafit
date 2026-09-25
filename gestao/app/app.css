@@ -2178,3 +2178,10 @@ button.sino{border:0;background:transparent;cursor:pointer;font:inherit;color:in
 .aviso--estoque{border-left-color:var(--st-separacao)}
 .aviso--forte{border-left-color:var(--st-cancelado);background:var(--st-cancelado-bg)}
 .aviso--forte span{color:var(--st-cancelado)}
+
+/* verificação em duas etapas, em Configurações (25/09/2026) */
+.duas-etapas{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+.duas-etapas__estado{margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;color:var(--ink-2)}
+.duas-etapas__qr{display:block;width:180px;height:180px;margin:4px auto;background:#fff;padding:8px;border-radius:12px;border:1px solid var(--line)}
+.duas-etapas__chave{display:inline-block;margin-top:4px;padding:4px 8px;border-radius:8px;background:var(--tela);
+  font-size:13px;letter-spacing:.08em;overflow-wrap:anywhere;user-select:all}

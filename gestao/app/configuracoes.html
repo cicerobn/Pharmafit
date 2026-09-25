@@ -2,6 +2,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
+<!-- CSP (25/09/2026): o navegador só roda script deste site (e a biblioteca do
+     Supabase no jsDelivr, a reserva do nuvem.js), e só manda dados para o nosso
+     Supabase. Código injetado por alguém não roda, e se rodasse não teria para
+     onde mandar o que roubou. Nada de script embutido no HTML: é o que permite
+     esta regra ser rígida. A mesma linha em todas as páginas da Pharma Fit. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://xqiujdwvmbaipxyzcpvt.supabase.co; connect-src 'self' https://xqiujdwvmbaipxyzcpvt.supabase.co wss://xqiujdwvmbaipxyzcpvt.supabase.co https://cdn.jsdelivr.net; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Configurações — Gestão Pharma Fit</title>
 <meta name="robots" content="noindex, nofollow">
@@ -9,10 +15,8 @@
 <link rel="icon" href="../../assets/img/logo-pf-marca.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" media="print" onload="this.media='all'"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
-<link rel="stylesheet" href="app.css?v=41839958">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="app.css?v=4c94329e">
 </head>
 <body>
 
@@ -67,6 +71,39 @@
       </form>
     </section>
 
+    <!-- VERIFICAÇÃO EM DUAS ETAPAS (25/09/2026). Brian: "quero ele
+         blindado contra hackers". Senha pode vazar (vírus no computador,
+         site falso, senha repetida em outro lugar); o código do celular
+         muda a cada 30 segundos e fica no aparelho dele. Com ela ativa, o
+         banco só trata a conta como equipe depois do código. -->
+    <p class="rotulo-secao">Segurança da conta</p>
+    <section class="bloco">
+      <div class="bloco__corpo duas-etapas" data-2e>
+        <p class="duas-etapas__estado" data-2e-estado>Conferindo…</p>
+        <p class="campo__nota" data-2e-nota>
+          Com a verificação em duas etapas, entrar no painel pede a senha E um
+          código de 6 números do seu celular. Quem roubar a senha não entra.
+        </p>
+        <div data-2e-passos hidden>
+          <p class="campo__nota"><b>1.</b> Instale no celular o <b>Google Authenticator</b>
+            (ou Authy / Microsoft Authenticator).<br><b>2.</b> No app, toque em "+" e
+            escaneie este código:</p>
+          <img class="duas-etapas__qr" data-2e-qr alt="Código QR para o app autenticador">
+          <p class="campo__nota">Não dá para escanear? Digite no app esta chave:
+            <code class="duas-etapas__chave" data-2e-chave></code></p>
+          <label class="campo">
+            <span class="campo__rotulo">3. Digite o código que apareceu no app</span>
+            <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                   pattern="[0-9]*" placeholder="000000" data-2e-codigo>
+          </label>
+        </div>
+        <p class="folha__recado" data-2e-recado role="status" hidden></p>
+        <button class="botao botao--forte" type="button" data-2e-botao hidden>Ativar verificação em duas etapas</button>
+        <!-- celular perdido ou senha vazada: derruba todas as sessões -->
+        <button class="botao" type="button" data-sair-todos>Sair de todos os aparelhos</button>
+      </div>
+    </section>
+
     <p class="rotulo-secao">Geral</p>
     <section class="bloco">
       <ul class="lista" data-geral></ul>
@@ -98,10 +135,10 @@
 <script src="../assets/config.js?v=55118931"></script>
 <script src="../assets/util.js?v=a2c25918"></script>
 <script src="../../assets/js/catalogo.js?v=303ca501"></script>
-<script src="../assets/auth.js?v=2fb8bdb5"></script>
+<script src="../assets/auth.js?v=aa6c3cd8"></script>
 <script src="../assets/dados.js?v=d500aef2"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
 <script src="app.js?v=84b787ca"></script>
-<script src="configuracoes.js?v=790a1fc1"></script>
+<script src="configuracoes.js?v=dee9746a"></script>
 </body>
 </html>

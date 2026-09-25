@@ -178,6 +178,12 @@
         var r = await sb.auth.signInWithPassword({ email: email, password: senha });
         if (r.error) return { ok: false, erro: traduzErro(r.error.message) };
 
+        /* VERIFICAÇÃO EM DUAS ETAPAS (25/09/2026): se a conta ativou,
+           a senha abre só a primeira porta. A tela pede o código antes
+           de perguntar se é da equipe — até o código, o banco responde
+           "não" de propósito (ver `pf_e_equipe`). */
+        if (await Auth.precisaCodigo()) return { ok: false, precisaCodigo: true };
+
         /* SENHA CERTA NÃO É A MESMA COISA QUE TER ACESSO.
          *
          * Brian, 18/09/2026: "essa conta de davis robert tem que ser a
@@ -272,6 +278,126 @@
       }
     },
 
+    /* ---------- VERIFICAÇÃO EM DUAS ETAPAS (25/09/2026) ----------
+       Senha + código de 6 dígitos de um app autenticador (Google
+       Authenticator, Authy, Microsoft Authenticator). Quem ativa passa a
+       precisar dos dois; o banco cobra isso sozinho em `pf_e_equipe` e
+       `pf_papel`, então pular esta tela não adianta. */
+
+    /** A conta tem duas etapas e esta sessão ainda não passou pelo código? */
+    precisaCodigo: async function () {
+      await pronto;
+      if (!sb || !sb.auth || !sb.auth.mfa) return false;
+      try {
+        var r = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (!r || r.error || !r.data) return false;
+        return r.data.nextLevel === 'aal2' && r.data.currentLevel !== 'aal2';
+      } catch (e) {
+        return false;
+      }
+    },
+
+    /** Confere o código de 6 dígitos da entrada. */
+    confirmarCodigo: async function (codigo) {
+      await pronto;
+      if (!sb) return { ok: false, erro: 'Sem conexão com o banco.' };
+      codigo = String(codigo || '').replace(/\D/g, '');
+      if (codigo.length !== 6) return { ok: false, erro: 'O código tem 6 números.' };
+      try {
+        var f = await sb.auth.mfa.listFactors();
+        var totp = f && f.data && f.data.totp && f.data.totp[0];
+        if (!totp) return { ok: false, erro: 'Não achei a verificação desta conta. Entre de novo.' };
+        var r = await sb.auth.mfa.challengeAndVerify({ factorId: totp.id, code: codigo });
+        if (r.error) return { ok: false, erro: 'Código errado ou vencido. Confira o app e digite o número que está aparecendo agora.' };
+        if ((await Auth.daEquipe()) === false) {
+          try { await sb.auth.signOut(); } catch (e2) {}
+          return { ok: false, erro: 'Sua conta não tem permissão para acessar a gestão.' };
+        }
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
+    /** Situação das duas etapas desta conta: { ativa, pendentes:[ids] } ou null. */
+    duasEtapas: async function () {
+      await pronto;
+      if (!sb || !sb.auth || !sb.auth.mfa) return null;
+      try {
+        var f = await sb.auth.mfa.listFactors();
+        if (f.error || !f.data) return null;
+        var todas = f.data.all || [];
+        return {
+          ativa: (f.data.totp || []).length > 0,
+          fator: (f.data.totp || [])[0] || null,
+          pendentes: todas.filter(function (x) { return x.status !== 'verified'; }).map(function (x) { return x.id; })
+        };
+      } catch (e) {
+        return null;
+      }
+    },
+
+    /** Começa a ativação: devolve { id, qr, segredo } para mostrar na tela. */
+    iniciarDuasEtapas: async function () {
+      await pronto;
+      if (!sb) return { ok: false, erro: 'Sem conexão com o banco.' };
+      try {
+        /* tentativa anterior que ficou pela metade atrapalha a nova */
+        var estado = await Auth.duasEtapas();
+        if (estado && estado.pendentes.length) {
+          for (var i = 0; i < estado.pendentes.length; i++) {
+            try { await sb.auth.mfa.unenroll({ factorId: estado.pendentes[i] }); } catch (e1) {}
+          }
+        }
+        var r = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Pharma Fit ' + Date.now() });
+        if (r.error) return { ok: false, erro: traduzErro(r.error.message) };
+        return { ok: true, id: r.data.id, qr: r.data.totp.qr_code, segredo: r.data.totp.secret };
+      } catch (e) {
+        return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
+    /** Termina a ativação com o primeiro código do app. */
+    confirmarDuasEtapas: async function (factorId, codigo) {
+      await pronto;
+      codigo = String(codigo || '').replace(/\D/g, '');
+      if (codigo.length !== 6) return { ok: false, erro: 'O código tem 6 números.' };
+      try {
+        var r = await sb.auth.mfa.challengeAndVerify({ factorId: factorId, code: codigo });
+        if (r.error) return { ok: false, erro: 'Código errado ou vencido. Digite o número que está aparecendo agora no app.' };
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
+    /** Desliga (só funciona numa sessão que já passou pelo código). */
+    desligarDuasEtapas: async function (factorId) {
+      await pronto;
+      try {
+        var r = await sb.auth.mfa.unenroll({ factorId: factorId });
+        if (r.error) return { ok: false, erro: traduzErro(r.error.message) };
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
+    /** Encerra a sessão em TODOS os aparelhos (celular perdido, senha
+        vazada): qualquer aparelho logado precisa entrar de novo. */
+    sairDeTodos: async function () {
+      await pronto;
+      try { sessionStorage.removeItem(DEMO_KEY); localStorage.removeItem(DEMO_KEY); } catch (e) {}
+      if (!sb) return { ok: true };
+      try {
+        var r = await sb.auth.signOut({ scope: 'global' });
+        if (r && r.error) return { ok: false, erro: traduzErro(r.error.message) };
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, erro: traduzErro(e && e.message) };
+      }
+    },
+
     /** Redireciona para o login se não houver sessão. Retorna o usuário. */
     exigirLogin: async function (destinoLogin) {
       var user = await Auth.usuario();
@@ -282,6 +408,13 @@
       if (user.email && !emailPermitido(user.email)) {
         await Auth.sair();
         location.replace((destinoLogin || 'login.html') + '?erro=sem-acesso');
+        return null;
+      }
+
+      /* sessão aberta só com a senha, numa conta com duas etapas: volta
+         para a tela do código (sem encerrar a sessão, que é o 1º passo) */
+      if (await Auth.precisaCodigo()) {
+        location.replace((destinoLogin || 'login.html') + '?codigo=1');
         return null;
       }
 

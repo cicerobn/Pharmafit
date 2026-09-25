@@ -203,6 +203,12 @@
     el._t = setTimeout(function () { el.classList.remove('is-visible'); }, 4000);
   }
 
+  function escHtml(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
   /** Mostra o que a pessoa escolheu: foto, preço e parcelas. */
   function pintarResumo(nome) {
     var caixa = document.getElementById('pd-resumo');
@@ -214,9 +220,11 @@
     var desconto = Preco.desconto(item.antes, item.venda);
     caixa.hidden = false;
     caixa.innerHTML =
-      '<img src="' + item.imagem + '" alt="">' +
+      /* nome e foto vêm do banco: neutralizados antes de virar HTML
+         (defesa em camadas, 25/09/2026 — a CSP é a outra camada) */
+      '<img src="' + escHtml(item.imagem) + '" alt="">' +
       '<div>' +
-        '<p class="resumo-produto__nome">' + item.nome + '</p>' +
+        '<p class="resumo-produto__nome">' + escHtml(item.nome) + '</p>' +
         (item.antes
           ? '<p class="product__antes"><s>' + Preco.formatar(item.antes) + '</s>' +
             (desconto ? '<span class="selo-off">-' + desconto + '%</span>' : '') + '</p>'
