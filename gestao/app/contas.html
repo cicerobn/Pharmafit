@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contas a pagar — Gestão Pharma Fit</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1d1b18">
+<link rel="icon" href="../../assets/img/logo-pf-marca.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<link rel="stylesheet" href="app.css?v=8c9fb713">
+</head>
+<body>
+
+<div class="app">
+  <main>
+
+    <div class="pagina">
+      <a class="pagina__volta" href="mais.html" data-volta aria-label="Voltar"></a>
+      <h1 class="pagina__titulo">Contas a pagar</h1>
+    </div>
+
+    <!-- CONTAS A PAGAR (Brian, 25/09/2026): "nome, descrição em baixo do
+         nome com uma cor mais clara, valor em vermelho, vencimento, data
+         do pagamento quando eu pagar, forma do pagamento, status se foi
+         paga ou não, e se não foi pago deixe uma abinha pra eu marcar que
+         paguei, editar, excluir" — e "ter um histórico de contas também".
+         O total em aberto também aparece em vermelho no início do painel
+         e vai diminuindo conforme as contas são marcadas como pagas. -->
+
+    <!-- o resumo: quanto falta pagar -->
+    <section class="bloco contas-resumo" data-resumo hidden>
+      <div class="bloco__corpo">
+        <p class="contas-resumo__rotulo">Falta pagar</p>
+        <p class="contas-resumo__valor" data-resumo-valor>—</p>
+        <p class="contas-resumo__pe" data-resumo-pe></p>
+      </div>
+    </section>
+
+    <p class="rotulo-secao" data-form-titulo>Nova conta</p>
+    <section class="bloco">
+      <form class="bloco__corpo conta-form" data-form novalidate>
+        <label class="campo">
+          <span class="campo__rotulo">Nome</span>
+          <input type="text" data-f="nome" maxlength="120" autocomplete="off" placeholder="Ex.: Aluguel da loja">
+        </label>
+        <label class="campo">
+          <span class="campo__rotulo">Descrição (opcional)</span>
+          <input type="text" data-f="descricao" maxlength="500" autocomplete="off" placeholder="Ex.: referente a outubro">
+        </label>
+        <div class="conta-form__linha">
+          <label class="campo">
+            <span class="campo__rotulo">Valor (R$)</span>
+            <input type="text" inputmode="decimal" data-f="valor" autocomplete="off" placeholder="0,00">
+          </label>
+          <label class="campo">
+            <span class="campo__rotulo">Vencimento</span>
+            <input type="date" data-f="vencimento">
+          </label>
+        </div>
+        <!-- só aparece ao EDITAR uma conta já paga: corrigir a data ou a
+             forma sem ter de desmarcar e marcar de novo -->
+        <div class="conta-form__linha" data-form-pago hidden>
+          <label class="campo">
+            <span class="campo__rotulo">Pago em</span>
+            <input type="date" data-f="pago_em">
+          </label>
+          <label class="campo">
+            <span class="campo__rotulo">Forma</span>
+            <select data-f="forma_pagamento" data-formas></select>
+          </label>
+        </div>
+        <p class="folha__recado" data-recado role="status" hidden></p>
+        <div class="conta-form__botoes">
+          <button class="botao botao--forte" type="submit" data-salvar>Adicionar conta</button>
+          <button class="botao" type="button" data-cancelar hidden>Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- A PAGAR / HISTÓRICO -->
+    <div class="chips-ordem contas-abas" role="tablist" aria-label="Quais contas">
+      <button class="chip-ordem is-ativo" type="button" role="tab" aria-selected="true" data-aba="abertas">A pagar</button>
+      <button class="chip-ordem" type="button" role="tab" aria-selected="false" data-aba="pagas">Histórico (pagas)</button>
+    </div>
+
+    <section class="bloco">
+      <ul class="lista" data-lista></ul>
+      <div class="vazio" data-vazio hidden>
+        <p class="vazio__titulo" data-vazio-titulo>Nenhuma conta em aberto</p>
+        <p class="vazio__texto" data-vazio-texto>As contas que você adicionar aparecem aqui até serem pagas.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="../assets/config.js?v=55118931"></script>
+<script src="../assets/util.js?v=a2c25918"></script>
+<script src="../../assets/js/catalogo.js?v=303ca501"></script>
+<script src="../assets/auth.js?v=2fb8bdb5"></script>
+<script src="../assets/dados.js?v=67d872c8"></script>
+<script src="../assets/analise.js?v=e2445f21"></script>
+<script src="app.js?v=2d10b5d0"></script>
+<script src="contas.js?v=1874733e"></script>
+</body>
+</html>

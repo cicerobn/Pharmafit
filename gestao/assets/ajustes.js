@@ -53,7 +53,9 @@
     { nome: 'cobrancas',      para: 'pagamentos do site (PIX e cartão)' },
     /* 24/09/2026: os cupons de desconto e a marca de cliente VIP. */
     { nome: 'cupons',         para: 'cupons de desconto do site' },
-    { nome: 'vip',            para: 'clientes marcados como VIP' }
+    { nome: 'vip',            para: 'clientes marcados como VIP' },
+    /* 25/09/2026: as contas a pagar. */
+    { nome: 'contas_pagar',   para: 'contas a pagar e o histórico das pagas' }
   ];
 
   var conexaoTestada = null; /* { url, chave } que passou no teste */
@@ -226,7 +228,7 @@
      e o arquivo sai incompleto sem dizer que saiu. */
   var COLECOES = ['pedidos', 'produtos', 'despesas', 'representantes', 'orcamentos',
                   'espera', 'atendimentos', 'pessoal', 'notas', 'configuracoes',
-                  'clientes', 'compras', 'compra_itens', 'cobrancas', 'cupons', 'vip'];
+                  'clientes', 'compras', 'compra_itens', 'cobrancas', 'cupons', 'vip', 'contas_pagar'];
 
   var CHAVE_BACKUP = 'pharmafit_ultimo_backup';
 

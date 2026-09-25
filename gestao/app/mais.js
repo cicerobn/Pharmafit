@@ -36,6 +36,8 @@
        eu lucrei" e "relatorio diario (...) e ter como imprimir". */
     { rotulo: 'Vendas por período', pe: 'Escolher as datas, ver o que saiu e imprimir', icone: 'calendario', href: 'vendas.html' },
     { rotulo: 'Gastos', pe: 'Lançar e ver as despesas', icone: 'dinheiro', href: '../despesas.html' },
+    /* Brian, 25/09/2026: "Crie uma aba no painel de contas a pagar". */
+    { rotulo: 'Contas a pagar', pe: 'Vencimentos, marcar como paga e histórico', icone: 'conta', href: 'contas.html' },
     /* Brian, 24/09/2026: "cupons para fazer promoção". Fica junto do
        dinheiro, porque cupom é desconto — é assunto de venda, não de
        ajuste do sistema. */
