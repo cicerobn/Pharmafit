@@ -39,6 +39,9 @@ AddDefaultCharset UTF-8
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
   Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+  # Outra aba aberta a partir daqui não consegue mexer nesta (e vice-versa):
+  # fecha o golpe de trocar a página do painel por uma falsa por trás.
+  Header always set Cross-Origin-Opener-Policy "same-origin-allow-popups"
 </IfModule>
 
 # ---- tipos de arquivo ------------------------------------
