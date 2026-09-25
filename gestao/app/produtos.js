@@ -71,11 +71,60 @@
 
   /** O que a tela mostra no lugar do estoque. */
   function estoqueTexto(p) {
+    /* ampola que vem da caixa: o estoque é o da caixa, em ampolas */
+    if (p.fraciona_de) {
+      var cx = caixaDe(p.fraciona_de);
+      if (!cx) return 'Vem de uma caixa que não existe mais';
+      if (cx.estoque === null || cx.estoque === undefined || cx.estoque === '') {
+        return 'Vem de ' + cx.nome + ' (sem controle de estoque)';
+      }
+      return ampolasDe(cx, p.fracoes) + ' ampolas · vem de ' + cx.nome;
+    }
     var tem = !(p.estoque === null || p.estoque === undefined || p.estoque === '');
     if (!tem) return 'Estoque não controlado';
     var n = Number(p.estoque);
     if (n <= 0) return 'Sem estoque';
-    return 'Estoque: ' + n + (n === 1 ? ' unidade' : ' unidades');
+    /* caixa que também é vendida em ampola: conta em caixas */
+    if (ehCaixa(p)) {
+      return 'Estoque: ' + n + (n === 1 ? ' caixa' : ' caixas') +
+        (Number(p.soltas) > 0 ? ' + ' + p.soltas + (Number(p.soltas) === 1 ? ' ampola solta' : ' ampolas soltas') : '');
+    }
+    return 'Estoque: ' + n + (n === 1 ? ' unidade' : ' unidades') +
+      (Number(p.soltas) > 0 ? ' + ' + p.soltas + (Number(p.soltas) === 1 ? ' solta' : ' soltas') : '');
+  }
+
+  /* CAIXA E AMPOLA (25/09/2026). A ampola avulsa não tem estoque
+     próprio: ela vem de uma caixa (`fraciona_de`), que tem `fracoes`
+     ampolas. Ampolas disponíveis = caixas × por caixa + soltas. */
+  function caixaDe(id) {
+    return estado.produtos.filter(function (o) { return String(o.id) === String(id); })[0] || null;
+  }
+  function ampolasDe(cx, porCaixa) {
+    return Number(cx.estoque || 0) * Math.max(1, Number(porCaixa) || 1) + Number(cx.soltas || 0);
+  }
+  /** A caixa tem alguém tirando ampola dela? (produto ou opção) */
+  function ehCaixa(p) {
+    return estado.produtos.some(function (o) {
+      if (String(o.fraciona_de) === String(p.id)) return true;
+      return (Array.isArray(o.opcoes) ? o.opcoes : []).some(function (x) {
+        return String(x.fraciona_de) === String(p.id);
+      });
+    });
+  }
+  function podeFracionar(p) {
+    return !!p && Object.prototype.hasOwnProperty.call(p, 'fraciona_de');
+  }
+  /** As caixas que podem ser escolhidas: qualquer produto que não seja
+      ele mesmo nem outra ampola (ampola de ampola não existe). */
+  function opcoesDeCaixa(escolhida, semId) {
+    return '<option value="">Não — estoque próprio</option>' +
+      estado.produtos.filter(function (o) {
+        return String(o.id) !== String(semId) && !o.fraciona_de;
+      }).sort(function (a, b) { return String(a.nome).localeCompare(String(b.nome)); })
+        .map(function (o) {
+          return '<option value="' + esc(o.id) + '"' + (String(o.id) === String(escolhida) ? ' selected' : '') + '>' +
+            esc(o.nome) + '</option>';
+        }).join('');
   }
 
   /* Venda menos compra, por unidade, na linha do produto.
@@ -435,6 +484,33 @@
           '</div>' +
         '</div>' +
 
+        /* CAIXA E AMPOLA COM UM ESTOQUE SÓ (25/09/2026). O cliente do
+           Brian vende a mesma caixa fechada e em ampola avulsa. Na ficha
+           da AMPOLA escolhe-se a caixa de onde ela sai; o estoque dela
+           deixa de ser digitado e passa a ser caixas × por caixa +
+           soltas. Na ficha da CAIXA aparece o campo das soltas. */
+        '<div class="folha__linha" data-fracao hidden>' +
+          '<div class="campo" data-campo="fraciona">' +
+            '<label class="campo__rotulo" for="ed-fraciona">Vem de uma caixa?</label>' +
+            '<select id="ed-fraciona" data-fraciona></select>' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+          '<div class="campo" data-campo="fracoes" data-fracoes-caixa hidden>' +
+            '<label class="campo__rotulo" for="ed-fracoes">Ampolas por caixa</label>' +
+            '<input type="number" id="ed-fracoes" min="2" max="100" step="1" inputmode="numeric" placeholder="4">' +
+            '<p class="campo__erro" data-erro hidden></p>' +
+          '</div>' +
+        '</div>' +
+        '<p class="campo__nota" data-fracao-nota hidden></p>' +
+        '<div class="campo" data-campo="soltas" hidden>' +
+          '<label class="campo__rotulo" for="ed-soltas">Ampolas soltas (de caixa aberta)</label>' +
+          '<input type="number" id="ed-soltas" min="0" step="1" inputmode="numeric" placeholder="0">' +
+          '<p class="campo__nota">Esta caixa também é vendida em ampola. Quando uma ampola sai, ' +
+            'uma caixa é aberta e as que sobram ficam aqui — o painel faz a conta sozinho. ' +
+            'Mexa só para corrigir o inventário.</p>' +
+          '<p class="campo__erro" data-erro hidden></p>' +
+        '</div>' +
+
         /* O PARCELAMENTO QUE O CLIENTE VÊ ("ou 3x sem juros de…").
            Brian, 24/09/2026: "falta o 3x sem juros lá pra mim mesmo
            escolher o valor que aparece, e quantas vezes". Valor vazio =
@@ -535,6 +611,9 @@
     folha.querySelector('#ed-preco').addEventListener('input', mostrarParcelamento);
     folha.querySelector('#ed-parcelas').addEventListener('input', mostrarParcelamento);
 
+    folha.querySelector('[data-fraciona]').addEventListener('change', pintarFracao);
+    folha.querySelector('#ed-fracoes').addEventListener('input', pintarFracao);
+
     /* as opções: digitar, remover, adicionar, foto */
     var edOpcoes = folha.querySelector('[data-opcoes-ed]');
     edOpcoes.addEventListener('input', function (e) {
@@ -542,6 +621,12 @@
       var linha = e.target.closest('[data-i]');
       if (!campo || !linha) return;
       opcoesEd[Number(linha.getAttribute('data-i'))][campo] = e.target.value;
+    });
+    edOpcoes.addEventListener('change', function (e) {
+      if (!e.target.hasAttribute('data-redesenha')) return;
+      var linha = e.target.closest('[data-i]');
+      opcoesEd[Number(linha.getAttribute('data-i'))][e.target.getAttribute('data-o')] = e.target.value;
+      pintarOpcoesEd();
     });
     edOpcoes.addEventListener('click', function (e) {
       var linha = e.target.closest('[data-i]');
@@ -722,6 +807,24 @@
   }
 
   /** Sobe a foto e devolve o endereço público dela. */
+  function pintarFracao() {
+    var sel = folha.querySelector('[data-fraciona]');
+    var ligado = !!sel.value;
+    folha.querySelector('[data-fracoes-caixa]').hidden = !ligado;
+    folha.querySelector('[data-campo="estoque"]').hidden = ligado;
+    var nota = folha.querySelector('[data-fracao-nota]');
+    var cx = ligado ? caixaDe(sel.value) : null;
+    nota.hidden = !cx;
+    if (cx) {
+      var por = numero(folha.querySelector('#ed-fracoes')) || 0;
+      nota.textContent = (cx.estoque === null || cx.estoque === undefined || cx.estoque === '')
+        ? 'O estoque sai de ' + cx.nome + ', que está sem controle de estoque.'
+        : 'Estoque desta ampola: ' + cx.estoque + ' caixas' +
+          (Number(cx.soltas) > 0 ? ' + ' + cx.soltas + ' soltas' : '') +
+          (por >= 2 ? ' = ' + ampolasDe(cx, por) + ' ampolas.' : ' — diga quantas ampolas tem cada caixa.');
+    }
+  }
+
   function pintarOpcoesEd() {
     var caixa = folha.querySelector('[data-opcoes-ed]');
     caixa.innerHTML = opcoesEd.map(function (o, i) {
@@ -735,11 +838,22 @@
             '<div class="opcao-ed__linha">' +
               '<label class="opcao-ed__mini"><span>Preço (R$)</span>' +
                 '<input type="number" data-o="preco" min="0" step="0.01" inputmode="decimal" placeholder="—" value="' + esc(o.preco) + '"></label>' +
-              '<label class="opcao-ed__mini"><span>Estoque</span>' +
-                '<input type="number" data-o="estoque" min="0" step="1" inputmode="numeric" placeholder="livre" value="' + esc(o.estoque) + '"></label>' +
+              (o.fraciona_de
+                ? ''
+                : '<label class="opcao-ed__mini"><span>Estoque</span>' +
+                    '<input type="number" data-o="estoque" min="0" step="1" inputmode="numeric" placeholder="livre" value="' + esc(o.estoque) + '"></label>') +
               (verCusto
                 ? '<label class="opcao-ed__mini"><span>Custo (R$)</span>' +
                     '<input type="number" data-o="custo" min="0" step="0.01" inputmode="decimal" placeholder="—" value="' + esc(o.custo) + '"></label>'
+                : '') +
+            '</div>' +
+            /* a marca pode sair de uma caixa (ampola avulsa daquela caixa) */
+            '<div class="opcao-ed__linha opcao-ed__linha--caixa">' +
+              '<label class="opcao-ed__mini"><span>Vem da caixa</span>' +
+                '<select data-o="fraciona_de" data-redesenha>' + opcoesDeCaixa(o.fraciona_de, editando && editando.id) + '</select></label>' +
+              (o.fraciona_de
+                ? '<label class="opcao-ed__mini"><span>Por caixa</span>' +
+                    '<input type="number" data-o="fracoes" min="2" max="100" step="1" inputmode="numeric" placeholder="4" value="' + esc(o.fracoes) + '"></label>'
                 : '') +
             '</div>' +
           '</div>' +
@@ -916,6 +1030,22 @@
         erroNo('parcela-valor', 'Valor inválido.'); ruim = true;
       }
     }
+    var fracao = null;
+    if (podeFracionar(editando) && !folha.querySelector('[data-fracao]').hidden) {
+      var fr = folha.querySelector('[data-fraciona]').value;
+      var por = numero(folha.querySelector('#ed-fracoes'));
+      if (fr && !(Number.isInteger(por) && por >= 2 && por <= 100)) {
+        erroNo('fracoes', 'Quantas ampolas tem cada caixa? De 2 a 100, sem vírgula.'); ruim = true;
+      }
+      fracao = fr ? { fraciona_de: Number(fr), fracoes: por } : { fraciona_de: null, fracoes: null };
+    }
+    var soltas = null;
+    if (podeFracionar(editando) && !folha.querySelector('[data-campo="soltas"]').hidden) {
+      soltas = numero(folha.querySelector('#ed-soltas'));
+      if (soltas === null) soltas = 0;
+      if (!(Number.isInteger(soltas) && soltas >= 0)) { erroNo('soltas', 'Número inteiro, sem vírgula.'); ruim = true; }
+    }
+
     var opcoesLimpa = null;
     if (podeOpcoes(editando)) {
       var vistos = {};
@@ -923,7 +1053,8 @@
       var num = function (v) { var t = String(v == null ? '' : v).trim().replace(',', '.'); return t === '' ? null : Number(t); };
       opcoesLimpa = opcoesEd.filter(function (o) {
         /* linha totalmente vazia (tocou em "+" e desistiu) só some */
-        return String(o.nome || '').trim() || String(o.preco || '') || String(o.estoque || '') || o.fotoNova;
+        return String(o.nome || '').trim() || String(o.preco || '') || String(o.estoque || '') ||
+          String(o.fraciona_de || '') || o.fotoNova;
       }).map(function (o) {
         var nomeO = String(o.nome || '').trim();
         var chave = nomeO.toLowerCase();
@@ -935,7 +1066,12 @@
         if (pr !== null && !(pr > 0)) problema = problema || 'Preço inválido em "' + nomeO + '".';
         if (es !== null && !(Number.isInteger(es) && es >= 0)) problema = problema || 'Estoque inválido em "' + nomeO + '" (número inteiro, sem vírgula).';
         if (cu !== null && !(cu >= 0)) problema = problema || 'Custo inválido em "' + nomeO + '".';
-        return { o: o, nome: nomeO, preco: pr, estoque: es, custo: cu };
+        var fd = String(o.fraciona_de || '') ? Number(o.fraciona_de) : null;
+        var fc = num(o.fracoes);
+        if (fd && !(Number.isInteger(fc) && fc >= 2 && fc <= 100)) {
+          problema = problema || 'Quantas ampolas tem cada caixa de "' + nomeO + '"? De 2 a 100.';
+        }
+        return { o: o, nome: nomeO, preco: pr, estoque: fd ? null : es, custo: cu, fraciona_de: fd, fracoes: fd ? fc : null };
       });
       if (problema) { erroNo('opcoes', problema); ruim = true; }
     }
@@ -962,6 +1098,13 @@
          o salvar INTEIRO — a equipe perderia a mudança de preço por
          causa de uma coluna que falta. */
       if (podeEtiquetar(editando)) campos.destaque = destaque || null;
+      if (fracao) {
+        campos.fraciona_de = fracao.fraciona_de;
+        campos.fracoes = fracao.fracoes;
+        /* a ampola ligada não tem estoque próprio: o da caixa é que vale */
+        if (fracao.fraciona_de) campos.estoque = null;
+      }
+      if (soltas !== null) campos.soltas = soltas;
       if (opcoesLimpa) {
         for (var k = 0; k < opcoesLimpa.length; k++) {
           if (opcoesLimpa[k].o.fotoNova) {
@@ -976,6 +1119,7 @@
           if (x.preco !== null) o.preco = Math.round(x.preco * 100) / 100;
           if (x.estoque !== null) o.estoque = x.estoque;
           if (x.custo !== null) o.custo = Math.round(x.custo * 100) / 100;
+          if (x.fraciona_de) { o.fraciona_de = x.fraciona_de; o.fracoes = x.fracoes; }
           if (x.o.imagem) o.imagem = x.o.imagem;
           return o;
         });
@@ -1051,11 +1195,19 @@
     caixaEtiqueta.hidden = !podeEtiquetar(p);
     folha.querySelector('[data-destaque]').value = String(p.destaque || '');
 
+    folha.querySelector('[data-fracao]').hidden = !podeFracionar(p) || ehCaixa(p);
+    folha.querySelector('[data-fraciona]').innerHTML = opcoesDeCaixa(p.fraciona_de, p.id);
+    folha.querySelector('#ed-fracoes').value = p.fracoes || '';
+    folha.querySelector('[data-campo="soltas"]').hidden = !podeFracionar(p) || !(ehCaixa(p) || Number(p.soltas) > 0);
+    folha.querySelector('#ed-soltas').value = Number(p.soltas) || 0;
+    pintarFracao();
+
     folha.querySelector('[data-campo="opcoes"]').hidden = !podeOpcoes(p);
     folha.querySelector('[data-opcoes-rotulo]').value = p.opcoes_rotulo || 'Marca';
     opcoesEd = (Array.isArray(p.opcoes) ? p.opcoes : []).map(function (o) {
       var v = function (x) { return x === undefined || x === null ? '' : String(x); };
       return { nome: v(o.nome), preco: v(o.preco), estoque: v(o.estoque), custo: v(o.custo),
+               fraciona_de: v(o.fraciona_de), fracoes: v(o.fracoes),
                imagem: o.imagem || '', fotoNova: null };
     });
     pintarOpcoesEd();

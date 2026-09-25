@@ -2151,3 +2151,7 @@ textarea:focus-visible,
 .contas-inicio__item b{color:var(--st-cancelado);font-weight:700}
 .contas-inicio__item--atrasada span:last-child{color:var(--st-cancelado)}
 @media (prefers-reduced-motion:reduce){ .contas-inicio__falta{transition:none} }
+/* a linha "Vem da caixa" da opção (25/09/2026) */
+.opcao-ed__linha--caixa{grid-template-columns:minmax(0,1fr) 78px}
+.opcao-ed__linha--caixa:has(> :only-child){grid-template-columns:minmax(0,1fr)}
+.opcao-ed__mini select{width:100%;min-width:0;font-size:13.5px;padding-inline:6px}
