@@ -57,9 +57,9 @@ PASTA="$(mktemp -d)"
 # O `kill` DE PERTINHO DO PÉ. Eu havia escrito `kill ${servidor:-0}`, e
 # `kill 0` em bash não é "não mata ninguém": é MATA O GRUPO TODO,
 # inclusive esta prova. Quando a prova saía antes de subir o servidor
-# — por exemplo para dizer "não rodou, falta Pillow", que é saída 2 —
-# o trap a matava e ela saía 143. O publicador compara a saída com 2,
-# então um ambiente sem biblioteca reprovaria uma publicação boa.
+# — por exemplo para dizer "PROVA QUEBRADA" — o trap a matava e ela
+# saía 143 em vez do código que ela queria dar. Quem lê o resultado
+# fica sem saber se a prova reprovou o script ou se ela mesma morreu.
 limpar() {
   if [ -n "${servidor:-}" ]; then
     kill "$servidor" 2>/dev/null
@@ -76,53 +76,139 @@ REPO="$(ls -S "$RAIZ"/assets/img/*.jpg "$RAIZ"/assets/img/*.jpeg 2>/dev/null | h
 
 # ---- o que a Hostinger devolve, reproduzido ----
 #
-# Recomprimir e redimensionar: pelo Pillow se a máquina tiver, senão
-# pelo `convert` do ImageMagick. Uma das duas sempre tem — e eu não
-# quero que esta prova deixe de rodar por causa de biblioteca.
-if python3 -c 'import PIL' 2>/dev/null; then
-  python3 -I -c '
-import sys
-from PIL import Image
-o, pasta = sys.argv[1], sys.argv[2]
-im = Image.open(o)
-im.save(pasta + "/t.jpg", "JPEG", quality=82)
-im.resize((im.width - 60, im.height - 40)).save(pasta + "/t2.jpg", "JPEG", quality=90)
-' "$REPO" "$PASTA"
-elif command -v convert >/dev/null 2>&1; then
-  convert "$REPO" -quality 82 "$PASTA/t.jpg"
-  convert "$REPO" -resize '94%' -quality 90 "$PASTA/t2.jpg"
-else
-  echo "PROVA NÃO RODOU: esta máquina não tem Pillow nem ImageMagick."
-  echo "Nada foi medido — isto NÃO é defeito do conferir-no-ar.sh."
-  exit 2
-fi
-
-# E a troca do cabeçalho JFIF por Exif, que é o que a Hostinger faz na
-# entrega. Isto é python de fábrica, sem biblioteca nenhuma.
-python3 -I -c '
+# SEM BIBLIOTECA NENHUMA, e isto foi lição de hoje.
+#
+# A primeira versão desta prova usava Pillow (ou o `convert` do
+# ImageMagick) para recomprimir a imagem. Rodava aqui, passava em 13
+# medições, e eu liguei ela no publicador. No GitHub ela não rodou: a
+# máquina deles não tem nem um nem outro. O aviso apareceu, a
+# publicação seguiu — e a prova que eu acabara de escrever para
+# guardar o site não guardava nada. Prova que só roda na minha máquina
+# é prova que não existe.
+#
+# Então aqui não se recomprime imagem: mexe-se nos BYTES, com python
+# de fábrica, para montar exatamente os três casos que importam. O que
+# está sob medição é o conferir-no-ar.sh, e ele lê duas coisas de uma
+# imagem: as MEDIDAS (pelo `file`) e a MARCA DE FIM. Então o que a
+# prova precisa produzir é isso, e nada mais:
+#
+#   recomprimida.jpg  bytes diferentes, tamanho diferente, cabeçalho
+#                     Exif em vez de JFIF, MESMAS medidas
+#                     → é o caso real da Hostinger, e tem de PASSAR
+#   encolhida.jpg     a medida escrita no cabeçalho SOF é trocada
+#                     → tem de REPROVAR
+#   cortada.jpg       os primeiros 300 bytes
+#                     → tem de REPROVAR
+#
+# Na encolhida eu troco os dois números no cabeçalho em vez de
+# redimensionar de verdade. Para quem olha com os olhos é uma imagem
+# mentirosa; para o `file` — que é quem a conferência consulta — é uma
+# imagem de outro tamanho, que é precisamente o caso a provar.
+python3 -I - "$REPO" "$PASTA" <<'PY'
 import struct, sys
-def para_exif(entrada, saida):
-    b = open(entrada, "rb").read()
+
+origem, pasta = sys.argv[1], sys.argv[2]
+b = open(origem, "rb").read()
+assert b[:2] == b"\xff\xd8", "a imagem de referencia nao e JPEG"
+
+def sem_o_app0(dados):
+    """Tira o APP0/JFIF, se houver, e devolve o resto."""
     i = 2
-    if b[i:i+2] == b"\xff\xe0":
-        i += 2 + struct.unpack(">H", b[i+2:i+4])[0]
+    if dados[i:i+2] == b"\xff\xe0":
+        i += 2 + struct.unpack(">H", dados[i+2:i+4])[0]
+    return dados[i:]
+
+def app1_exif():
+    """Um APP1/Exif minimo e valido — a forma em que a Hostinger
+       devolve a imagem recomprimida (medido no diagnostico:
+       'JPEG image data, Exif standard: [TIFF image data, big-endian')."""
     tiff = (b"MM\x00*\x00\x00\x00\x08\x00\x01"
             b"\x01\x1a\x00\x05\x00\x00\x00\x01\x00\x00\x00\x1a\x00\x00\x00\x00")
     carga = b"Exif\x00\x00" + tiff
-    app1 = b"\xff\xe1" + struct.pack(">H", len(carga) + 2) + carga
-    open(saida, "wb").write(b[:2] + app1 + b[i:])
-pasta, origem = sys.argv[1], sys.argv[2]
-para_exif(pasta + "/t.jpg",  pasta + "/recomprimida.jpg")
-para_exif(pasta + "/t2.jpg", pasta + "/encolhida.jpg")
-open(pasta + "/cortada.jpg", "wb").write(open(origem, "rb").read()[:300])
-' "$PASTA" "$REPO"
+    return b"\xff\xe1" + struct.pack(">H", len(carga) + 2) + carga
+
+def comentario(quantos):
+    """Um segmento COM, que todo JPEG aceita e nenhum decodificador le.
+       Serve para o arquivo ter OUTRO tamanho e outro md5 sem que
+       nenhum pixel mude."""
+    texto = b"prova" * quantos
+    return b"\xff\xfe" + struct.pack(">H", len(texto) + 2) + texto
+
+# 1. a recompressao da hospedagem
+open(f"{pasta}/recomprimida.jpg", "wb").write(
+    b[:2] + app1_exif() + comentario(60) + sem_o_app0(b))
+
+# 2. a mesma imagem com OUTRA medida escrita no cabecalho
+SOF = {0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7,
+       0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf}
+d = bytearray(b)
+i, achei = 2, False
+while i < len(d) - 1:
+    if d[i] != 0xFF:
+        i += 1
+        continue
+    marca = d[i+1]
+    if marca in (0xD8, 0xD9, 0x01) or 0xD0 <= marca <= 0xD7:
+        i += 2
+        continue
+    tam = struct.unpack(">H", bytes(d[i+2:i+4]))[0]
+    if marca in SOF:
+        alt, larg = struct.unpack(">HH", bytes(d[i+5:i+9]))
+        d[i+5:i+9] = struct.pack(">HH", alt - 40, larg - 60)
+        achei = True
+        break
+    if marca == 0xDA:
+        break
+    i += 2 + tam
+assert achei, "nao achei o cabecalho SOF para trocar a medida"
+open(f"{pasta}/encolhida.jpg", "wb").write(
+    d[:2] + app1_exif() + sem_o_app0(bytes(d)))
+
+# 3. o arquivo que a publicacao cortou no meio
+open(f"{pasta}/cortada.jpg", "wb").write(b[:300])
+PY
 
 [ -s "$PASTA/recomprimida.jpg" ] || { echo "PROVA QUEBRADA: não consegui montar as imagens"; exit 1; }
-# Se a recompressão tiver MUDADO as medidas, a prova mediria a coisa
-# errada e eu nem saberia.
-if [ "$(medidas "$REPO")" != "$(medidas "$PASTA/recomprimida.jpg")" ]; then
-  echo "PROVA QUEBRADA: a recompressão mudou as medidas ($(medidas "$REPO") → $(medidas "$PASTA/recomprimida.jpg"))."
+
+# A PROVA CONFERE A SI MESMA — COM A RÉGUA DELA, NÃO COM A DO MEDIDO.
+#
+# Eu havia escrito esta conferência usando a função `medidas` do
+# conferir-no-ar.sh. Então, no dia em que eu recoloquei o defeito de
+# propósito para ver se a prova mordia, ela respondeu "PROVA QUEBRADA:
+# a recompressão mudou as medidas" — culpando a si mesma por um
+# defeito do script que ela existe para pegar. Diagnóstico errado é o
+# estrago que eu passei o dia inteiro consertando; não vou plantar
+# outro aqui.
+#
+# Agora as medidas são lidas direto do cabeçalho SOF do JPEG, por
+# conta própria, sem passar por nada que esteja sob medição.
+sof() { python3 -I - "$1" <<'PY'
+import struct, sys
+d = open(sys.argv[1], "rb").read()
+SOF = {0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf}
+i = 2
+while i < len(d) - 1:
+    if d[i] != 0xFF:
+        i += 1; continue
+    m = d[i+1]
+    if m in (0xD8, 0xD9, 0x01) or 0xD0 <= m <= 0xD7:
+        i += 2; continue
+    if m in SOF:
+        a, l = struct.unpack(">HH", d[i+5:i+9]); print(f"{l}x{a}"); break
+    if m == 0xDA: break
+    i += 2 + struct.unpack(">H", d[i+2:i+4])[0]
+PY
+}
+if [ "$(sof "$REPO")" != "$(sof "$PASTA/recomprimida.jpg")" ]; then
+  echo "PROVA QUEBRADA: a montagem da imagem mexeu nas medidas"
+  echo "  ($(sof "$REPO") → $(sof "$PASTA/recomprimida.jpg"))."
   echo "A Hostinger mantém as medidas; esta prova tem de manter também."
+  echo "Isto é defeito DA PROVA, não do conferir-no-ar.sh."
+  exit 1
+fi
+if [ "$(sof "$REPO")" = "$(sof "$PASTA/encolhida.jpg")" ]; then
+  echo "PROVA QUEBRADA: a imagem 'encolhida' ficou do mesmo tamanho da"
+  echo "original, então o teste que deveria reprovar não prova nada."
   exit 1
 fi
 
