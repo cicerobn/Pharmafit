@@ -52,6 +52,7 @@
   var cNome = document.getElementById('ct-nome');
   var cZap = document.getElementById('ct-zap');
   var cEndereco = document.getElementById('ct-endereco');
+  var cPagamento = document.getElementById('ct-pagamento');
 
   function valorDe(campo) {
     return campo ? String(campo.value || '').trim() : '';
@@ -75,8 +76,25 @@
    * dedo ao primeiro vazio; o segundo, aí sim, cobra o que falta. */
   var Validacao = window.PharmaFitValidacao;
 
-  function primeiroVazio() {
+  var caixaPagamento = document.querySelector('[data-campo-pagamento]');
+
+  /** Quais campos este caminho precisa.
+   *
+   *  A FORMA DE PAGAMENTO SÓ VALE NO CAMINHO DO WHATSAPP. No do PIX,
+   *  perguntar "como quer pagar" depois de a pessoa ter tocado em "Pagar
+   *  com PIX" é perguntar o que ela acabou de responder — e ainda abriria
+   *  a porta para ela escolher "Dinheiro" dentro do fluxo do PIX.
+   *
+   *  Por isso o campo também SOME no caminho do PIX: campo na tela que não
+   *  vale nada é a coisa que o Brian mais me cobra não existir. */
+  function camposDe(comPagamento) {
     var campos = [cNome, cZap, cEndereco];
+    if (comPagamento && cPagamento) campos.push(cPagamento);
+    return campos;
+  }
+
+  function primeiroVazio(comPagamento) {
+    var campos = camposDe(comPagamento);
     for (var i = 0; i < campos.length; i++) {
       if (campos[i] && !valorDe(campos[i])) return campos[i];
     }
@@ -85,17 +103,18 @@
 
   /** true = os dados estão completos, pode seguir.
    *  false = a tela pediu o que falta, e quem chamou deve parar. */
-  function pedirDados() {
+  function pedirDados(comPagamento) {
     if (!form) return true;
+    if (caixaPagamento) caixaPagamento.hidden = !comPagamento;
 
     /* Já está tudo lá? Então não mostra nada e deixa passar. Quem comprou
        antes tem os campos preenchidos pelo aparelho, e para essa pessoa o
        toque continua valendo de uma vez. */
-    if (!primeiroVazio()) {
+    if (!primeiroVazio(comPagamento)) {
       return Validacao ? Validacao.conferir(form) : true;
     }
 
-    var vazio = primeiroVazio();
+    var vazio = primeiroVazio(comPagamento);
     if (form.hidden) {
       form.hidden = false;
       try { form.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
@@ -103,8 +122,13 @@
       return false;
     }
 
-    /* segundo toque com campo vazio: agora o recado em vermelho */
-    if (Validacao) Validacao.conferir(form);
+    /* segundo toque com campo vazio: agora o recado em vermelho.
+       A lista não tem `data-valida`, então o recado dela é escrito aqui —
+       é o preço de o campo valer só em um dos dois caminhos. */
+    if (Validacao) {
+      if (vazio === cPagamento) Validacao.erro(cPagamento, 'Escolha a forma de pagamento.');
+      else Validacao.conferir(form);
+    }
     try { vazio.focus({ preventScroll: true }); } catch (e) { vazio.focus(); }
     return false;
   }
@@ -119,7 +143,8 @@
     return {
       nome: valorDe(cNome),
       telefone: valorDe(cZap),
-      endereco: valorDe(cEndereco)
+      endereco: valorDe(cEndereco),
+      pagamento: valorDe(cPagamento)
     };
   }
 
@@ -143,6 +168,17 @@
         : dados.telefone;
     }
     if (cEndereco && !cEndereco.value && dados.endereco) cEndereco.value = dados.endereco;
+    /* A LISTA só aceita de volta uma opção que ela TEM. Dado velho no
+       aparelho (ou mexido à mão) não pode deixar o campo num valor que não
+       existe na lista: o navegador voltaria para a primeira opção, que é a
+       vazia, e a pessoa veria "escolha uma forma" sem entender por quê. */
+    if (cPagamento && !cPagamento.value && dados.pagamento) {
+      var existe = false;
+      for (var i = 0; i < cPagamento.options.length; i++) {
+        if (cPagamento.options[i].value === dados.pagamento) existe = true;
+      }
+      if (existe) cPagamento.value = dados.pagamento;
+    }
   }
 
   /* ---------- desenhar ---------- */
@@ -369,13 +405,35 @@
     var numero = String(cfg.WHATSAPP || '559285904669').replace(/\D+/g, '');
     var dados = contato();
 
-    var linhas = ['Olá! Quero fechar este pedido:', ''];
+    /* A MENSAGEM NA ORDEM QUE A EQUIPE PEDIU.
+     *
+     * Pedido deles, 14/10/2026, com o print da conversa: "Exemplo o que
+     * seria útil pra mim: 1 Produto interessado, 2 Forma de pagamento,
+     * 3 Localização de entrega, 4 WhatsApp".
+     *
+     * O que mudou:
+     *   · os quatro viraram seções numeradas e em negrito, na ordem deles.
+     *     Antes era uma lista de produtos e depois três linhas soltas
+     *     (Nome, WhatsApp, Entrega) — quem atende tinha de caçar o que
+     *     precisava no meio do texto;
+     *   · a forma de pagamento é nova, e é o único dos quatro que o site
+     *     não tinha;
+     *   · o NOME saiu da lista e subiu para a saudação. A equipe não pediu
+     *     ele, mas sem nome não dá para responder a ninguém; na saudação
+     *     ele some do caminho dos quatro e continua ali.
+     *
+     * Os asteriscos são negrito no WhatsApp, e `encodeURIComponent` não
+     * mexe neles — é por isso que dá para usar. */
+    var linhas = [];
+    linhas.push(dados.nome
+      ? 'Olá! Aqui é ' + dados.nome + ', quero fechar este pedido:'
+      : 'Olá! Quero fechar este pedido:');
 
+    linhas.push('');
+    linhas.push('*1. Produto*');
     conta.itens.forEach(function (i) {
       linhas.push('• ' + i.quantidade + '× ' + i.nome + ' — ' + moeda(i.subtotal));
     });
-
-    linhas.push('');
     if (conta.cupom && conta.desconto) {
       linhas.push('Subtotal: ' + moeda(conta.total));
       linhas.push('Cupom ' + conta.cupom.codigo + ' (' + Cupom.rotulo(conta.cupom) + '): − ' +
@@ -385,9 +443,17 @@
       linhas.push('Total: ' + moeda(conta.total));
     }
 
-    if (dados.nome) linhas.push('Nome: ' + dados.nome);
-    if (dados.telefone) linhas.push('WhatsApp: ' + dados.telefone);
-    if (dados.endereco) linhas.push('Entrega: ' + dados.endereco);
+    linhas.push('');
+    linhas.push('*2. Forma de pagamento*');
+    linhas.push(dados.pagamento || 'a combinar');
+
+    linhas.push('');
+    linhas.push('*3. Entrega*');
+    linhas.push(dados.endereco || 'a combinar');
+
+    linhas.push('');
+    linhas.push('*4. WhatsApp*');
+    linhas.push(dados.telefone || '(este mesmo)');
 
     var alvo = document.getElementById('fechar');
     alvo.href = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(linhas.join('\n'));
@@ -442,7 +508,7 @@
        * conversa começaria sem nome nem telefone, o pedido entraria na
        * fila anônimo, e a pessoa acharia que está tudo certo. Barrar
        * aqui é a única hora em que dá para pedir o que falta. */
-      if (!pedirDados()) {
+      if (!pedirDados(true)) {
         e.preventDefault();
         return;
       }

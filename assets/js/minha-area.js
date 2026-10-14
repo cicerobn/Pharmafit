@@ -38,14 +38,25 @@
 
     /** Dados de contato salvos neste aparelho. */
     dados: function () {
-      return ler(CHAVE_DADOS, { nome: '', telefone: '', endereco: '' });
+      return ler(CHAVE_DADOS, { nome: '', telefone: '', endereco: '', pagamento: '' });
     },
 
+    /* A FORMA DE PAGAMENTO TAMBÉM FICA GUARDADA, e isso não é capricho.
+     *
+     * Ela virou campo obrigatório do carrinho em 14/10/2026, a pedido da
+     * equipe. Sem guardar, ela estaria SEMPRE vazia — e campo obrigatório
+     * sempre vazio obriga o formulário a aparecer em toda compra, inclusive
+     * para quem já comprou dez vezes. Isso desfaria o "um toque só" que o
+     * Brian pediu dois dias antes.
+     *
+     * Guardada, a pessoa escolhe UMA vez e nas próximas o carrinho já vem
+     * com a escolha dela. Trocar é só mexer na lista. */
     salvarDados: function (dados) {
       gravar(CHAVE_DADOS, {
         nome: String(dados.nome || '').trim(),
         telefone: String(dados.telefone || '').trim(),
-        endereco: String(dados.endereco || '').trim()
+        endereco: String(dados.endereco || '').trim(),
+        pagamento: String(dados.pagamento || '').trim()
       });
       /* AVISA A TELA QUE O DADO MUDOU.
          O cadastro da conta desce para cá quando a página abre, e isso

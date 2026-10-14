@@ -169,6 +169,16 @@ window.PHARMAFIT_ES ={
      remendado. */
   "A equipe confirma o estoque e combina a entrega com você. Você pode pagar agora com PIX ou fechar o pedido no WhatsApp.":
     "El equipo confirma el stock y acuerda la entrega con usted. Puede pagar ahora con PIX o cerrar el pedido por WhatsApp.",
+  /* A FORMA DE PAGAMENTO, pedida pela equipe em 14/10/2026. "PIX" não se
+     traduz — é o nome do sistema brasileiro. O cliente paraguaio que
+     escolher PIX está dizendo que vai pagar por ele, e traduzir viraria
+     uma palavra que não existe em banco nenhum. */
+  "Como quer pagar": "Cómo quiere pagar",
+  "Escolha uma forma": "Elija una forma",
+  "Cartão de crédito": "Tarjeta de crédito",
+  "Dinheiro na entrega": "Efectivo en la entrega",
+  "Prefiro combinar com a equipe": "Prefiero acordar con el equipo",
+  "Escolha a forma de pagamento.": "Elija la forma de pago.",
   "ou pague agora": "o pague ahora",
   "Pagar com PIX": "Pagar con PIX",
   "Gerando o código…": "Generando el código…",

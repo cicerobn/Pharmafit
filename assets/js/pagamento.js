@@ -315,7 +315,7 @@
      * falta e eu paro: nada de gravar compra pela metade nem de mexer no
      * rótulo do botão, que ainda não começou a trabalhar. */
     var Contato = window.PharmaFitContato;
-    if (Contato && !Contato.pedir()) return;
+    if (Contato && !Contato.pedir(false)) return;
 
     botao.disabled = true;
     var rotulo = botao.querySelector('[data-pagar-rotulo]');
