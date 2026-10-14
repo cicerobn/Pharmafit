@@ -97,7 +97,17 @@ jobs:
 
             for forma in "cru:$alvo/$arq" "escapado:$alvo/$escapado" "furando o cache:$alvo/$escapado?nocache=$RANDOM$RANDOM"; do
               rotulo="${forma%%:*}"; url="${forma#*:}"
-              cod=$(curl -s -o /tmp/veio -w '%{http_code}' --max-time 25 "$url" 2>/dev/null || echo 000)
+              # 14/10/2026: com espaco no nome, o curl recusa o endereco
+              # ANTES de abrir o arquivo de saida. O /tmp/veio nao era
+              # criado, as tres linhas seguintes reclamavam "No such file
+              # or directory" no meio do relatorio, e o codigo saia
+              # "000000" (o -w e o `|| echo 000`, os dois). Eu li aquilo
+              # como se o servidor nao tivesse respondido. Zerar o
+              # arquivo antes resolve, e a linha abaixo diz o que de
+              # fato aconteceu.
+              : > /tmp/veio
+              cod=$(curl -s -o /tmp/veio -w '%{http_code}' --max-time 25 "$url" 2>/dev/null) || true
+              [ -n "$cod" ] || cod="(nem pedi)"
               tam=$(wc -c < /tmp/veio 2>/dev/null || echo 0)
               tipo=$(file -b /tmp/veio 2>/dev/null | cut -c1-38)
               la=$(md5sum /tmp/veio 2>/dev/null | cut -d' ' -f1)

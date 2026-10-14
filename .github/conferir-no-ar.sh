@@ -614,10 +614,83 @@ eh_imagem() {
 
 # As medidas pelo `file`, que já está na máquina. Ele escreve de
 # formas diferentes por formato — "PNG image data, 192 x 192",
-# "Web/P image, VP8 encoding, 620x407" — então pego o primeiro
-# "<número> x <número>" e tiro os espaços.
+# "Web/P image, VP8 encoding, 620x407".
+#
+# 14/10/2026: ESTA FUNÇÃO ESTAVA PEGANDO O NÚMERO ERRADO, e por causa
+# dela a conferência reprovou a publicação dez tentativas seguidas,
+# cinco minutos, dizendo que duas imagens não chegaram — uma delas a
+# foto grande da página inicial. O diagnóstico pediu as duas no
+# servidor: HTTP 200, JPEG válido, nos três endereços. Estavam no ar.
+#
+# O que acontecia: para JPEG o `file` escreve
+#
+#   JPEG image data, JFIF standard 1.01, aspect ratio, density 1x1,
+#   segment length 16, progressive, precision 8, 1600x941, components 3
+#                                               ^^^^^^^^ a medida
+#                      ^^^ e ANTES dela, este "1x1", que é a densidade
+#
+# O "primeiro <número>x<número>" era o `density 1x1`. E a Hostinger
+# devolve a imagem recomprimida como Exif, não JFIF — sem a linha da
+# densidade. Então era "1x1" de um lado e "1600x941" do outro: toda
+# JPEG do site reprovava, todo dia, para sempre, sem motivo. Os PNG
+# passavam porque ali a medida vem antes de tudo.
+#
+# Agora, antes de procurar a medida, eu tiro o que sabidamente não é
+# medida: o que vem entre [ ] (o bloco TIFF do Exif), a densidade, e
+# qualquer "coisa=NxN".
 medidas() {
-  file -b "$1" 2>/dev/null | grep -oE '[0-9]+ ?x ?[0-9]+' | head -1 | tr -d ' '
+  file -b "$1" 2>/dev/null \
+    | sed -e 's/\[[^]]*\]//g' \
+          -e 's/density [0-9]\+ *x *[0-9]\+//g' \
+          -e 's/=[0-9]\+ *x *[0-9]\+//g' \
+    | grep -oE '[0-9]+ ?x ?[0-9]+' | head -1 | tr -d ' '
+}
+
+# MEDIDA IGUAL NÃO QUER DIZER ARQUIVO INTEIRO.
+#
+# A prova de hoje pegou isto, e o furo já era antigo: eu cortei uma
+# JPEG nos primeiros 300 bytes — como ficaria se a publicação parasse
+# no meio — e a conferência disse IGUAL. É que a medida da imagem mora
+# logo no começo do arquivo: o `file` lê 1259x741 nos 300 bytes e
+# responde confiante. O visitante veria a foto cortada.
+#
+# Todo formato destes marca o próprio fim. Se o fim não está lá, o
+# arquivo não chegou inteiro:
+#
+#   JPEG  acaba em ffd9                       (EOI)
+#   PNG   acaba no CRC do IEND, ae426082      (sempre este)
+#   GIF   acaba em 3b                         (trailer)
+#   WebP/AVIF  não dá para saber pelo fim — ali fica só a medida
+#
+# E a exigência só vale se o arquivo DAQUI também terminar assim. Um
+# arquivo com lixo colado no fim existe, funciona no navegador, e eu
+# não vou reprovar a publicação por causa dele.
+fim_esperado() {
+  case "$(printf '%s' "${1##*.}" | tr 'A-Z' 'a-z')" in
+    jpg|jpeg) echo ffd9 ;;
+    png)      echo 6082 ;;
+    gif)      echo 3b   ;;
+    *)        echo ""   ;;
+  esac
+}
+
+fim_do_arquivo() { tail -c 2 "$1" 2>/dev/null | od -An -tx1 | tr -d ' \n'; }
+
+# 0 = chegou inteiro (ou não dá para saber, e aí não reprova)
+chegou_inteiro() {   # $1 = arquivo daqui   $2 = o que veio
+  marca="$(fim_esperado "$1")"
+  [ -n "$marca" ] || return 0
+  case "$(fim_do_arquivo "$1")" in *"$marca") ;; *) return 0 ;; esac
+  case "$(fim_do_arquivo "$2")" in *"$marca") return 0 ;; *) return 1 ;; esac
+}
+
+# Para o caso de o `file` não saber medir — AVIF, por exemplo, ele só
+# diz "ISO Media". Sem isto, uma imagem que ele não mede reprova a
+# publicação mesmo chegando inteira. Aqui a pergunta cai para: veio o
+# MESMO TIPO de arquivo? Um 404 nem chega neste ponto (o `curl -fsS`
+# recusa antes), e um arquivo truncado muda o tipo.
+tipo_de_imagem() {
+  file -b "$1" 2>/dev/null | sed 's/,.*//' | tr 'A-Z' 'a-z'
 }
 
 # Devolve IGUAL, DIFERENTE ou SEM-RESPOSTA.
@@ -626,9 +699,24 @@ confere() {   # $1 = arquivo daqui   $2 = endereço
     echo "SEM-RESPOSTA"; return
   fi
   if eh_imagem "$1"; then
-    if [ -n "$(medidas /tmp/veio)" ] && [ "$(medidas "$1")" = "$(medidas /tmp/veio)" ]; then
+    aqui="$(medidas "$1")"; veio="$(medidas /tmp/veio)"
+    if ! chegou_inteiro "$1" /tmp/veio; then
+      printf '%s: chegou CORTADO (falta a marca de fim do %s)\n' "$1" \
+        "$(printf '%s' "${1##*.}" | tr 'a-z' 'A-Z')" >> /tmp/detalhe-imagem.txt
+      echo "DIFERENTE"
+    elif [ -n "$aqui" ] && [ -n "$veio" ]; then
+      if [ "$aqui" = "$veio" ]; then echo "IGUAL"; else
+        # Deixa escrito POR QUE reprovou. Sem isto o relatório diz só
+        # "não chegou", e quem for olhar amanhã recomeça do zero —
+        # foi o que me custou a tarde de hoje.
+        printf '%s: aqui %s · servidor %s\n' "$1" "$aqui" "$veio" >> /tmp/detalhe-imagem.txt
+        echo "DIFERENTE"
+      fi
+    elif [ "$(tipo_de_imagem "$1")" = "$(tipo_de_imagem /tmp/veio)" ]; then
       echo "IGUAL"
     else
+      printf '%s: aqui "%s" · servidor "%s"\n' "$1" \
+        "$(tipo_de_imagem "$1")" "$(tipo_de_imagem /tmp/veio)" >> /tmp/detalhe-imagem.txt
       echo "DIFERENTE"
     fi
   elif [ "$(md5sum /tmp/veio | cut -d' ' -f1)" = "$(md5sum "$1" | cut -d' ' -f1)" ]; then
@@ -644,8 +732,12 @@ confere() {   # $1 = arquivo daqui   $2 = endereço
 # nome com espaço dentro continua sendo UM nome — foi o `for` que
 # partiu "ChatGPT Image 16 de set..." em sete e acusou a Hostinger.
 : > /tmp/ausentes.txt
+: > /tmp/detalhe-imagem.txt
 for tentativa in 1 2 3 4 5 6 7 8 9 10; do
   : > /tmp/ausentes.txt
+  # zerado a cada tentativa, senão as dez rodadas empilham a mesma
+  # imagem dez vezes no relatório
+  : > /tmp/detalhe-imagem.txt
   while IFS= read -r arq; do
     [ -n "$arq" ] || continue
     # `?nocache=` diferente a cada pedido: sem isto, a própria
@@ -691,6 +783,13 @@ fi
 
 if [ -s /tmp/ausentes.txt ]; then
   echo "::error::A publicação não chegou depois de 5 minutos, nem em pedidos repetidos. Não chegaram: $(tr '\n' ' ' < /tmp/ausentes.txt)"
+  if [ -s /tmp/detalhe-imagem.txt ]; then
+    echo
+    echo "Das imagens, o que não bateu foi a MEDIDA (não os bytes — recompressão"
+    echo "da Hostinger é esperada e não reprova):"
+    sed 's/^/  · /' /tmp/detalhe-imagem.txt
+    echo
+  fi
   echo "Antes de mexer na Hostinger, confira se algum desses nomes tem espaço ou"
   echo "acento estranho, e se algum deles foi APAGADO neste commit: as duas coisas"
   echo "já fizeram esta conferência culpar a hospedagem sem motivo."
