@@ -23,13 +23,35 @@ jobs:
 
       - name: Olhar o que o servidor devolve
         run: |
-          alvo="https://darkblue-deer-373108.hostingersite.com"
+          # O ENDERECO MUDOU. O site saiu do endereco de teste da Hostinger e
+          # esta no dominio proprio desde setembro; o antigo responde HTTP 000
+          # (medido pela conferencia completa em 14/10/2026, que achou
+          # pharmafitmao.com.br com HTTP 200 e os dois *.hostingersite.com
+          # mortos). Este arquivo tinha ficado para tras apontando para o
+          # endereco que nao existe mais — ou seja, qualquer diagnostico que
+          # alguem rodasse aqui responderia "404 em tudo" e culparia a
+          # publicacao, quando o problema seria o endereco da pergunta.
+          alvo="${SITE_URL:-https://pharmafitmao.com.br}"
 
-          # A PERGUNTA DE AGORA (17/09/2026)
+          # A PERGUNTA DE AGORA (14/10/2026)
           #
-          # A conferencia completa reprovou dizendo que 7 imagens nao chegaram:
-          # os seis PNG do logo e um arquivo chamado "ChatGPT Image 17 de set.
-          # de 2026, 10_08_52.png", solto na raiz.
+          # A conferencia completa passou em tudo — paginas, CSS, JS, a loja, o
+          # 404, e as ferramentas da raiz bloqueadas — e reprovou so no fim,
+          # dizendo que DOIS arquivos nao chegaram, depois de 10 tentativas em
+          # 5 minutos:
+          #
+          #   · "WhatsApp Image 2026-09-23 at 22.05.30.jpeg", solto na raiz e
+          #     USADO pelo index.html. Nome com espacos, que e a primeira
+          #     suspeita que a propria conferencia manda olhar;
+          #   · assets/img/banner-jornada-saude.jpg, que existe no repositorio
+          #     e nao e usado por pagina nenhuma — imagem orfa.
+          #
+          # O que muda conforme a resposta:
+          #   · 404 no primeiro -> a home tem imagem quebrada para o visitante;
+          #   · 200 com bytes diferentes -> a hospedagem recomprimiu, o site
+          #     esta certo e quem erra e a conferencia;
+          #   · 200 no escapado e 404 no cru -> e o nome com espaco, e o
+          #     conserto e renomear o arquivo.
           #
           # A causa MUDA O QUE E URGENTE, e as duas possiveis pedem consertos
           # opostos:
@@ -55,13 +77,8 @@ jobs:
           # espaco e virgula e uma das suspeitas, e a propria conferencia
           # avisa para olhar isso antes de culpar a hospedagem.
           for arq in \
-            assets/img/logo-pf-marca.png \
-            assets/img/logo-pf-icone.png \
-            assets/img/logo-pf-192.png \
-            assets/img/logo-pf-512.png \
-            assets/img/logo-pf-compartilhar.png \
-            assets/img/logo-pf-original.png \
-            "ChatGPT Image 17 de set. de 2026, 10_08_52.png" \
+            "WhatsApp Image 2026-09-23 at 22.05.30.jpeg" \
+            assets/img/banner-jornada-saude.jpg \
           ; do
             echo "================================================================"
             echo "  $arq"
