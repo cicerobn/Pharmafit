@@ -154,19 +154,16 @@ jobs:
       # pega é justamente o tipo que ninguém vê: conferência que grita sem
       # motivo ensina a gente a ignorar o vermelho.
       #
-      # SAÍDA 2 NÃO REPROVA: é a própria prova dizendo que não rodou por
-      # falta de Pillow/ImageMagick na máquina. Isso é problema do ambiente,
-      # não do site, e eu não paro uma publicação boa por causa dele — mas
-      # fica o aviso na tela da Action.
+      # A PRIMEIRA VERSÃO DESTE PASSO NÃO MEDIA NADA. A prova usava Pillow
+      # para recomprimir a imagem, e esta máquina não tem Pillow nem
+      # ImageMagick: ela saía avisando "não rodei", o passo passava em menos
+      # de um segundo, e eu teria ficado com um conferidor de enfeite.
+      #
+      # Agora ela monta as imagens mexendo nos bytes, com python de fábrica,
+      # e não tem como não rodar. Se um dia ela não puder medir, ela
+      # REPROVA — passo que passa sem medir é pior que passo nenhum.
       - name: Conferir que a conferência de imagem não reprova recompressão
-        run: |
-          c=0
-          bash provas/conferir-imagem.sh || c=$?
-          if [ "$c" = "2" ]; then
-            echo "::warning::A prova da conferência de imagem não rodou nesta máquina (falta Pillow ou ImageMagick). Nada foi medido."
-            exit 0
-          fi
-          exit "$c"
+        run: bash provas/conferir-imagem.sh
 
       - name: Instalar as dependências da loja
         working-directory: loja-fonte
