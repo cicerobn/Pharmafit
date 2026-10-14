@@ -143,6 +143,31 @@ jobs:
       - name: Conferir que cada página carrega o que seus scripts precisam
         run: node conferir-scripts.mjs
 
+      # 14/10/2026: a conferência do site no ar reprovava toda JPEG, todo
+      # dia, por um motivo que não existia — ela lia a densidade do
+      # cabeçalho JFIF como se fosse a medida da imagem. Esta prova sobe um
+      # servidor local que devolve o que a Hostinger devolve (a imagem
+      # recomprimida, com o cabeçalho reescrito para Exif) e mede as
+      # funções DE VERDADE do conferir-no-ar.sh, arrancadas de lá.
+      #
+      # Ela mora aqui porque é offline, leva segundos, e o defeito que ela
+      # pega é justamente o tipo que ninguém vê: conferência que grita sem
+      # motivo ensina a gente a ignorar o vermelho.
+      #
+      # SAÍDA 2 NÃO REPROVA: é a própria prova dizendo que não rodou por
+      # falta de Pillow/ImageMagick na máquina. Isso é problema do ambiente,
+      # não do site, e eu não paro uma publicação boa por causa dele — mas
+      # fica o aviso na tela da Action.
+      - name: Conferir que a conferência de imagem não reprova recompressão
+        run: |
+          c=0
+          bash provas/conferir-imagem.sh || c=$?
+          if [ "$c" = "2" ]; then
+            echo "::warning::A prova da conferência de imagem não rodou nesta máquina (falta Pillow ou ImageMagick). Nada foi medido."
+            exit 0
+          fi
+          exit "$c"
+
       - name: Instalar as dependências da loja
         working-directory: loja-fonte
         run: npm ci

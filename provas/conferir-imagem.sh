@@ -41,12 +41,34 @@ printf '%s' "$trecho" | grep -q 'confere()' \
 NAVEGADOR="Mozilla/5.0 (prova)"
 eval "$trecho"
 
+# E a função que escapa o nome para virar endereço, que mora no começo
+# do arquivo.
+escapador="$(grep '^pro_endereco() ' "$SCRIPT")"
+[ -n "$escapador" ] \
+  || { echo "PROVA QUEBRADA: não achei pro_endereco() no $SCRIPT"; exit 1; }
+eval "$escapador"
+
 ok=0; mal=0
 diz() { if [ "$1" = "sim" ]; then echo "  ok     $2"; ok=$((ok+1));
         else echo "  FALHOU $2"; mal=$((mal+1)); fi; }
 
 PASTA="$(mktemp -d)"
-trap 'kill ${servidor:-0} 2>/dev/null; wait ${servidor:-0} 2>/dev/null; rm -rf "$PASTA"' EXIT
+
+# O `kill` DE PERTINHO DO PÉ. Eu havia escrito `kill ${servidor:-0}`, e
+# `kill 0` em bash não é "não mata ninguém": é MATA O GRUPO TODO,
+# inclusive esta prova. Quando a prova saía antes de subir o servidor
+# — por exemplo para dizer "não rodou, falta Pillow", que é saída 2 —
+# o trap a matava e ela saía 143. O publicador compara a saída com 2,
+# então um ambiente sem biblioteca reprovaria uma publicação boa.
+limpar() {
+  if [ -n "${servidor:-}" ]; then
+    kill "$servidor" 2>/dev/null
+    wait "$servidor" 2>/dev/null
+  fi
+  [ -n "${PASTA:-}" ] && rm -rf "$PASTA"
+  return 0
+}
+trap limpar EXIT
 
 # A imagem de referência é a maior JPEG do site — a que reprovava.
 REPO="$(ls -S "$RAIZ"/assets/img/*.jpg "$RAIZ"/assets/img/*.jpeg 2>/dev/null | head -1)"
@@ -181,6 +203,48 @@ if grep -q 'servidor' /tmp/detalhe-imagem.txt; then
   diz sim "escreveu a medida dos dois lados: $(tail -1 /tmp/detalhe-imagem.txt | sed "s|$RAIZ/||" | cut -c1-80)"
 else
   diz nao "não escreveu o motivo (o relatório diria só 'não chegou')"
+fi
+
+echo
+echo "===========  nome com espaço: a conferência consegue pedir?  ==========="
+#
+# A conferência reprovou a foto da página inicial — "WhatsApp Image
+# 2026-09-23 at 22.05.30.jpeg" — porque montava o endereço com os
+# espaços crus, e o curl recusa isso antes de sair da máquina. Aqui o
+# arquivo EXISTE no servidor: se o pedido falhar, é a conferência que
+# não sabe pedir.
+cp "$PASTA/recomprimida.jpg" "$PASTA/Foto Com Espaco No Nome.jpg"
+r="$(confere "$REPO" "$BASE/$(pro_endereco 'Foto Com Espaco No Nome.jpg')")"
+[ "$r" = "IGUAL" ] && diz sim "arquivo com espaço no nome é pedido e encontrado" \
+                   || diz nao "não deu para pedir o arquivo com espaço: $r"
+r="$(confere "$REPO" "$BASE/Foto Com Espaco No Nome.jpg")"
+[ "$r" = "SEM-RESPOSTA" ] && diz sim "e sem escapar, o pedido nem sai — era o defeito de 14/10" \
+                         || diz nao "sem escapar funcionou; então o escape não era o problema: $r"
+
+echo
+echo "===========  o que a conferência cobra da Hostinger  ==========="
+#
+# Eu mesmo causei isto hoje: criei esta prova como .sh, ela entrou na
+# lista dos arquivos publicáveis, e a conferência passou cinco minutos
+# cobrando da hospedagem um arquivo que o .htaccess recusa DE
+# PROPÓSITO. As duas listas têm de fechar: o que o site publica tem de
+# chegar igual, e o que é ferramenta tem de dar 404.
+publicaveis="$(sed -n '/^ARQUIVOS=\$(find/,/sort)$/p' "$SCRIPT")"
+ferramentas="$(sed -n '/^FERRAMENTAS_CI=\$(find/,/sort)$/p' "$SCRIPT")"
+if [ -z "$publicaveis" ] || [ -z "$ferramentas" ]; then
+  diz nao "PROVA QUEBRADA: não achei as duas listas no $SCRIPT"
+else
+  eval "$publicaveis"; eval "$ferramentas"
+  eu="provas/$(basename "$0")"
+  printf '%s\n' "$ARQUIVOS" | grep -qx "$eu" \
+    && diz nao "esta prova está na lista dos publicáveis — a conferência vai cobrá-la da Hostinger" \
+    || diz sim "nenhum .sh na lista do que a Hostinger tem de publicar"
+  printf '%s\n' "$FERRAMENTAS_CI" | grep -qx "$eu" \
+    && diz sim "e esta prova está na lista do que tem de dar 404" \
+    || diz nao "esta prova NÃO está na lista do que tem de dar 404 — ninguém confere se ela está exposta"
+  grep -q 'FilesMatch "\\\.(sql|ts|md|yml|yaml|sh)\$"' "$RAIZ/.htaccess" \
+    && diz sim "e o .htaccess recusa .sh, que é o que torna isso verdade" \
+    || diz nao "o .htaccess NÃO recusa .sh — então esta prova está baixável no site"
 fi
 
 echo
