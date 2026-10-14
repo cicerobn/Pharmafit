@@ -39,6 +39,30 @@ achou=""
 # parece robô; provavelmente fui eu que acendi o alarme.
 NAVEGADOR="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
 
+# NOME DE ARQUIVO NÃO É ENDEREÇO.
+#
+# 14/10/2026: esta conferência reprovou "WhatsApp Image 2026-09-23 at
+# 22.05.30.jpeg" — a foto grande da página inicial — dez tentativas
+# seguidas, cinco minutos, dizendo que não havia chegado. A imagem
+# estava no ar: o diagnóstico pediu ela com o nome escapado e veio
+# HTTP 200, JPEG válido, na medida certa.
+#
+# O que acontecia é que ela montava o endereço colando o nome do
+# arquivo, com os espaços dentro. O `curl` RECUSA endereço com espaço
+# cru — o pedido não chega nem a sair da máquina. A resposta era
+# sempre SEM-RESPOSTA, e o relatório dizia "não chegou", culpando a
+# Hostinger por um pedido que nunca foi feito.
+#
+# E o recado de erro mandava "confira se algum desses nomes tem
+# espaço": certo na pista, errado na conclusão. O espaço era problema
+# AQUI, não lá.
+#
+# Espaço é %20. Os outros caracteres que precisariam de tratamento
+# (#, ?, %) não aparecem em nome nenhum do site; no dia em que
+# aparecerem, a conferência reprova — e vai estar certa, porque nome
+# de arquivo com # no meio quebra no navegador também.
+pro_endereco() { printf '%s' "$1" | sed 's/ /%20/g'; }
+
 echo "Procurando a Pharma Fit:"
 barrado=0
 # "respondeu" = o servidor devolveu ALGUMA resposta HTTP, mesmo
@@ -300,7 +324,22 @@ echo "ferramentas da raiz que têm de estar bloqueadas: $(echo $FERRAMENTAS)"
 # arquivo do repositório é servido pela Hostinger até alguém dizer que não.
 # Lista pela FORMA e não pelo nome, pelo mesmo motivo de sempre: no dia em
 # que nascer o segundo `.sh` aqui ele já vem protegido.
-FERRAMENTAS_CI=$(find .github -type f \( -name '*.sh' -o -name '*.yml' -o -name '*.yaml' \) | sed 's|^\./||' | sort)
+#
+# 14/10/2026: e nasceu — provas/conferir-imagem.sh. Mas esta busca olhava
+# só dentro de .github/, então o arquivo novo não entrou aqui E entrou na
+# lista dos publicáveis, onde a conferência passou cinco minutos cobrando
+# da Hostinger um arquivo que o .htaccess recusa de propósito. Agora
+# procura `.sh` em TODO o repositório.
+#
+# node_modules/ e loja-fonte/ ficam de fora: o `npm ci` roda antes deste
+# passo e lá dentro há centenas de .sh e .yml de biblioteca. Pedir cada um
+# deles ao servidor não prova nada e levaria a conferência à eternidade —
+# e a pasta inteira já é recusada por RedirectMatch 404.
+FERRAMENTAS_CI=$(find . -type f \( -name '*.sh' -o -name '*.yml' -o -name '*.yaml' \) \
+  -not -path './.git/*' \
+  -not -path '*/node_modules/*' \
+  -not -path './loja-fonte/*' \
+  | sed 's|^\./||' | sort)
 echo "ferramentas de publicação que têm de estar bloqueadas: $(echo $FERRAMENTAS_CI)"
 
 for proibido in gestao/supabase/schema.sql \
@@ -311,7 +350,7 @@ for proibido in gestao/supabase/schema.sql \
                 README.md \
                 $FERRAMENTAS \
                 $FERRAMENTAS_CI; do
-  c=$(curl -s -A "$NAVEGADOR" -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$proibido" || echo 000)
+  c=$(curl -s -A "$NAVEGADOR" -o /dev/null -w '%{http_code}' --max-time 20 "$achou/$(pro_endereco "$proibido")" || echo 000)
   if [ "$c" = "200" ]; then
     echo "::error::$proibido está sendo servido ao público (HTTP 200). Isso entrega a estrutura do banco a quem passar."
     falhou=1
@@ -383,7 +422,7 @@ fi
 #
 #   .htaccess       o Apache se recusa a servir (é a configuração dele)
 #   .md .sql .ts    o próprio .htaccess recusa, de propósito
-#   .yml .yaml      idem
+#   .yml .yaml .sh  idem
 #   *.mjs           ferramenta de publicação; o .htaccess recusa pelo nome
 #   .git* .gitignore não é para o navegador
 #   loja-fonte/     RedirectMatch 404 — é a fonte, não o site
@@ -404,6 +443,7 @@ ARQUIVOS=$(find . -type f \
   -not -name '*.ts' \
   -not -name '*.yml' \
   -not -name '*.yaml' \
+  -not -name '*.sh' \
   -not -name '*.mjs' \
   -not -name 'robots.txt' \
   | sed 's|^\./||' | sort)
@@ -693,6 +733,10 @@ tipo_de_imagem() {
   file -b "$1" 2>/dev/null | sed 's/,.*//' | tr 'A-Z' 'a-z'
 }
 
+# (pro_endereco, que escapa o nome para virar endereço, está definida
+# lá no começo do arquivo, junto do NAVEGADOR: a lista de proibidos
+# roda antes daqui e usa ela também.)
+
 # Devolve IGUAL, DIFERENTE ou SEM-RESPOSTA.
 confere() {   # $1 = arquivo daqui   $2 = endereço
   if ! curl -fsS -A "$NAVEGADOR" --max-time 20 "$2" -o /tmp/veio 2>/dev/null; then
@@ -743,7 +787,7 @@ for tentativa in 1 2 3 4 5 6 7 8 9 10; do
     # `?nocache=` diferente a cada pedido: sem isto, a própria
     # pergunta viraria cache e as dez tentativas leriam a mesma
     # resposta velha, o que faz o laço não servir para nada.
-    [ "$(confere "$arq" "$achou/$arq?nocache=$RANDOM$RANDOM$tentativa")" = "IGUAL" ] \
+    [ "$(confere "$arq" "$achou/$(pro_endereco "$arq")?nocache=$RANDOM$RANDOM$tentativa")" = "IGUAL" ] \
       || printf '%s\n' "$arq" >> /tmp/ausentes.txt
   done < /tmp/alvos.txt
   if [ ! -s /tmp/ausentes.txt ]; then
@@ -765,9 +809,9 @@ if [ ! -s /tmp/ausentes.txt ]; then
   while IFS= read -r arq; do
     [ -n "$arq" ] || continue
     if estampado "$arq"; then
-      url="$achou/$arq?v=$(esperado8 "$arq")"
+      url="$achou/$(pro_endereco "$arq")?v=$(esperado8 "$arq")"
     else
-      url="$achou/$arq"
+      url="$achou/$(pro_endereco "$arq")"
     fi
     [ "$(confere "$arq" "$url")" = "IGUAL" ] && continue
     printf '%s\n' "$arq" >> /tmp/cdn-velho.txt
