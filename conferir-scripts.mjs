@@ -82,6 +82,13 @@ for (const arq of readdirSync(PASTA).filter((f) => f.endsWith('.js'))) {
     .split(/[,\s]+/)
     .map((s) => s.trim().replace(/\.js$/, ''))
     .filter(Boolean);
+  /* `precisa: nada` é um arquivo que não depende de ninguém — e dizer
+     isso é diferente de esquecer a linha. Sem esta regra, 15/10/2026, o
+     `mensagem-pedido.js` escreveu "precisa: nada (é só texto e contas)" e
+     o conferidor saiu cobrando da página os scripts "nada.js", "(é.js",
+     "só.js", "texto.js" e "contas).js". A primeira palavra manda; o
+     resto da linha é explicação para quem lê. */
+  if (lista[0] === 'nada') continue;
   if (lista.length) precisa.set(arq.replace(/\.js$/, ''), lista);
 }
 

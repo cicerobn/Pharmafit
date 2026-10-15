@@ -19,6 +19,8 @@
   var Moedas = window.PharmaFitMoedas;
   var Area = window.PharmaFitArea;
   var Cupom = window.PharmaFitCupom;
+  /* o banco, para ler o modelo da mensagem que a equipe edita no painel */
+  var Nuvem = window.PharmaFitNuvem;
   if (!C || !document.getElementById('itens')) return;
 
   var cfg = window.PHARMAFIT_CONFIG || {};
@@ -401,6 +403,93 @@
 
   /* ---------- o WhatsApp ---------- */
 
+  /* =================================================================
+     A MENSAGEM AGORA É UM MODELO QUE A EQUIPE EDITA NO PAINEL.
+     =================================================================
+
+     Brian, 15/10/2026: "aqui tem que ter como editar no painel, a
+     mensagem que aparece".
+
+     O texto de fábrica, a lista de peças e a troca das peças moram em
+     `assets/js/mensagem-pedido.js` — num arquivo só, porque o PAINEL
+     precisa das mesmas três coisas para mostrar a prévia e recusar peça
+     inventada. Duas cópias discordariam no primeiro ajuste.
+
+     Aqui ficam só as duas coisas que são do carrinho: QUANTO vale cada
+     peça neste pedido, e de onde vem o modelo. */
+  var Mensagem = window.PharmaFitMensagemPedido;
+  var CHAVE_APARELHO = 'pharmafit_mensagem_zap';
+
+  /** O que cada peça vale neste pedido. */
+  function pecasDoPedido(conta, dados) {
+    var produtos = conta.itens.map(function (i) {
+      return '• ' + i.quantidade + '× ' + i.nome + ' — ' + moeda(i.subtotal);
+    }).join('\n');
+
+    /* O bloco do cupom só existe quando há cupom; junto vai o subtotal,
+       porque sem ele o desconto não faz sentido na leitura. */
+    var cupom = '';
+    if (conta.cupom && conta.desconto) {
+      cupom = 'Subtotal: ' + moeda(conta.total) + '\n' +
+              'Cupom ' + conta.cupom.codigo + ' (' + Cupom.rotulo(conta.cupom) + '): − ' +
+              moeda(conta.desconto);
+    }
+
+    return {
+      /* "cliente" no lugar do nome vazio: o formulário exige o nome
+         neste caminho, então isto é só para nunca sair "Aqui é ,". */
+      nome: dados.nome || 'cliente',
+      produtos: produtos,
+      cupom: cupom,
+      total: moeda(conta.aPagar),
+      pagamento: dados.pagamento || 'a combinar',
+      entrega: dados.endereco || 'a combinar',
+      whatsapp: dados.telefone || '(este mesmo)'
+    };
+  }
+
+  /* a última conta desenhada, para o link ser remontado quando o banco
+     responder com um texto diferente do que este aparelho tinha */
+  var ultimaConta = null;
+
+  /* O MODELO QUE ESTE APARELHO JÁ VIU, lido antes de qualquer pedido —
+     igual ao que o `zap.js` faz com o número. Assim a primeira mensagem
+     da visita já sai com o texto da equipe, sem esperar o banco. */
+  var modeloEmUso = (function () {
+    var guardado = '';
+    try { guardado = localStorage.getItem(CHAVE_APARELHO) || ''; } catch (e) {}
+    return (Mensagem && Mensagem.serve(guardado)) ? guardado
+         : (Mensagem ? Mensagem.padrao : '');
+  })();
+
+  /* E a pergunta ao banco, que corrige para a próxima montagem. Erro de
+     rede NÃO apaga o que o aparelho sabe: na dúvida, fica o último
+     texto que funcionou. */
+  (async function perguntarOModelo() {
+    if (!Mensagem || !Nuvem || !Nuvem.cliente) return;
+    try { await Nuvem.pronto; } catch (e) { return; }
+    var sb = Nuvem.cliente();
+    if (!sb) return;
+    var r;
+    try {
+      r = await sb.from('pf_configuracoes').select('valor')
+            .eq('chave', Mensagem.chave).maybeSingle();
+    } catch (e) { return; }
+    if (!r || r.error) return;
+
+    var doBanco = (r.data && r.data.valor) || '';
+    if (Mensagem.serve(doBanco)) {
+      modeloEmUso = doBanco;
+      try { localStorage.setItem(CHAVE_APARELHO, doBanco); } catch (e) {}
+    } else {
+      /* a equipe apagou o texto no painel: volta o de fábrica */
+      modeloEmUso = Mensagem.padrao;
+      try { localStorage.removeItem(CHAVE_APARELHO); } catch (e) {}
+    }
+    /* o link já montado na tela passa a valer o texto novo */
+    try { if (ultimaConta) montarLinkZap(ultimaConta); } catch (e) {}
+  })();
+
   function montarLinkZap(conta) {
     var numero = String(cfg.WHATSAPP || '559285904669').replace(/\D+/g, '');
     var dados = contato();
@@ -423,40 +512,20 @@
      *     ele some do caminho dos quatro e continua ali.
      *
      * Os asteriscos são negrito no WhatsApp, e `encodeURIComponent` não
-     * mexe neles — é por isso que dá para usar. */
-    var linhas = [];
-    linhas.push(dados.nome
-      ? 'Olá! Aqui é ' + dados.nome + ', quero fechar este pedido:'
-      : 'Olá! Quero fechar este pedido:');
-
-    linhas.push('');
-    linhas.push('*1. Produto*');
-    conta.itens.forEach(function (i) {
-      linhas.push('• ' + i.quantidade + '× ' + i.nome + ' — ' + moeda(i.subtotal));
-    });
-    if (conta.cupom && conta.desconto) {
-      linhas.push('Subtotal: ' + moeda(conta.total));
-      linhas.push('Cupom ' + conta.cupom.codigo + ' (' + Cupom.rotulo(conta.cupom) + '): − ' +
-                  moeda(conta.desconto));
-      linhas.push('Total: ' + moeda(conta.aPagar));
-    } else {
-      linhas.push('Total: ' + moeda(conta.total));
-    }
-
-    linhas.push('');
-    linhas.push('*2. Forma de pagamento*');
-    linhas.push(dados.pagamento || 'a combinar');
-
-    linhas.push('');
-    linhas.push('*3. Entrega*');
-    linhas.push(dados.endereco || 'a combinar');
-
-    linhas.push('');
-    linhas.push('*4. WhatsApp*');
-    linhas.push(dados.telefone || '(este mesmo)');
+     * mexe neles — é por isso que dá para usar.
+     *
+     * 15/10/2026: ESTE TEXTO SAIU DAQUI e virou um modelo que a equipe
+     * edita no painel (Configurações → Mensagem do pedido). O de fábrica
+     * está em `assets/js/mensagem-pedido.js`, e é ele que vale enquanto
+     * ninguém editar. O formato das quatro seções continua o que a
+     * equipe pediu; quem muda agora são eles. */
+    ultimaConta = conta;
+    var pecas = pecasDoPedido(conta, dados);
+    var texto = Mensagem ? Mensagem.aplicar(modeloEmUso, pecas)
+                         : pecas.produtos + '\nTotal: ' + pecas.total;
 
     var alvo = document.getElementById('fechar');
-    alvo.href = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(linhas.join('\n'));
+    alvo.href = 'https://wa.me/' + numero + '?text=' + encodeURIComponent(texto);
     alvo.__conta = conta;
   }
 
