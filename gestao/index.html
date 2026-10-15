@@ -305,6 +305,15 @@
          (24/09/2026). Nasce escondido; o `painel.js` escreve a regra do
          cupom e se ela já está descontada na sugestão de valor. -->
     <p class="cv-cupom" id="cv-cupom" hidden></p>
+    <!-- DE ONDE VEIO O VALOR SUGERIDO (15/10/2026).
+         Brian: "o valor fica diferente na notinha, aí sempre a pessoa
+         pergunta". A caixa sugeria um número sem dizer de onde ele saía
+         — e sugeria VAZIO quando não achava o produto, que é o caso de
+         todo pedido de opção. Campo vazio empurra quem confirma a
+         digitar de cabeça, e aí a notinha discorda da mensagem que o
+         cliente leu. Agora a procedência fica escrita aqui, e quando o
+         preço não é conhecido a caixa diz isso em vez de calar. -->
+    <p class="cv-cupom" id="cv-origem" hidden></p>
 
     <div class="field">
       <label class="field__label" for="cv-valor">Valor da venda (R$)</label>
@@ -501,6 +510,6 @@
 <script src="assets/analise.js?v=e2445f21"></script>
 <script src="assets/menu.js?v=89452c62"></script>
 <script src="assets/notificacoes.js?v=eb076428"></script>
-<script src="assets/painel.js?v=edeee92f"></script>
+<script src="assets/painel.js?v=7df8a68f"></script>
 </body>
 </html>
