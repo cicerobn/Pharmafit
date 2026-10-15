@@ -460,11 +460,78 @@
    *
    * Continua sendo SUGESTÃO: o que vale é o valor fechado na conversa,
    * e o campo segue aberto para mudar. */
+  /* QUAL ITEM DA LISTA É ESTE PEDIDO — E O PEDIDO PODE SER DE UMA OPÇÃO.
+   *
+   * Brian, 15/10/2026, com o print da conversa da equipe: "tô tendo esse
+   * problema no site do valor ficar diferente na notinha, aí sempre a
+   * pessoa pergunta".
+   *
+   * O site vende ampola avulsa de sete marcas sem ter sete produtos na
+   * vitrine: é UM produto com OPÇÕES, e cada opção tem preço próprio. O
+   * nome que vai no carrinho, no pedido e na mensagem do WhatsApp é
+   * "<produto> (<opção>)" — está escrito assim no `catalogo-banco.js`, e
+   * o estoque do painel já sabe disso (`gestao/assets/dados.js`).
+   *
+   * ESTA PARTE NÃO SABIA. Ela procurava o nome inteiro na lista de
+   * produtos, não achava — porque lá o nome é só o do produto-pai — e
+   * respondia preço ZERO. Com sugestão zero o campo abre VAZIO, quem
+   * confirma digita o valor de cabeça, e o número que vai na notinha não
+   * é o que o cliente leu na mensagem. Daí a pergunta do cliente, toda
+   * vez.
+   *
+   * O mesmo furo atingia o CUSTO na hora de confirmar: opção não achada
+   * virava custo zero, e o Brian pediu o preço de compra justamente
+   * "pra ver o lucro e a receita" — lucro calculado contra custo zero é
+   * lucro inventado.
+   *
+   * Devolve sempre um objeto, com `produto` e/ou `opcao` vazios quando
+   * não achou — quem chama precisa saber a diferença entre "achei e
+   * custa zero" e "não achei".
+   */
+  function itemDoPedido(nome) {
+    nome = String(nome || '').trim();
+    if (!nome) return { produto: null, opcao: null, achou: false };
+
+    var produto = estado.produtos.filter(function (p) { return p.nome === nome; })[0];
+    if (produto) return { produto: produto, opcao: null, achou: true };
+
+    /* "<produto> (<opção>)" — a mesma conta que o estoque faz, para as
+       duas partes nunca discordarem sobre o que é uma opção. */
+    var dono = null, op = null;
+    estado.produtos.forEach(function (p) {
+      (Array.isArray(p.opcoes) ? p.opcoes : []).forEach(function (o) {
+        if (!dono && o && nome === p.nome + ' (' + String(o.nome || '').trim() + ')') {
+          dono = p; op = o;
+        }
+      });
+    });
+    if (dono) return { produto: dono, opcao: op, achou: true };
+
+    return { produto: null, opcao: null, achou: false };
+  }
+
+  /** O preço de UMA unidade, do jeito que o SITE calcula — é o número que
+      o cliente leu na mensagem. Opção com preço próprio vale o dela;
+      opção sem preço herda o do produto, exatamente como no site. */
+  function unitarioDoItem(item) {
+    if (!item.achou) return 0;
+    var doOpcao = item.opcao ? Number(item.opcao.preco || 0) : 0;
+    if (doOpcao > 0) return doOpcao;
+    return Number((item.produto && item.produto.preco) || 0);
+  }
+
+  /** O custo de UMA unidade, pela mesma regra. */
+  function custoDoItem(item) {
+    if (!item.achou) return 0;
+    var doOpcao = item.opcao ? Number(item.opcao.custo || 0) : 0;
+    if (doOpcao > 0) return doOpcao;
+    return Number((item.produto && item.produto.custo) || 0);
+  }
+
   function precoSugerido(pedido) {
     var qtd = Math.max(1, Number(pedido.quantidade || 1));
 
-    var produto = estado.produtos.filter(function (p) { return p.nome === pedido.produto; })[0];
-    var unitario = produto ? Number(produto.preco || 0) : 0;
+    var unitario = unitarioDoItem(itemDoPedido(pedido.produto));
 
     var noCatalogo = (window.PHARMAFIT_CATALOGO || []).filter(function (p) {
       return p.nome === pedido.produto;
@@ -509,6 +576,39 @@
     var campo = document.getElementById('cv-valor');
     campo.value = Number(pedido.valor) > 0 ? Number(pedido.valor) : (sugestao > 0 ? sugestao : '');
 
+    /* A PROCEDÊNCIA DO NÚMERO, escrita na tela.
+       O valor sugerido é o preço de HOJE na lista de produtos, vezes a
+       quantidade — que é a mesma conta que o site faz para escrever o
+       preço na mensagem do cliente. Quando os dois discordam, é porque
+       o preço mudou na lista depois do pedido; agora dá para ver isso
+       em vez de descobrir pela pergunta do cliente. */
+    var elOrigem = document.getElementById('cv-origem');
+    if (elOrigem) {
+      var item = itemDoPedido(pedido.produto);
+      var unit = unitarioDoItem(item);
+      if (!item.achou) {
+        elOrigem.hidden = false;
+        elOrigem.textContent =
+          '"' + (pedido.produto || '') + '" não está na sua lista de produtos, então eu não ' +
+          'tenho preço para sugerir. Confira na mensagem do WhatsApp o valor que o site ' +
+          'mostrou ao cliente — é esse que tem de ir na notinha.';
+      } else if (!(unit > 0)) {
+        elOrigem.hidden = false;
+        elOrigem.textContent =
+          (item.opcao ? 'A opção "' + item.opcao.nome + '"' : 'Este produto') +
+          ' está sem preço na sua lista, então não há o que sugerir. ' +
+          'O site mostrou ao cliente o preço que está na mensagem do WhatsApp.';
+      } else {
+        elOrigem.hidden = false;
+        elOrigem.textContent = 'Sugestão: ' + moeda(unit) + ' por unidade' +
+          (qtd > 1 ? ' × ' + qtd + ' = ' + moeda(sugestao) : '') +
+          ' — é o preço que está HOJE na sua lista de produtos' +
+          (item.opcao ? ', na opção "' + item.opcao.nome + '"' : '') +
+          '. Se a mensagem do cliente mostrar outro valor, o preço mudou depois do pedido: ' +
+          'vale o que foi combinado com ele.';
+      }
+    }
+
     var elCupom = document.getElementById('cv-cupom');
     if (elCupom) {
       var regra = regraDoCupom(pedido.cupom);
@@ -551,13 +651,14 @@
       var nome = pedidoEmConfirmacao.cliente || 'cliente';
       botao.disabled = true;
 
-      var produto = estado.produtos.filter(function (x) {
-        return x.nome === pedidoEmConfirmacao.produto;
-      })[0];
+      /* O custo pela mesma régua do preço: entende opção. Antes, um
+         pedido de opção não achava produto nenhum e gravava custo zero. */
+      var item = itemDoPedido(pedidoEmConfirmacao.produto);
+      var custoUnit = custoDoItem(item);
 
       var r = await Dados.confirmarPedido(pedidoEmConfirmacao.id, {
         valor: valor,
-        custo: produto ? Number(produto.custo || 0) : Number(pedidoEmConfirmacao.custo || 0),
+        custo: item.achou ? custoUnit : Number(pedidoEmConfirmacao.custo || 0),
         pagamento: document.getElementById('cv-pagamento').value,
         vendedor: usuarioAtual,
         produto: pedidoEmConfirmacao.produto,
