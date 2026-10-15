@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="app.css?v=4c94329e">
+<link rel="stylesheet" href="app.css?v=8d6f3bdb">
 </head>
 <body>
 
@@ -68,6 +68,48 @@
         </p>
         <p class="folha__recado" data-zap-recado role="status" hidden></p>
         <button class="botao botao--forte" type="submit" data-zap-salvar>Salvar número</button>
+      </form>
+    </section>
+
+    <!-- A MENSAGEM QUE CHEGA NO WHATSAPP, EDITÁVEL DAQUI.
+         Brian, 15/10/2026, colando a mensagem que a equipe recebe:
+         "aqui tem que ter como editar no painel, a mensagem que
+         aparece". O texto morava dentro do código do site; mudar uma
+         vírgula exigia publicar. Quem sabe que palavra funciona na
+         conversa é quem atende.
+
+         A PRÉVIA é a parte que faz isso ser seguro para quem não é
+         programador: ela mostra, do lado, a mensagem pronta com um
+         pedido de exemplo. Não é preciso entender "peça" nem "chave" —
+         basta olhar se ficou do jeito que se quer. -->
+    <p class="rotulo-secao">Mensagem do pedido</p>
+    <section class="bloco">
+      <form class="bloco__corpo msg-form" data-msg-form novalidate>
+        <label class="campo">
+          <span class="campo__rotulo">O texto que a equipe recebe</span>
+          <textarea class="msg-form__texto" rows="14" spellcheck="false"
+                    data-msg-texto></textarea>
+        </label>
+
+        <p class="campo__nota">
+          O que está entre chaves é trocado pelos dados do pedido. Linha
+          que ficar vazia depois da troca desaparece sozinha — é assim
+          que o desconto só aparece quando há cupom.
+        </p>
+        <ul class="msg-form__pecas" data-msg-pecas></ul>
+
+        <p class="campo__rotulo" style="margin-top:18px">Como vai chegar</p>
+        <pre class="msg-form__previa" data-msg-previa></pre>
+        <label class="msg-form__opcao">
+          <input type="checkbox" data-msg-com-cupom>
+          <span>ver com cupom de desconto</span>
+        </label>
+
+        <p class="folha__recado" data-msg-recado role="status" hidden></p>
+        <div class="msg-form__botoes">
+          <button class="botao botao--forte" type="submit" data-msg-salvar>Salvar mensagem</button>
+          <button class="botao" type="button" data-msg-padrao>Voltar ao texto de fábrica</button>
+        </div>
       </form>
     </section>
 
@@ -138,7 +180,12 @@
 <script src="../assets/auth.js?v=aa6c3cd8"></script>
 <script src="../assets/dados.js?v=d500aef2"></script>
 <script src="../assets/analise.js?v=e2445f21"></script>
+<!-- O MODELO da mensagem do pedido — o MESMO arquivo que o carrinho do
+     site usa. É dele que saem o texto de fábrica, a lista de peças e a
+     prévia desta tela; assim o painel e o site nunca discordam sobre
+     como a mensagem é montada. -->
+<script src="../../assets/js/mensagem-pedido.js?v=28368b5b"></script>
 <script src="app.js?v=84b787ca"></script>
-<script src="configuracoes.js?v=dee9746a"></script>
+<script src="configuracoes.js?v=acd4748c"></script>
 </body>
 </html>

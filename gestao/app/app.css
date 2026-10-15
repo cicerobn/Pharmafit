@@ -1723,6 +1723,58 @@ body.travado{overflow:hidden}
    explicação, recado e botão empilhados, com o mesmo respiro da folha. */
 .zap-form{display:flex;flex-direction:column;gap:12px;padding-top:14px}
 
+/* ---- a mensagem do pedido, editável (15/10/2026) ----
+   Brian: "aqui tem que ter como editar no painel, a mensagem que
+   aparece". Empilha como o formulário do WhatsApp.
+
+   A PRÉVIA é desenhada como uma conversa de WhatsApp de propósito: quem
+   vai mexer aqui não lê "modelo com chaves", lê a mensagem que o cliente
+   manda. Fundo verde-claro, canto arredondado, texto na largura de um
+   celular. `white-space:pre-wrap` é o que faz as quebras de linha do
+   texto aparecerem como quebras — sem isso a prévia vira um parágrafo
+   só e não se parece com nada.
+
+   O campo de escrever usa fonte de largura fixa: as peças entre chaves
+   ficam fáceis de distinguir do texto, e alinhar as linhas é mais
+   simples. */
+.msg-form{display:flex;flex-direction:column;gap:12px;padding-top:14px}
+.msg-form__texto{
+  width:100%;
+  min-height:220px;
+  padding:12px 13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--card);
+  color:var(--ink);
+  font:400 13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  resize:vertical;
+}
+.msg-form__texto:focus{outline:2px solid var(--gold-soft);outline-offset:1px;border-color:var(--gold)}
+.msg-form__pecas{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+.msg-form__pecas li{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--muted)}
+.msg-form__pecas code{
+  flex:0 0 auto;
+  padding:1px 6px;
+  border-radius:6px;
+  background:var(--line-2);
+  color:var(--ink-2);
+  font:600 12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.msg-form__previa{
+  margin:6px 0 0;
+  max-width:330px;
+  padding:11px 13px;
+  border-radius:14px 14px 14px 4px;
+  background:var(--st-pago-bg);
+  color:var(--ink);
+  font:400 13.5px/1.55 var(--sans);
+  white-space:pre-wrap;
+  word-break:break-word;
+  overflow-x:auto;
+}
+.msg-form__opcao{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:4px}
+.msg-form__botoes{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+
 /* ---- a tela de Cupons (24/09/2026) ----
    O formulário empilha como o do WhatsApp; valor e validade dividem a
    linha quando cabem. Na lista, o código vem em destaque — é o que a

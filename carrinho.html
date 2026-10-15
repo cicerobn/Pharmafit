@@ -495,7 +495,12 @@
 <script src="assets/js/conta.js?v=d0cc7b55" defer></script>
 <script src="assets/js/pedido.js?v=5e47cbee" defer></script>
 <script src="assets/js/cupom.js?v=1bcb183c" defer></script>
-<script src="assets/js/tela-carrinho.js?v=358e719d" defer></script>
+<!-- O MODELO da mensagem do WhatsApp, que a equipe edita no painel
+     (15/10/2026). Vem ANTES do `tela-carrinho.js`, que o usa para
+     montar o texto; os dois são `defer`, então a ordem aqui é a ordem
+     de execução. -->
+<script src="assets/js/mensagem-pedido.js?v=28368b5b" defer></script>
+<script src="assets/js/tela-carrinho.js?v=1092eba0" defer></script>
 <script src="assets/js/pagamento.js?v=c2875121" defer></script>
 </body>
 </html>

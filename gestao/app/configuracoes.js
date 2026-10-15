@@ -153,6 +153,121 @@
     });
   }
 
+  /* ---------- a mensagem que chega no WhatsApp ----------
+
+     Brian, 15/10/2026: "aqui tem que ter como editar no painel, a
+     mensagem que aparece".
+
+     O texto de fábrica, a lista de peças e a troca das peças vêm de
+     `assets/js/mensagem-pedido.js` — o MESMO arquivo que o carrinho usa
+     para montar a mensagem de verdade. Por isso a prévia daqui não é uma
+     imitação: é a mesma conta, com um pedido de exemplo no lugar do
+     pedido real. Se um dia a montagem mudar, a prévia muda junto,
+     sozinha.
+
+     A CHAVE leva o prefixo `publico_` porque é ele que a regra do banco
+     usa para o SITE poder ler. */
+  function ligarFormularioMensagem() {
+    var form = document.querySelector('[data-msg-form]');
+    var M = window.PharmaFitMensagemPedido;
+    if (!form) return;
+
+    /* Sem o arquivo do modelo não há o que editar, e um formulário que
+       não faz nada é pior que formulário nenhum: some da tela. */
+    if (!M) {
+      form.closest('section').hidden = true;
+      var rotulo = form.closest('section').previousElementSibling;
+      if (rotulo && rotulo.classList.contains('rotulo-secao')) rotulo.hidden = true;
+      return;
+    }
+
+    var campo = form.querySelector('[data-msg-texto]');
+    var previa = form.querySelector('[data-msg-previa]');
+    var recado = form.querySelector('[data-msg-recado]');
+    var botao = form.querySelector('[data-msg-salvar]');
+    var comCupom = form.querySelector('[data-msg-com-cupom]');
+
+    form.querySelector('[data-msg-pecas]').innerHTML = M.pecas.map(function (p) {
+      return '<li><code>{' + p.chave + '}</code> <span>' + esc(p.diz) + '</span></li>';
+    }).join('');
+
+    function dizer(texto, bom) {
+      recado.hidden = !texto;
+      recado.className = 'folha__recado folha__recado--' + (bom ? 'bom' : 'ruim');
+      recado.textContent = texto || '';
+    }
+
+    /* A PRÉVIA, com a mesma função que monta a mensagem de verdade. */
+    function pintarPrevia() {
+      var exemplo = comCupom.checked ? M.exemploComCupom : M.exemplo;
+      previa.textContent = M.aplicar(campo.value, exemplo);
+      /* o aviso do que está errado aparece enquanto se escreve, e não só
+         ao tentar salvar — assim ninguém digita trinta linhas para
+         descobrir no fim que faltava uma peça */
+      var porque = M.porQueNaoServe(campo.value);
+      if (porque) dizer(porque, false);
+      else if (campo.value.length > M.limite) {
+        dizer('A mensagem está com ' + campo.value.length + ' caracteres, e o limite é ' +
+              M.limite + '. Mensagem muito comprida é recusada pelo WhatsApp.', false);
+      } else dizer('', true);
+    }
+
+    campo.addEventListener('input', pintarPrevia);
+    comCupom.addEventListener('change', pintarPrevia);
+
+    form.querySelector('[data-msg-padrao]').addEventListener('click', function () {
+      campo.value = M.padrao;
+      pintarPrevia();
+      dizer('Este é o texto de fábrica. Toque em "Salvar mensagem" para valer no site.', true);
+    });
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var texto = campo.value;
+
+      /* NÃO SALVA MENSAGEM QUEBRADA. Mensagem sem produto ou sem total
+         chega na conversa sem dizer o quê nem quanto — e quem ia
+         descobrir é quem atende, no meio de um atendimento. */
+      var porque = M.porQueNaoServe(texto);
+      if (porque) { dizer(porque, false); campo.focus(); return; }
+      if (texto.length > M.limite) {
+        dizer('A mensagem está com ' + texto.length + ' caracteres, e o limite é ' +
+              M.limite + '.', false);
+        campo.focus();
+        return;
+      }
+
+      botao.disabled = true;
+      var antes = botao.textContent;
+      botao.textContent = 'Salvando…';
+      try {
+        /* Texto igual ao de fábrica é salvo VAZIO: assim o site usa o de
+           fábrica de verdade, e uma melhoria futura no texto padrão
+           chega para quem nunca editou nada. */
+        var guardar = (texto.trim() === M.padrao.trim()) ? '' : texto;
+        var r = await Dados.salvarConfig(M.chave, guardar);
+        if (r && r.ok === false) throw new Error(r.erro || 'o banco recusou');
+        dizer(guardar
+          ? 'Salvo. A próxima pessoa que abrir o carrinho já manda a mensagem nova.'
+          : 'Salvo — a mensagem voltou a ser a de fábrica.', true);
+      } catch (err) {
+        dizer('Não consegui salvar: ' + (err && err.message ? err.message : 'erro desconhecido') +
+              '. A mensagem antiga continua valendo.', false);
+      } finally {
+        botao.disabled = false;
+        botao.textContent = antes;
+      }
+    });
+
+    /* o que está valendo hoje; vazio no banco significa "a de fábrica" */
+    return async function carregar() {
+      var doBanco = '';
+      try { doBanco = await Dados.lerConfig(M.chave, ''); } catch (e) { doBanco = ''; }
+      campo.value = M.serve(doBanco) ? doBanco : M.padrao;
+      pintarPrevia();
+    };
+  }
+
   /* ---------- montar ---------- */
 
   /* ---------- VERIFICAÇÃO EM DUAS ETAPAS (25/09/2026) ---------- */
@@ -260,6 +375,9 @@
     try { doBanco = U.digitos(await Dados.lerConfig(CHAVE_ZAP, '')); } catch (e) { doBanco = ''; }
     pintarCartaoZap(doBanco || DO_ARQUIVO);
     ligarFormularioZap(doBanco, DO_ARQUIVO, pintarCartaoZap);
+
+    var carregarMensagem = ligarFormularioMensagem();
+    if (carregarMensagem) await carregarMensagem();
 
     var elDono = document.querySelector('[data-empresa-dono]');
     if (cfg.EMAIL_DONO) elDono.textContent = cfg.EMAIL_DONO;
